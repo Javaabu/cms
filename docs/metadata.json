@@ -1,5 +1,5 @@
 {
-    "name": "{Your Package}",
-    "description": "{package description}",
+    "name": "Cms",
+    "description": "Content Management System integration for Laravel Projects",
     "version": "1"
 }

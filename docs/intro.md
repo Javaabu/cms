@@ -3,7 +3,7 @@ title: Introduction
 sidebar_position: 1.0
 ---
 
-# {Your Package}
+# Cms
 
 :::danger
 
@@ -11,4 +11,4 @@ This package is currently under development. If anything works, that's a surpris
 
 :::
 
-[{Your Package}](https://github.com/Javaabu/{your-package}) {package description}.
+[Cms](https://github.com/Javaabu/cms) Content Management System integration for Laravel Projects.

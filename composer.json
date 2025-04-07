@@ -1,17 +1,17 @@
 {
-    "name": "javaabu/{your-package}",
-    "description": "{package description}",
-    "homepage": "https://github.com/Javaabu/{your-package}",
+    "name": "javaabu/cms",
+    "description": "Content Management System integration for Laravel Projects",
+    "homepage": "https://github.com/Javaabu/cms",
     "license": "MIT",
     "keywords": [
         "javaabu",
         "laravel",
-        "{your_package}"
+        "cms"
     ],
     "authors": [
         {
-            "name": "{author_name}",
-            "email": "{author_email}",
+            "name": "FlameXode",
+            "email": "wovencoast14782@techie.com",
             "role": "Developer"
         }
     ],
@@ -26,12 +26,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Javaabu\\{YourPackage}\\": "src/"
+            "Javaabu\\Cms\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Javaabu\\{YourPackage}\\Tests\\": "tests/"
+            "Javaabu\\Cms\\Tests\\": "tests/"
         }
     },
     "extra": {
@@ -40,7 +40,7 @@
         },
         "laravel": {
             "providers": [
-                "Javaabu\\{YourPackage}\\{YourPackage}ServiceProvider"
+                "Javaabu\\Cms\\CmsServiceProvider"
             ]
         }
     },

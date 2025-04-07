@@ -1,8 +1,8 @@
 <?php
 
-namespace Javaabu\{YourPackage}\Tests\Feature;
+namespace Javaabu\Cms\Tests\Feature;
 
-use Javaabu\{YourPackage}\Tests\TestCase;
+use Javaabu\Cms\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
 class ExampleTest extends TestCase
