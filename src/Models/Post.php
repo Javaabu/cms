@@ -6,17 +6,29 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Javaabu\Cms\Enums\GalleryTypes;
 use Javaabu\Cms\Enums\PageStyles;
+use Javaabu\Helpers\AdminModel\AdminModel;
+use Javaabu\Helpers\AdminModel\IsAdminModel;
 use Javaabu\Helpers\Enums\PublishStatuses;
+use Javaabu\Helpers\Traits\HasSlug;
+use Javaabu\Helpers\Traits\Publishable;
 use Javaabu\Translatable\Contracts\Translatable;
 use Javaabu\Translatable\JsonTranslatable\IsJsonTranslatable;
 use Javaabu\Translatable\Models\Language;
 
-class Post extends Model implements Translatable
+class Post extends Model implements
+    AdminModel,
+    Translatable
 {
+    use IsJsonTranslatable;
+    use IsAdminModel;
+    use SoftDeletes;
+    use Publishable;
+    use HasSlug;
     use IsJsonTranslatable;
 
     protected static $status_class = PublishStatuses::class;

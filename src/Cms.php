@@ -116,7 +116,7 @@ class Cms {
         });
     }
 
-    public function addToSidebar($menus)
+    public function addToSidebar(array $menus = [])
     {
         $all_post_types = PostType::all();
 
