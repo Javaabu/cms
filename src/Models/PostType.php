@@ -3,6 +3,8 @@
 namespace Javaabu\Cms\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
+use Javaabu\Cms\Enums\PostTypeFeatures;
 use Javaabu\Helpers\AdminModel\AdminModel;
 use Javaabu\Helpers\AdminModel\IsAdminModel;
 use Illuminate\Database\Eloquent\Model;
@@ -61,6 +63,39 @@ class PostType extends Model implements AdminModel, Translatable
     public function categoryType(): BelongsTo
     {
         return $this->belongsTo(CategoryType::class);
+    }
+
+    public function getFeatureName($feature): ?string
+    {
+        if (! $this->hasFeature($feature)) {
+            return null;
+        }
+
+        $feature_title = $this->features[$feature];
+
+        if (gettype($feature_title) == 'boolean') {
+            return PostTypeFeatures::getLabel($feature);
+        }
+
+        if (gettype($feature_title) == 'string') {
+            return Str::title($feature_title);
+        }
+
+        return null;
+    }
+
+    public function hasFeature($feature): bool
+    {
+        return array_key_exists($feature, $this->features);
+    }
+
+    public function getFeatureCollectionName($feature): ?string
+    {
+        if (! $this->hasFeature($feature)) {
+            return null;
+        }
+
+        return PostTypeFeatures::getCollectionName($feature);
     }
 }
 
