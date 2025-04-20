@@ -14,8 +14,8 @@ use Illuminate\Support\ServiceProvider;
 class CmsServiceProvider extends ServiceProvider
 {
     protected array $migrations = [
-        'create_categories_table',
         'create_category_types_table',
+        'create_categories_table',
         'create_post_types_table',
         'create_posts_table',
     ];
