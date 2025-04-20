@@ -375,6 +375,29 @@ class Post extends Model implements Translatable
                 : $this->getDraftKey();
         }
     }
+
+    /**
+     * Determine posts that a user can see
+     *
+     * @param            $query
+     * @param PostType $type
+     * @return mixed
+     */
+    public function scopeUserVisibleForPostType($query, PostType $type)
+    {
+        $admin = auth()->user();
+
+        if ($admin) {
+            if ($admin->can('create', $type) && $admin->can('editOthers', $type)) {
+                // Admin can edit all posts
+                return $query;
+            }
+        }
+
+        // everyone can view published
+        return $query->published();
+    }
+
     /**
      * Get the content blocks
      * Default to one single raw block
