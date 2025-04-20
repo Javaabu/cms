@@ -4,10 +4,13 @@ namespace Javaabu\Cms;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Javaabu\Cms\Enums\PostTypeFeatures;
 use Javaabu\Cms\Http\Controllers\PostsController;
 use Javaabu\Cms\Http\Controllers\Admin\PostsController as AdminPostsController;
 use Javaabu\Cms\Models\CategoryType;
+use Javaabu\Cms\Models\Post;
 use Javaabu\Cms\Models\PostType;
+use Javaabu\MenuBuilder\Menu\MenuItem;
 use Javaabu\Translatable\Facades\Languages;
 
 class Cms {
@@ -111,5 +114,39 @@ class Cms {
         ], function () {
             $this->registerAdminRoutes();
         });
+    }
+
+    public function addToSidebar($menus)
+    {
+        $all_post_types = PostType::all();
+
+        foreach ($all_post_types as $post_type) {
+            $name = Str::title($post_type->name_en);
+            $children = [
+                MenuItem::make($name)
+                    ->can('view_' . $post_type->permission_slug)
+                    ->active(optional(request()->route('post_type'))->slug == $post_type->slug)
+                    ->url(translate_route('admin.posts.index', $post_type->slug))
+                    ->icon('zmdi-' . $post_type->icon)
+                    ->count(Post::query()->userVisibleForPostType($post_type)->postType($post_type->slug)->pending()),
+            ];
+
+            if ($post_type->hasFeature(PostTypeFeatures::CATEGORIES)) {
+                $children[] = MenuItem::make(_d(':name Categories', ['name' => Str::singular($name)]))
+                    ->can('view_' . Str::singular($post_type->permission_slug) . '_categories')
+                    ->url(translate_route('admin.categories.index', Str::singular($post_type->slug) . '-categories'))
+                    ->active(optional(request()->route('category_type'))->slug == Str::singular($post_type->slug) . '-categories');
+
+                $menus[] =
+                    MenuItem::make($name)
+                        ->icon('zmdi-' . $post_type->icon)
+                        ->can('view_' . $post_type->permission_slug)
+                        ->children($children);
+            } else {
+                $menus = array_merge($menus, $children);
+            }
+        }
+
+        return $menus;
     }
 }
