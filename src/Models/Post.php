@@ -2,7 +2,6 @@
 
 namespace Javaabu\Cms\Models;
 
-use App\Helpers\Media\Attachment\HasAttachments\HasAttachments;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;

@@ -2,10 +2,10 @@
 
 namespace Javaabu\Cms;
 
-use App\Models\CategoryType;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Javaabu\Cms\Http\Controllers\PostsController;
+use Javaabu\Cms\Models\CategoryType;
 use Javaabu\Cms\Models\PostType;
 use Javaabu\Translatable\Facades\Languages;
 
