@@ -79,7 +79,7 @@ class Cms {
     {
         Route::group([
             'prefix' => '{post_type}',
-            'as' => 'cms::',
+            'as' => 'posts.',
         ], function () {
             Route::match(['PUT', 'PATCH'], '/', [PostsController::class, 'bulk'])->name('bulk');
             Route::get('/trash', [PostsController::class, 'trash'])->name('trash');
@@ -126,7 +126,10 @@ class Cms {
                 MenuItem::make($name)
                     ->can('view_' . $post_type->permission_slug)
                     ->active(optional(request()->route('post_type'))->slug == $post_type->slug)
-                    ->url(translate_route('admin.posts.index', $post_type->slug))
+                    ->url(config('cms.should_translate')
+                        ? translate_route('admin.posts.index', $post_type->slug)
+                        : route('admin.posts.index', $post_type->slug)
+                    )
                     ->icon('zmdi-' . $post_type->icon)
                     ->count(Post::query()->userVisibleForPostType($post_type)->postType($post_type->slug)->pending()),
             ];
@@ -134,7 +137,10 @@ class Cms {
             if ($post_type->hasFeature(PostTypeFeatures::CATEGORIES)) {
                 $children[] = MenuItem::make(_d(':name Categories', ['name' => Str::singular($name)]))
                     ->can('view_' . Str::singular($post_type->permission_slug) . '_categories')
-                    ->url(translate_route('admin.categories.index', Str::singular($post_type->slug) . '-categories'))
+                    ->url(config('cms.should_translate')
+                        ? translate_route('admin.categories.index', Str::singular($post_type->slug) . '-categories')
+                        : route('admin.categories.index', Str::singular($post_type->slug) . '-categories')
+                    )
                     ->active(optional(request()->route('category_type'))->slug == Str::singular($post_type->slug) . '-categories');
 
                 $menus[] =
