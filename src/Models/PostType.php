@@ -43,8 +43,17 @@ class PostType extends Model implements AdminModel, Translatable
 
     public function getAdminUrlAttribute(): string
     {
-        // TODO: Implement getAdminUrlAttribute() method.
         return 'post_type';
+    }
+
+    /**
+     * Get the permission slug
+     *
+     * @return string
+     */
+    public function getPermissionSlugAttribute()
+    {
+        return Str::slug($this->slug, '_');
     }
 
     public function getTranslatables(): array
