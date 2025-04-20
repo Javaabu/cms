@@ -22,7 +22,7 @@ class Cms {
 
             $name = Str::title(str_replace('-', ' ', $slug));
             $type->name = $data['name'] ?? $name;
-            $type->singular_name = $data['name_singular'] ?? Str::singular($name);
+            $type->singular_name = $data['name_singular'] ?? Str::singular($data['name'] ?? $name);
             if (config('cms.should_translate')) $type->lang = Languages::default();
 
             $type->slug = $slug;
