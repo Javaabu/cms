@@ -2,6 +2,7 @@
 
 namespace Javaabu\Cms;
 
+use App\Models\CategoryType;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Javaabu\Cms\Http\Controllers\PostsController;
@@ -11,6 +12,7 @@ use Javaabu\Translatable\Facades\Languages;
 class Cms {
     public function registerPostTypes($postTypes): void
     {
+        $count = 0;
         foreach ($postTypes as $slug => $data) {
             $type = PostType::whereSlug($slug)->first();
 
@@ -21,7 +23,7 @@ class Cms {
             $name = Str::title(str_replace('-', ' ', $slug));
             $type->name = $data['name'] ?? $name;
             $type->singular_name = $data['name_singular'] ?? Str::singular($name);
-            $type->lang = Languages::default();
+            if (config('cms.should_translate')) $type->lang = Languages::default();
 
             $type->slug = $slug;
             $type->icon = $data['icon'];
@@ -35,10 +37,21 @@ class Cms {
             $type->order_column = $count;
 
             $type->save();
+
+            $count++;
         }
     }
 
-    public function registerRoutes(): void
+    public function registerRoutes()
+    {
+        if (config('cms.should_translate')) {
+            $this->registerTranslatableRoutes();
+        } else {
+            $this->registerNormalRoutes();
+        }
+    }
+
+    public function registerNormalRoutes(): void
     {
         Route::group([
             'prefix' => '{post_type}',
@@ -66,7 +79,7 @@ class Cms {
         Route::group([
             'prefix' => '{language}',
         ], function () {
-            $this->registerRoutes();
+            $this->registerNormalRoutes();
         });
     }
 }

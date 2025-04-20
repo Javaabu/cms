@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use Javaabu\Cms\Enums\GalleryTypes;
 use Javaabu\Cms\Enums\PageStyles;
 use Javaabu\Helpers\Enums\PublishStatuses;
+use Javaabu\Translatable\Models\Language;
 
 class Post extends Model
 {
@@ -154,16 +155,8 @@ class Post extends Model
      * @param string $namespace
      * @return string
      */
-    public function url(string $action = 'show', $locale = null, string $namespace = 'cms::'): string
+    public function url(string $action = 'show', string $locale = null, string $namespace = 'cms::'): string
     {
-        if (! $locale) {
-            $locale = app()->getLocale();
-        }
-
-        if ($locale instanceof Languages) {
-            $locale = $locale->value;
-        }
-
         $controller = Str::lower(Str::plural(Str::kebab(class_basename(get_class($this)))));
         $controller_action = $namespace . '.' . $controller . '.' . $action;
 
@@ -171,7 +164,17 @@ class Post extends Model
             'post_type' => $this->postType->slug,
         ];
 
-        $params[] = $locale ?: app()->getLocale();
+        if (config('cms.should_translate')) {
+            if (! $locale) {
+                $locale = app()->getLocale();
+            }
+
+            if ($locale instanceof Language) {
+                $locale = $locale->value;
+            }
+
+            $params[] = $locale ?: app()->getLocale();
+        }
 
         if (! in_array($action, ['index', 'store', 'create', 'trash'])) {
             $params[] = $this->id;

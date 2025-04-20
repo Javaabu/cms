@@ -1,19 +1,16 @@
 <?php
 
-namespace App\Models;
+namespace Javaabu\Cms\Models;
 
+use Javaabu\Cms\Models\PostType;
 use Javaabu\Helpers\Traits\HasSlug;
 use Javaabu\Helpers\AdminModel\IsAdminModel;
 use Javaabu\Helpers\AdminModel\AdminModel;
-use Javaabu\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 use Javaabu\Translatable\Contracts\Translatable;
 use Javaabu\Translatable\JsonTranslatable\IsJsonTranslatable;
-use Javaabu\Translatable\Languages;
-
 class CategoryType extends Model implements AdminModel, Translatable
 {
     use IsAdminModel;
@@ -34,10 +31,6 @@ class CategoryType extends Model implements AdminModel, Translatable
      */
     protected static array $ignoreChangedAttributes = ['created_at', 'updated_at'];
 
-    protected $casts = [
-        'translations' => 'array',
-    ];
-
     /**
      * The attributes that are mass assignable.
      *
@@ -49,6 +42,9 @@ class CategoryType extends Model implements AdminModel, Translatable
 
     public function getTranslatables(): array
     {
+        if (! config('cms.should_translate')) {
+            return [];
+        }
         return [
             'name',
             'singular_name',

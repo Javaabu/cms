@@ -2,20 +2,16 @@
 
 namespace Javaabu\Cms\Http\Requests;
 
-use App\Models\PostType;
 use Illuminate\Support\Str;
 use Illuminate\Routing\Route;
 use Illuminate\Validation\Rule;
-use App\Helpers\Enums\PageStyles;
-use App\Helpers\Enums\GalleryTypes;
-use App\Helpers\Enums\PostTypeFeatures;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rules\Unique;
+use Javaabu\Cms\Enums\PageStyles;
 use Javaabu\Helpers\Enums\PublishStatuses;
 use Illuminate\Foundation\Http\FormRequest;
 use Javaabu\Helpers\Media\AllowedMimeTypes;
-use App\Helpers\Translation\Enums\Languages;
-use App\Helpers\Traits\ForceEnglishErrorMessages;
+use Javaabu\Translatable\Facades\Languages;
 
 class PostRequest extends FormRequest
 {
@@ -69,47 +65,24 @@ class PostRequest extends FormRequest
             'tags.*'            => 'string|max:255|required',
             'action'            => 'in:' . implode(',', $this->actions()),
             'featured_image'    => AllowedMimeTypes::getAttachmentValidationRule('image'),
-            'lang'              => 'in:' . implode(',', Languages::getKeys()),
             'hide_translations' => 'boolean',
             'recently_updated'  => 'boolean',
         ];
 
+        if (config('cms.should_translate')) {
+            $rules['lang'] = 'in:' . implode(',', Languages::all()->pluck('code')->toArray());
+        }
+
         $rules['title'] = 'string|max:500';
         $rules['slug'] = ['string', 'max:255'];
 
-        if ($post_type->hasFeature(PostTypeFeatures::CATEGORIES)) {
-            $rules['categories'] = 'array|ids_exist:categories,id,type_id,' . $post_type->categoryType->id;
-        }
-
-        if ($post_type->hasFeature(PostTypeFeatures::CITY)) {
-            $rules['city'] = 'nullable|exists:cities,id';
-        }
-
-        //======================================================================
-        // DEPARTMENT RULES
-        //======================================================================
-        $rules['department'] = [
-            Rule::exists('departments', 'id'),
-        ];
-
-        $rules['components'] = [
-            Rule::exists('components', 'id'),
-        ];
-
-        // If user can edit other departments, make it nullable
-        if ($this->user()->canDo($post_type, 'edit_others')) {
-            $rules['department'][] = 'nullable';
-        } else {
-            // If user cannot edit other dep
-            $rules['department'][] = 'required';
-            $rules['department'][] = Rule::exists('department_user', 'department_id')
-                ->where('user_id', $this->user()->id);
-        }
-
-        //======================================================================
-        // REFERENCE NUMBER RULES
-        //======================================================================
-        $rules['ref_no'] = 'nullable|string|max:255';
+//        if ($post_type->hasFeature(PostTypeFeatures::CATEGORIES)) {
+//            $rules['categories'] = 'array|ids_exist:categories,id,type_id,' . $post_type->categoryType->id;
+//        }
+//
+//        if ($post_type->hasFeature(PostTypeFeatures::CITY)) {
+//            $rules['city'] = 'nullable|exists:cities,id';
+//        }
 
         //======================================================================
         // DOCUMENT ATTACHMENT RULES
@@ -138,7 +111,7 @@ class PostRequest extends FormRequest
         //======================================================================
         // GALLERY FORMAT RULES
         //======================================================================
-        $rules['format'] = 'in:' . implode(',', GalleryTypes::getKeys());
+        $rules['format'] = 'in:' . implode(',', array_keys(AllowedMimeTypes::getAllowedTypes()));
         // $rules['video_url'] = 'nullable|url|string'; // Used in video link rules instead
         $rules['image_gallery'] = 'array';
         $rules['image_gallery.*'] = AllowedMimeTypes::getAttachmentValidationRule('image');
@@ -157,15 +130,6 @@ class PostRequest extends FormRequest
             'required_if:page_style,' . PageStyles::SIDEBAR->value,
             'exists:menus,id',
         ];
-
-
-        //======================================================================
-        // Coordinates
-        //======================================================================
-        if ($post_type->hasFeature(PostTypeFeatures::COORDS)) {
-            $rules['lat'] = ['latitude', 'required_with:lng'];
-            $rules['lng'] = ['longitude', 'required_with:lat'];
-        }
 
         if ($model) {
             //

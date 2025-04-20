@@ -2,16 +2,11 @@
 
 namespace Javaabu\Cms\Models;
 
-use Illuminate\Support\Str;
-use Javaabu\Cms\Enums\PostTypeFeatures;
 use Javaabu\Helpers\AdminModel\AdminModel;
 use Javaabu\Helpers\AdminModel\IsAdminModel;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 use Javaabu\Translatable\Contracts\Translatable;
 use Javaabu\Translatable\JsonTranslatable\IsJsonTranslatable;
-use Javaabu\Translatable\Languages;
 
 class PostType extends Model implements AdminModel, Translatable
 {
@@ -40,7 +35,6 @@ class PostType extends Model implements AdminModel, Translatable
         'features' => 'array',
         'og_description' => 'string',
         'order_column' => 'integer',
-        'translations' => 'array',
         'hide_translation' => 'boolean',
     ];
 

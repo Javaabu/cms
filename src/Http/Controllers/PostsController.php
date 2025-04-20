@@ -113,7 +113,7 @@ class PostsController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store($locale, PostType $type, PostsRequest $request)
+    public function store($locale, PostType $type, PostRequest $request)
     {
         $this->authorize('create', $type);
 
@@ -200,7 +200,7 @@ class PostsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update($locale, PostsRequest $request, PostType $type, Post $post)
+    public function update($locale, PostRequest $request, PostType $type, Post $post)
     {
         $this->authorize('update', $post);
 
