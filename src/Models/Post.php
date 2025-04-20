@@ -11,10 +11,14 @@ use Illuminate\Support\Str;
 use Javaabu\Cms\Enums\GalleryTypes;
 use Javaabu\Cms\Enums\PageStyles;
 use Javaabu\Helpers\Enums\PublishStatuses;
+use Javaabu\Translatable\Contracts\Translatable;
+use Javaabu\Translatable\JsonTranslatable\IsJsonTranslatable;
 use Javaabu\Translatable\Models\Language;
 
-class Post extends Model
+class Post extends Model implements Translatable
 {
+    use IsJsonTranslatable;
+
     protected static $status_class = PublishStatuses::class;
 
     /**
@@ -73,21 +77,27 @@ class Post extends Model
 
     protected $with = ['postType'];
 
-//    public function getTranslatables(): array
-//    {
-//        return [
-//            'title',
-//            'content',
-//            'excerpt',
-//        ];
-//    }
-//    public function getNonTranslatablePivots(): array
-//    {
-//        return [
-//            'categories',
-//            'tagWords',
-//        ];
-//    }
+    public function getTranslatables(): array
+    {
+        if (! config('cms.should_translate')) {
+            return [];
+        }
+        return [
+            'title',
+            'content',
+            'excerpt',
+        ];
+    }
+    public function getNonTranslatablePivots(): array
+    {
+        if (! config('cms.should_translate')) {
+            return [];
+        }
+        return [
+            'categories',
+            'tagWords',
+        ];
+    }
 
     public static function boot()
     {
@@ -188,7 +198,6 @@ class Post extends Model
     {
         return $this->belongsTo(PostType::class, 'type', 'slug');
     }
-
 
 
     /**

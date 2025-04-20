@@ -2,6 +2,7 @@
 
 namespace Javaabu\Cms\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Javaabu\Helpers\AdminModel\AdminModel;
 use Javaabu\Helpers\AdminModel\IsAdminModel;
 use Illuminate\Database\Eloquent\Model;
@@ -55,6 +56,11 @@ class PostType extends Model implements AdminModel, Translatable
             'singular_name',
             'og_description',
         ];
+    }
+
+    public function categoryType(): BelongsTo
+    {
+        return $this->belongsTo(CategoryType::class);
     }
 }
 
