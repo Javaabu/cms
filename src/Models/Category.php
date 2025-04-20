@@ -221,25 +221,25 @@ class Category extends Model implements AdminModel, Translatable
             });
     }
 
-    /**
-     * Register image conversions
-     *
-     * @param Media|null $media
-     */
-    public function registerAttachmentConversions(Media $media = null)
-    {
-        $this->addAttachmentConversion('shareable_image')
-            ->width(1200)
-            ->height(630)
-            ->fit(Fit::Crop, 1200, 630)
-            ->performOnCollections('featured_image');
-
-        $this->addAttachmentConversion('header_image')
-            ->width(1920)
-            ->height(300)
-            ->fit(Fit::Crop, 1920, 300)
-            ->performOnCollections('featured_image');
-    }
+//    /**
+//     * Register image conversions
+//     *
+//     * @param Media|null $media
+//     */
+//    public function registerAttachmentConversions(Media $media = null)
+//    {
+//        $this->addAttachmentConversion('shareable_image')
+//            ->width(1200)
+//            ->height(630)
+//            ->fit(Fit::Crop, 1200, 630)
+//            ->performOnCollections('featured_image');
+//
+//        $this->addAttachmentConversion('header_image')
+//            ->width(1920)
+//            ->height(300)
+//            ->fit(Fit::Crop, 1920, 300)
+//            ->performOnCollections('featured_image');
+//    }
 
 //    public function getPermalinkAttribute(): string
 //    {
