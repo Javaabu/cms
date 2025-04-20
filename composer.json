@@ -20,7 +20,8 @@
         "illuminate/support": "^9.0 || ^10.0 || ^11.0 || ^12.0",
         "javaabu/helpers": "^1.61",
         "javaabu/translatable": "^1.1",
-        "javaabu/menu-builder": "^1.6"
+        "javaabu/menu-builder": "^1.6",
+        "kalnoy/nestedset": "^6.0"
     },
     "require-dev": {
         "laravel/pint": "^1.14",

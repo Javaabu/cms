@@ -5,6 +5,7 @@ namespace Javaabu\Cms;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Javaabu\Cms\Enums\PostTypeFeatures;
+use Javaabu\Cms\Http\Controllers\Admin\CategoriesController;
 use Javaabu\Cms\Http\Controllers\PostsController;
 use Javaabu\Cms\Http\Controllers\Admin\PostsController as AdminPostsController;
 use Javaabu\Cms\Models\CategoryType;
@@ -77,21 +78,44 @@ class Cms {
 
     public function registerAdminRoutes(): void
     {
+        /**
+         * Categories
+         */
+        Route::group([
+            'prefix' => 'category-types/{category_type}',
+            'as'     => 'categories.',
+        ], function () {
+            Route::match(['PUT', 'PATCH'], '/', [CategoriesController::class, 'bulk'])->name('bulk');
+            Route::get('/trash', [CategoriesController::class, 'trash'])->name('trash');
+            Route::post('/{id}/restore', [CategoriesController::class, 'restore'])->name('restore');
+            Route::delete('/{id}/force-delete', [CategoriesController::class, 'forceDelete'])->name('force-delete');
+            Route::get('/', [CategoriesController::class, 'index'])->name('index');
+            Route::get('/create', [CategoriesController::class, 'create'])->name('create');
+            Route::post('/', [CategoriesController::class, 'store'])->name('store');
+
+            Route::get('/{category}', [CategoriesController::class, 'show'])->name('show');
+            Route::get('/{category}/edit', [CategoriesController::class, 'edit'])->name('edit');
+            Route::match(['PUT', 'PATCH'], '/{category}', [CategoriesController::class, 'update'])->name('update');
+            Route::delete('/{category}', [CategoriesController::class, 'destroy'])->name('destroy');
+        });
+        /**
+         * Post Types
+         */
         Route::group([
             'prefix' => '{post_type}',
             'as' => 'posts.',
         ], function () {
-            Route::match(['PUT', 'PATCH'], '/', [PostsController::class, 'bulk'])->name('bulk');
-            Route::get('/trash', [PostsController::class, 'trash'])->name('trash');
-            Route::post('/{id}/restore', [PostsController::class, 'restore'])->name('restore');
-            Route::delete('/{id}/force-delete', [PostsController::class, 'forceDelete'])->name('force-delete');
-            Route::get('/', [PostsController::class, 'index'])->name('index');
-            Route::get('/create', [PostsController::class, 'create'])->name('create');
-            Route::post('/', [PostsController::class, 'store'])->name('store');
-            Route::get('/{post}', [PostsController::class, 'show'])->name('show');
-            Route::get('/{post}/edit', [PostsController::class, 'edit'])->name('edit');
-            Route::match(['PUT', 'PATCH'], '/{post}', [PostsController::class, 'update'])->name('update');
-            Route::delete('/{post}', [PostsController::class, 'destroy'])->name('destroy');
+            Route::match(['PUT', 'PATCH'], '/', [AdminPostsController::class, 'bulk'])->name('bulk');
+            Route::get('/trash', [AdminPostsController::class, 'trash'])->name('trash');
+            Route::post('/{id}/restore', [AdminPostsController::class, 'restore'])->name('restore');
+            Route::delete('/{id}/force-delete', [AdminPostsController::class, 'forceDelete'])->name('force-delete');
+            Route::get('/', [AdminPostsController::class, 'index'])->name('index');
+            Route::get('/create', [AdminPostsController::class, 'create'])->name('create');
+            Route::post('/', [AdminPostsController::class, 'store'])->name('store');
+            Route::get('/{post}', [AdminPostsController::class, 'show'])->name('show');
+            Route::get('/{post}/edit', [AdminPostsController::class, 'edit'])->name('edit');
+            Route::match(['PUT', 'PATCH'], '/{post}', [AdminPostsController::class, 'update'])->name('update');
+            Route::delete('/{post}', [AdminPostsController::class, 'destroy'])->name('destroy');
         });
     }
 
