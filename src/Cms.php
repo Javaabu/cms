@@ -145,7 +145,7 @@ class Cms {
         $all_post_types = PostType::all();
 
         foreach ($all_post_types as $post_type) {
-            $name = Str::title($post_type->name_en);
+            $name = Str::title($post_type->name);
             $children = [
                 MenuItem::make($name)
                     ->can('view_' . $post_type->permission_slug)

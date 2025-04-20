@@ -33,7 +33,7 @@ return new class extends Migration
                 ->on('category_types')
                 ->onDelete('cascade');
 
-            if (config('cms.should_translate')) $table->jsonTranslatable();
+            $table->jsonTranslatable();
         });
     }
 

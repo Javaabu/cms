@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('og_description')->nullable();
             $table->unsignedInteger('order_column')->default(0);
             $table->timestamps();
-            if (config('cms.should_translate')) $table->jsonTranslatable();
+            $table->jsonTranslatable();
         });
     }
 

@@ -36,7 +36,7 @@ return new class extends Migration
             $table->text('coords')->nullable();
             $table->foreignId('city_id')->nullable()->index();
 
-            if (config('cms.should_translate')) $table->jsonTranslatable();
+            $table->jsonTranslatable();
 
             // slugs must be unique for the category
             $table->unique(['slug', 'type'], 'unique_type_slug');
