@@ -36,7 +36,6 @@ class CategoryType extends Model implements AdminModel, Translatable
 
     protected $casts = [
         'translations' => 'array',
-        'lang' => Languages::class,
     ];
 
     /**

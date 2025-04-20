@@ -12,9 +12,6 @@ use Illuminate\Support\Str;
 use Javaabu\Cms\Enums\GalleryTypes;
 use Javaabu\Cms\Enums\PageStyles;
 use Javaabu\Helpers\Enums\PublishStatuses;
-use Javaabu\Translatable\Contracts\Translatable;
-use Javaabu\Translatable\JsonTranslatable\IsJsonTranslatable;
-use Javaabu\Translatable\Languages;
 
 class Post extends Model
 {
@@ -60,7 +57,6 @@ class Post extends Model
         'ref_no'           => 'string',
         'recently_updated' => 'boolean',
         'translations'     => 'array',
-        'lang'             => Languages::class,
         'hide_translation' => 'boolean',
     ];
 

@@ -41,7 +41,6 @@ class PostType extends Model implements AdminModel, Translatable
         'og_description' => 'string',
         'order_column' => 'integer',
         'translations' => 'array',
-        'lang' => Languages::class,
         'hide_translation' => 'boolean',
     ];
 
