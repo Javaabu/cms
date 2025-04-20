@@ -5,6 +5,7 @@ namespace Javaabu\Cms;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Javaabu\Cms\Http\Controllers\PostsController;
+use Javaabu\Cms\Http\Controllers\Admin\PostsController as AdminPostsController;
 use Javaabu\Cms\Models\CategoryType;
 use Javaabu\Cms\Models\PostType;
 use Javaabu\Translatable\Facades\Languages;
@@ -53,6 +54,26 @@ class Cms {
 
     public function registerNormalRoutes(): void
     {
+        $root_slugs = app(RootSlugsRegistrar::class)->getSlugs();
+        $post_types = $root_slugs['post_type'] ?? [];
+        /** @var  PostType $post_type */
+        foreach ($post_types as $post_type) {
+            Route::get($post_type->slug, [PostsController::class, 'index'])
+                ->defaults('web_post_type_slug', $post_type->slug)
+                ->name('cms::posts.index.' . $post_type->slug);
+
+            Route::get($post_type->slug . '/{post_slug}', [PostsController::class, 'show'])
+                ->defaults('web_post_type_slug', $post_type)
+                ->name('cms::posts.show.' . $post_type->slug);
+
+//            Route::get($post_type->slug . '/{post_slug}/files', [PostsController::class, 'downloadFiles'])
+//                ->defaults('web_post_type_slug', $post_type)
+//                ->name('cms::posts.show.files.' . $post_type->slug);
+        }
+    }
+
+    public function registerAdminRoutes(): void
+    {
         Route::group([
             'prefix' => '{post_type}',
             'as' => 'cms::',
@@ -80,6 +101,15 @@ class Cms {
             'prefix' => '{language}',
         ], function () {
             $this->registerNormalRoutes();
+        });
+    }
+
+    public function registerTranslatableAdminRoutes()
+    {
+        Route::group([
+            'prefix' => '{language}',
+        ], function () {
+            $this->registerAdminRoutes();
         });
     }
 }
