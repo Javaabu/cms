@@ -1,0 +1,26 @@
+{
+    "$schema": "https://laravel-ide.com/schema/laravel-ide-v2.json",
+    "completions": [
+        {
+            "complete": "routeName",
+            "condition": [
+                {
+                    "functionNames": ["translate_route"],
+                    "parameters": [1]
+                }
+            ]
+        },
+        {
+            "complete": "configKey",
+            "options": {
+                "prefix": "defaults"
+            },
+            "condition": [
+                {
+                    "functionNames": ["get_setting"],
+                    "parameters": [1]
+                }
+            ]
+        }
+    ]
+}

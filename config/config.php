@@ -10,5 +10,5 @@ return [
     |
     */
 
-    // TODO
+    'should_translate' => false,
 ];
