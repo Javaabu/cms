@@ -3,6 +3,7 @@
 namespace Javaabu\Cms\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 use Javaabu\Cms\Enums\PostTypeFeatures;
 use Javaabu\Helpers\AdminModel\AdminModel;
@@ -105,6 +106,24 @@ class PostType extends Model implements AdminModel, Translatable
         }
 
         return PostTypeFeatures::getCollectionName($feature);
+    }
+
+    /**
+     * A post type has many posts
+     */
+    public function userVisiblePosts()
+    {
+        return $this->posts()->userVisibleForPostType($this);
+    }
+
+    /**
+     * A post type has many posts
+     *
+     * @return HasMany
+     */
+    public function posts(): HasMany
+    {
+        return $this->hasMany(Post::class, 'type', 'slug');
     }
 
     /**
