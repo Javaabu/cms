@@ -173,7 +173,7 @@ class Cms {
                 $children[] = MenuItem::make(_d(':name Categories', ['name' => Str::singular($name)]))
                     ->controller(CategoriesController::class)
                     ->can('view_' . Str::singular($post_type->permission_slug) . '_categories')
-//                    ->active(optional(request()->route('category_type'))->slug == Str::singular($post_type->slug) . '-categories')
+                    ->active(optional(request()->route('category_type'))->slug == Str::singular($post_type->slug) . '-categories')
 //                    ->url(config('cms.should_translate')
 //                        ? translate_route('admin.categories.index', Str::singular($post_type->slug) . '-categories')
 //                        : route('admin.categories.index', Str::singular($post_type->slug) . '-categories')

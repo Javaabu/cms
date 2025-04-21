@@ -106,5 +106,15 @@ class PostType extends Model implements AdminModel, Translatable
 
         return PostTypeFeatures::getCollectionName($feature);
     }
+
+    /**
+     * Slugify the value
+     *
+     * @param $value
+     */
+    public function setSlugAttribute($value)
+    {
+        $this->attributes['slug'] = Str::slug($value);
+    }
 }
 
