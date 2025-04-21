@@ -47,7 +47,6 @@ class PostsController extends Controller
         $per_page = $this->getPerPage($request);
 
         $posts = $type->userVisiblePosts()
-            ->ofLocale()
             ->orderBy($orderby, $order);
 
         $search = null;
