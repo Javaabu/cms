@@ -1,6 +1,6 @@
 <?php
 
-namespace Javaabu\Cms\Http\Controllers;
+namespace Javaabu\Cms\Translatable\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Javaabu\Cms\Models\Post;

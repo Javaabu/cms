@@ -1,6 +1,6 @@
 <?php
 
-namespace Javaabu\Cms\Http\Controllers\Admin;
+namespace Javaabu\Cms\Translatable\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Javaabu\Cms\Enums\PostTypeFeatures;
@@ -37,7 +37,7 @@ class PostsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(PostType $type, Request $request, bool $trashed = false)
+    public function index($locale, PostType $type, Request $request, bool $trashed = false)
     {
         $this->authorize('viewAny', $type);
 
@@ -102,7 +102,7 @@ class PostsController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(PostType $type, Request $request)
+    public function create($locale, PostType $type, Request $request)
     {
         $this->authorize('create', $type);
         return view('admin.posts.create', compact('type'));
@@ -111,7 +111,7 @@ class PostsController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(PostType $type, PostRequest $request)
+    public function store($locale, PostType $type, PostRequest $request)
     {
         $this->authorize('create', $type);
 
@@ -173,22 +173,22 @@ class PostsController extends Controller
         }
         $this->flashSuccessMessage();
 
-        return redirect()->action([PostsController::class, 'edit'], [$type, $post]);
+        return redirect()->action([PostsController::class, 'edit'], [$locale, $type, $post]);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(PostType $type, Post $post)
+    public function show($locale, PostType $type, Post $post)
     {
         $this->authorize('view', $post);
-        return redirect()->action([static::class, 'edit'], [$type, $post]);
+        return redirect()->action([static::class, 'edit'], [$locale, $type, $post]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(PostType $type, Post $post)
+    public function edit($locale, PostType $type, Post $post)
     {
         $this->authorize('update', $post);
         $post->dontShowTranslationFallbacks();
@@ -198,7 +198,7 @@ class PostsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(PostRequest $request, PostType $type, Post $post)
+    public function update($locale, PostRequest $request, PostType $type, Post $post)
     {
         $this->authorize('update', $post);
 
@@ -284,13 +284,13 @@ class PostsController extends Controller
 
         $this->flashSuccessMessage();
 
-        return redirect()->action([static::class, 'edit'], [$type, $post]);
+        return redirect()->action([static::class, 'edit'], [$locale, $type, $post]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(PostType $type, Post $post, Request $request)
+    public function destroy($locale, PostType $type, Post $post, Request $request)
     {
         $this->authorize('delete', $post);
 
@@ -306,23 +306,23 @@ class PostsController extends Controller
             return response()->json(true);
         }
 
-        return redirect()->action([static::class, 'index'], [$type]);
+        return redirect()->action([static::class, 'index'], [$locale, $type]);
     }
 
     /**
      * Display a listing of the deleted resources.
      */
-    public function trash(PostType $type, Request $request)
+    public function trash($locale, PostType $type, Request $request)
     {
         $this->authorize('viewTrash', $type);
 
-        return $this->index($type, $request, true);
+        return $this->index($locale, $type, $request, true);
     }
 
     /**
      * Force delete the resource
      */
-    public function forceDelete(PostType $postType, $id, Request $request)
+    public function forceDelete($locale, PostType $postType, $id, Request $request)
     {
         //find the model
         $post = $postType->posts()
@@ -345,13 +345,13 @@ class PostsController extends Controller
             return response()->json(true);
         }
 
-        return redirect()->action([static::class, 'trash'], [$postType]);
+        return redirect()->action([static::class, 'trash'], [$locale, $postType]);
     }
 
     /**
      * Restore deleted resource
      */
-    public function restore(PostType $postType, $id, Request $request)
+    public function restore($locale, PostType $postType, $id, Request $request)
     {
         //find the model
         $post = $postType->posts()
@@ -374,13 +374,13 @@ class PostsController extends Controller
             return response()->json(true);
         }
 
-        return redirect()->action([static::class, [$postType]]);
+        return redirect()->action([static::class, [$locale, $postType]]);
     }
 
     /**
      * Perform bulk action on the resource
      */
-    public function bulk(PostType $type, Request $request)
+    public function bulk($locale, PostType $type, Request $request)
     {
         $this->authorize('viewAny', $type);
 
@@ -433,6 +433,6 @@ class PostsController extends Controller
 
         $this->flashSuccessMessage("{$ids_count} Posts updated!");
 
-        return $this->redirect($request, action([static::class, 'index'], [$type]));
+        return $this->redirect($request, action([static::class, 'index'], [$locale, $type]));
     }
 }

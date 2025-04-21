@@ -23,6 +23,19 @@ return [
         'category_type'    => \Javaabu\Cms\Models\CategoryType::class,
     ],
 
+    'web' => [
+        'controllers'        => [
+            'posts'            => \Javaabu\Cms\Http\Controllers\PostsController::class,
+        ],
+    ],
+
+    'admin' => [
+        'controllers'        => [
+            'posts'            => \Javaabu\Cms\Http\Controllers\Admin\PostsController::class,
+            'categories'       => \Javaabu\Cms\Http\Controllers\Admin\CategoriesController::class,
+        ]
+    ],
+
     /**
      * This config section defines the policies that are used in the CMS package.
      * Not all applications will be having the same policies, so you can define the

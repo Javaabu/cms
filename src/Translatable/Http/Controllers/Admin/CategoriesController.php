@@ -1,6 +1,6 @@
 <?php
 
-namespace Javaabu\Cms\Http\Controllers\Admin;
+namespace Javaabu\Cms\Translatable\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Javaabu\Cms\Http\Requests\CategoriesRequest;
@@ -8,6 +8,7 @@ use Javaabu\Cms\Models\Category;
 use Javaabu\Cms\Models\CategoryType;
 use Javaabu\Helpers\Http\Controllers\Controller;
 use Javaabu\Helpers\Traits\HasOrderbys;
+
 class CategoriesController extends Controller
 {
     use HasOrderbys;
