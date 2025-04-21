@@ -89,8 +89,6 @@ class PostsController extends Controller
             $posts->onlyTrashed();
         }
 
-        $posts->with('department');
-
 //        if ($request->download) {
 //            return (new PostsExport($posts))->download('posts.xlsx');
 //        }

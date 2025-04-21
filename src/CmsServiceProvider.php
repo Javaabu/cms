@@ -3,7 +3,7 @@
 namespace Javaabu\Cms;
 
 use Carbon\Carbon;
-use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Javaabu\Cms\Models\Post;
 use Javaabu\Cms\Models\PostType;
@@ -15,9 +15,9 @@ class CmsServiceProvider extends ServiceProvider
 {
     protected array $migrations = [
         'create_category_types_table',
-        'create_categories_table',
         'create_post_types_table',
         'create_posts_table',
+        'create_categories_table',
     ];
 
     /**
@@ -26,6 +26,8 @@ class CmsServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->offerPublishing();
+
+        $this->registerPolicies();
     }
 
     /**
@@ -71,6 +73,15 @@ class CmsServiceProvider extends ServiceProvider
                     $vendorMigration => $appMigration,
                 ], 'cms-migrations');
             }
+        }
+    }
+
+    public function registerPolicies()
+    {
+        $policies = $this->getPolicies();
+
+        foreach ($policies as $key => $value) {
+            Gate::policy($key, $value);
         }
     }
 
@@ -170,5 +181,16 @@ class CmsServiceProvider extends ServiceProvider
         $migrationFileName = Str::of($migrationFileName)->snake()->finish('.php');
 
         return database_path($migrationsPath . $timestamp . '_' . $migrationFileName);
+    }
+
+    private function getPolicies(): array
+    {
+        $policies = [];
+
+        foreach (config('cms.policies') as $model_name => $policy) {
+            $policies[config("cms.models.{$model_name}")] = $policy;
+        }
+
+        return $policies;
     }
 }

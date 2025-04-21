@@ -21,7 +21,8 @@
         "javaabu/helpers": "^1.61",
         "javaabu/translatable": "^1.1",
         "javaabu/menu-builder": "^1.6",
-        "kalnoy/nestedset": "^6.0"
+        "kalnoy/nestedset": "^6.0",
+        "javaabu/auth": "^1.16"
     },
     "require-dev": {
         "laravel/pint": "^1.14",

@@ -8,10 +8,10 @@ use Illuminate\Validation\Rule;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rules\Unique;
 use Javaabu\Cms\Enums\PageStyles;
+use Javaabu\Cms\Models\PostType;
 use Javaabu\Helpers\Enums\PublishStatuses;
 use Illuminate\Foundation\Http\FormRequest;
 use Javaabu\Helpers\Media\AllowedMimeTypes;
-use Javaabu\Translatable\Facades\Languages;
 
 class PostRequest extends FormRequest
 {
@@ -68,10 +68,6 @@ class PostRequest extends FormRequest
             'hide_translations' => 'boolean',
             'recently_updated'  => 'boolean',
         ];
-
-        if (config('cms.should_translate')) {
-            $rules['lang'] = 'in:' . implode(',', Languages::all()->pluck('code')->toArray());
-        }
 
         $rules['title'] = 'string|max:500';
         $rules['slug'] = ['string', 'max:255'];
@@ -131,12 +127,10 @@ class PostRequest extends FormRequest
             'exists:menus,id',
         ];
 
-        if ($model) {
-            //
-        } else {
+        if (! $model) {
             $rules['title'] .= '|required';
             $rules['slug'][] = 'required';
-            $rules['lang'] .= '|required';
+            if (config('cms.should_translate')) $rules['lang'] = 'required';
         }
 
         return $rules;

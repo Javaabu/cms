@@ -56,6 +56,15 @@ class Cms {
         }
     }
 
+    public function registerAdminRoutes()
+    {
+        if (config('cms.should_translate')) {
+            $this->registerTranslatableAdminRoutes();
+        } else {
+            $this->registerNormalAdminRoutes();
+        }
+    }
+
     public function registerNormalRoutes(): void
     {
         $root_slugs = app(RootSlugsRegistrar::class)->getSlugs();
@@ -76,7 +85,7 @@ class Cms {
         }
     }
 
-    public function registerAdminRoutes(): void
+    public function registerNormalAdminRoutes(): void
     {
         /**
          * Categories
@@ -136,11 +145,11 @@ class Cms {
         Route::group([
             'prefix' => '{language}',
         ], function () {
-            $this->registerAdminRoutes();
+            $this->registerNormalAdminRoutes();
         });
     }
 
-    public function addToSidebar(array $menus = [])
+    public function adminMenuItems(array $menus = [])
     {
         $all_post_types = PostType::all();
 
@@ -148,24 +157,29 @@ class Cms {
             $name = Str::title($post_type->name);
             $children = [
                 MenuItem::make($name)
+                    ->controller(PostsController::class)
                     ->can('view_' . $post_type->permission_slug)
                     ->active(optional(request()->route('post_type'))->slug == $post_type->slug)
-                    ->url(config('cms.should_translate')
-                        ? translate_route('admin.posts.index', $post_type->slug)
-                        : route('admin.posts.index', $post_type->slug)
-                    )
+//                    ->url(config('cms.should_translate')
+//                        ? translate_route('admin.posts.index', $post_type->slug)
+//                        : route('admin.posts.index', $post_type->slug)
+//                    )
+                    ->url(translate_route('admin.posts.index', $post_type->slug))
                     ->icon('zmdi-' . $post_type->icon)
                     ->count(Post::query()->userVisibleForPostType($post_type)->postType($post_type->slug)->pending()),
             ];
 
             if ($post_type->hasFeature(PostTypeFeatures::CATEGORIES)) {
                 $children[] = MenuItem::make(_d(':name Categories', ['name' => Str::singular($name)]))
+                    ->controller(CategoriesController::class)
                     ->can('view_' . Str::singular($post_type->permission_slug) . '_categories')
-                    ->url(config('cms.should_translate')
-                        ? translate_route('admin.categories.index', Str::singular($post_type->slug) . '-categories')
-                        : route('admin.categories.index', Str::singular($post_type->slug) . '-categories')
-                    )
-                    ->active(optional(request()->route('category_type'))->slug == Str::singular($post_type->slug) . '-categories');
+//                    ->active(optional(request()->route('category_type'))->slug == Str::singular($post_type->slug) . '-categories')
+//                    ->url(config('cms.should_translate')
+//                        ? translate_route('admin.categories.index', Str::singular($post_type->slug) . '-categories')
+//                        : route('admin.categories.index', Str::singular($post_type->slug) . '-categories')
+//                    )
+                    ->url(translate_route('admin.categories.index', Str::singular($post_type->slug) . '-categories'))
+                ;
 
                 $menus[] =
                     MenuItem::make($name)
