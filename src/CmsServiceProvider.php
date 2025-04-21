@@ -28,6 +28,8 @@ class CmsServiceProvider extends ServiceProvider
         $this->offerPublishing();
 
         $this->registerPolicies();
+
+        $this->registerRouteModelBindings();
     }
 
     /**
@@ -156,8 +158,6 @@ class CmsServiceProvider extends ServiceProvider
             return $value;
         });
     }
-
-
 
     protected function generateMigrationName(string $migrationFileName, Carbon $now): string
     {
