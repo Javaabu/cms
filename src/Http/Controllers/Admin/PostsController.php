@@ -72,10 +72,6 @@ class PostsController extends Controller
             $posts->dateBetween($date_field, $request->input('date_from'), $request->input('date_to'));
         }
 
-        if ($department_id = $request->input('department')) {
-            $posts->whereDepartmentId($department_id);
-        }
-
         if ($category = $request->input('category')) {
             $posts->belongsToCategory($category);
         }
@@ -127,8 +123,6 @@ class PostsController extends Controller
         $post->slug = $request->input('slug');
 
         $post->lang = $request->input('lang', app()->getLocale());
-
-        $post->department()->associate($request->input('department'));
 
 
         if ($request->input('never_expire')) {
@@ -221,10 +215,6 @@ class PostsController extends Controller
 
         $post->hide_translation = $request->input('hide_translation', false);
         $post->recently_updated = $request->input('recently_updated', false);
-
-        if ($request->has('department')) {
-            $post->department()->associate($request->input('department'));
-        }
 
         if ($request->input('never_expire')) {
             $post->expire_at = null;
