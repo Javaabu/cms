@@ -57,6 +57,14 @@ class PostType extends Model implements AdminModel, Translatable
         return Str::slug($this->slug, '_');
     }
 
+    /**
+     * Get the route key name
+     */
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
     public function getTranslatables(): array
     {
         if (! config('cms.should_translate')) {
