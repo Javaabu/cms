@@ -29,6 +29,8 @@ class CmsServiceProvider extends ServiceProvider
 
         $this->registerPolicies();
 
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'cms');
+
         $this->registerRouteModelBindings();
     }
 
@@ -192,5 +194,10 @@ class CmsServiceProvider extends ServiceProvider
         }
 
         return $policies;
+    }
+
+    public function registerBreadcrumbs()
+    {
+
     }
 }

@@ -1,11 +1,12 @@
 <?php
 
-namespace Javaabu\Cms\Translatable\Http\Controllers;
+namespace Javaabu\Cms\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Javaabu\Cms\Models\Post;
 use Javaabu\Cms\Models\PostType;
 use Javaabu\Helpers\Http\Controllers\Controller;
+use Spatie\MediaLibrary\Support\MediaStream;
 
 class PostsController extends Controller
 {
@@ -22,9 +23,9 @@ class PostsController extends Controller
         $category = $request->input('category');
 
         $posts = $post_type->posts()
-            ->belongsToCategory($category)
-            ->ofLocale()
-            ->notHiddenOfLocale()
+//            ->belongsToCategory($category)
+//            ->ofLocale()
+//            ->notHiddenOfLocale()
             ->published();
 
         if ($search = $request->input('search')) {
@@ -70,12 +71,12 @@ class PostsController extends Controller
     public function show(Request $request, Post $post, PostType $post_type)
     {
         // Load up relations
-        $post->load(['department', 'attachments', 'attachments.media']);
+//        $post->load(['department', 'attachments', 'attachments.media']);
 
         $post_documents = $post->attachments_for_translation;
 
         $related_posts = $post_type->posts()
-            ->similarToTags($post)
+//            ->similarToTags($post)
             ->published()
             ->withRelations()
             ->orderBy('tag_similarity', 'DESC')
@@ -94,19 +95,19 @@ class PostsController extends Controller
         );
     }
 
-//    /**
-//     * Download files as zip method.
-//     *
-//     * @param            $lang
-//     * @param Request $request
-//     * @param Post $post
-//     * @param PostType $post_type
-//     * @return MediaStream
-//     */
-//    public function downloadFiles(Request $request, Post $post, PostType $post_type): MediaStream
-//    {
-//        $media_ids = $post->attachments_for_translation->pluck('media_id');
-//        $media = Media::whereIn('id', $media_ids)->get();
-//        return MediaStream::create("$post->title.zip")->addMedia($media);
-//    }
+    /**
+     * Download files as zip method.
+     *
+     * @param            $lang
+     * @param Request $request
+     * @param Post $post
+     * @param PostType $post_type
+     * @return MediaStream
+     */
+    public function downloadFiles(Request $request, Post $post, PostType $post_type): MediaStream
+    {
+        $media_ids = $post->attachments_for_translation->pluck('media_id');
+        $media = Media::whereIn('id', $media_ids)->get();
+        return MediaStream::create("$post->title.zip")->addMedia($media);
+    }
 }

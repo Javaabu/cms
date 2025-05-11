@@ -33,8 +33,18 @@ class Cms {
             $type->slug = $slug;
             $type->icon = $data['icon'];
 
+            $category_type = CategoryType::whereSlug($slug . '-categories')->first();
 
-            $category_type = CategoryType::whereSlug(Str::singular($slug) . '-categories')->first();
+            if (! $category_type) {
+                $category_type = new CategoryType();
+            }
+
+            $category_type->name = $data['name'] ?? $name . ' Categories';
+            $category_type->singular_name = $data['name_singular'] ?? Str::singular($data['name'] ?? $name) . ' Category';
+            $category_type->slug = $slug . '_categories';
+
+            $category_type->save();
+
             $type->categoryType()->associate($category_type);
 
             $type->features = $data['features'];
@@ -194,5 +204,85 @@ class Cms {
         return $menus;
     }
 
+    /**
+     * Load up permissions for all the Post Types
+     *
+     * @return array
+     */
+    public function seedPostTypePermissions(array $existing_permissions = []): array
+    {
+        $data = [];
+        $all_post_types = PostType::all();
 
+        foreach ($all_post_types as $post_type) {
+            $permissions = $this->constructPostTypePermissions($post_type);
+            $existing = $existing_permissions[$post_type->permission_slug] ?? [];
+            $data[$post_type->permission_slug] = array_merge($existing, $permissions);
+        }
+
+        return array_merge($existing_permissions, $data);
+    }
+
+    /**
+     * Permission template for the post types
+     *
+     * @param PostType $post_type
+     * @return string[]
+     */
+    protected function constructPostTypePermissions(PostType $post_type): array
+    {
+        $slug = $post_type->permission_slug;
+        $title = Str::lower($post_type->name);
+
+        return [
+            'edit_' . $slug                => 'Edit own ' . $title,
+            'edit_others_' . $slug         => 'Edit all ' . $title,
+            'delete_' . $slug              => 'Delete own ' . $title,
+            'delete_others_' . $slug       => 'Delete all ' . $title,
+            'view_' . $slug                => 'View own ' . $title,
+            'view_others_' . $slug         => 'View all ' . $title,
+            'force_delete_' . $slug        => 'Force delete own ' . $title,
+            'force_delete_others_' . $slug => 'Force delete all ' . $title,
+            'publish_' . $slug             => 'Publish own ' . $title,
+            'publish_others_' . $slug      => 'Publish all ' . $title,
+            'import_' . $slug              => 'Import ' . $title,
+        ];
+    }
+
+    /**
+     * Load up permissions for all the Category Types
+     *
+     * @returns array;
+     */
+    public function seedCategoryTypePermissions(array $existing_permissions = []): array
+    {
+        $data = [];
+        $all_category_types = CategoryType::all();
+
+        foreach ($all_category_types as $category_type) {
+            $permissions = $this->constructCategoryTypePermissions($category_type);
+            $existing = $existing_permissions[$category_type->permission_slug] ?? [];
+            $data[$category_type->permission_slug] = array_merge($existing, $permissions);
+        }
+        return array_merge($existing_permissions, $data);
+    }
+
+    /**
+     * Permission template for the category types
+     *
+     * @param CategoryType $category_type
+     * @return string[]
+     */
+    protected function constructCategoryTypePermissions(CategoryType $category_type): array
+    {
+        $slug = $category_type->permission_slug;
+        $title = Str::lower($category_type->name);
+
+        return [
+            'edit_' . $slug   => 'Edit ' . $title,
+            'delete_' . $slug => 'Delete ' . $title,
+            'view_' . $slug   => 'View ' . $title,
+            'import_' . $slug => 'Import ' . $title,
+        ];
+    }
 }

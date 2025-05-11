@@ -59,6 +59,11 @@ class CategoryType extends Model implements AdminModel, Translatable
         return '#';
     }
 
+    public function getSlugSeparator()
+    {
+        return '_';
+    }
+
     /**
      * Get the permission slug
      * @return string

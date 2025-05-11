@@ -117,6 +117,28 @@ class PostType extends Model implements AdminModel, Translatable
     }
 
     /**
+     * Gets the views to use for the post type
+     *
+     * @param string $action
+     * @return string
+     */
+    public function getWebView(string $action = 'index'): string
+    {
+        $default_views = config('cms.use_default_view_for');
+
+        if (in_array($this->slug, $default_views)) {
+            return 'web.post-type.default.' . $action;
+        }
+
+        return 'web.post-type.' . $this->slug . '.' . $action;
+    }
+
+    public function getPaginatorCount(): int
+    {
+        return get_setting($this->slug . '_per_page') ?? get_setting('per_page');
+    }
+
+    /**
      * A post type has many posts
      */
     public function userVisiblePosts()
