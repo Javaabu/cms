@@ -3,7 +3,9 @@
 namespace Javaabu\Cms\Models;
 
 use Carbon\Carbon;
+use Database\Factories\PostFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -30,6 +32,7 @@ class Post extends Model implements
     use Publishable;
     use HasSlug;
     use IsJsonTranslatable;
+    use HasFactory;
 
     protected static $status_class = PublishStatuses::class;
 
@@ -432,5 +435,10 @@ class Post extends Model implements
                 ],
             ];
         }
+    }
+
+    protected static function newFactory(): PostFactory
+    {
+        return PostFactory::new();
     }
 }

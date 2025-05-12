@@ -2,10 +2,9 @@
 
 namespace Javaabu\Cms\Models;
 
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
-use Javaabu\Cms\Enums\PostTypeFeatures;
+use Javaabu\Cms\Database\Factories\PostTypeFactory;
 use Javaabu\Helpers\AdminModel\AdminModel;
 use Javaabu\Helpers\AdminModel\IsAdminModel;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +13,7 @@ use Javaabu\Translatable\JsonTranslatable\IsJsonTranslatable;
 
 class PostType extends Model implements AdminModel, Translatable
 {
-//    use HasFactory;
+    use HasFactory;
     use IsAdminModel;
     use IsJsonTranslatable;
     /**
@@ -48,19 +47,9 @@ class PostType extends Model implements AdminModel, Translatable
     }
 
     /**
-     * Get the permission slug
-     *
-     * @return string
-     */
-    public function getPermissionSlugAttribute()
-    {
-        return Str::slug($this->slug, '_');
-    }
-
-    /**
      * Get the route key name
      */
-    public function getRouteKeyName()
+    public function getRouteKeyName(): string
     {
         return 'slug';
     }
@@ -78,42 +67,9 @@ class PostType extends Model implements AdminModel, Translatable
         ];
     }
 
-    public function categoryType(): BelongsTo
-    {
-        return $this->belongsTo(CategoryType::class);
-    }
-
-    public function getFeatureName($feature): ?string
-    {
-        if (! $this->hasFeature($feature)) {
-            return null;
-        }
-
-        $feature_title = $this->features[$feature];
-
-        if (gettype($feature_title) == 'boolean') {
-            return PostTypeFeatures::getLabel($feature);
-        }
-
-        if (gettype($feature_title) == 'string') {
-            return Str::title($feature_title);
-        }
-
-        return null;
-    }
-
     public function hasFeature($feature): bool
     {
         return array_key_exists($feature, $this->features);
-    }
-
-    public function getFeatureCollectionName($feature): ?string
-    {
-        if (! $this->hasFeature($feature)) {
-            return null;
-        }
-
-        return PostTypeFeatures::getCollectionName($feature);
     }
 
     /**
@@ -140,14 +96,6 @@ class PostType extends Model implements AdminModel, Translatable
 
     /**
      * A post type has many posts
-     */
-    public function userVisiblePosts()
-    {
-        return $this->posts()->userVisibleForPostType($this);
-    }
-
-    /**
-     * A post type has many posts
      *
      * @return HasMany
      */
@@ -156,14 +104,9 @@ class PostType extends Model implements AdminModel, Translatable
         return $this->hasMany(Post::class, 'type', 'slug');
     }
 
-    /**
-     * Slugify the value
-     *
-     * @param $value
-     */
-    public function setSlugAttribute($value)
+    protected static function newFactory(): PostTypeFactory
     {
-        $this->attributes['slug'] = Str::slug($value);
+        return PostTypeFactory::new();
     }
 }
 
