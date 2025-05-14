@@ -3,7 +3,7 @@
 namespace Javaabu\Cms\Models;
 
 use Carbon\Carbon;
-use Database\Factories\PostFactory;
+use Javaabu\Cms\Database\Factories\PostFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -179,10 +179,10 @@ class Post extends Model implements
      * @param string $namespace
      * @return string
      */
-    public function url(string $action = 'show', string $locale = null, string $namespace = 'cms::'): string
+    public function url(string $action = 'show', string $locale = null, string $namespace = 'web'): string
     {
         $controller = Str::lower(Str::plural(Str::kebab(class_basename(get_class($this)))));
-        $controller_action = $namespace . '.' . $controller . '.' . $action;
+        $controller_action = $namespace . '.' . $controller . '.' . $action . '.' . $this->postType->slug;
 
         $params = [
             'post_type' => $this->postType->slug,
@@ -328,9 +328,9 @@ class Post extends Model implements
         $controller = Str::lower(Str::plural(Str::kebab(class_basename(get_class($this)))));
 
         if ($post_type_slug != 'pages') {
-            $controller_action = 'cms::' . $controller . '.' . $action . '.' . $post_type_slug;
+            $controller_action = 'web.' . $controller . '.' . $action . '.' . $post_type_slug;
         } else {
-            $controller_action = 'cms::pages.' . $action;
+            $controller_action = 'web.pages.' . $action;
         }
 
         $params = [$locale, $this->slug];
@@ -437,8 +437,13 @@ class Post extends Model implements
         }
     }
 
-    protected static function newFactory(): PostFactory
+    protected static function newFactory()
     {
         return PostFactory::new();
     }
+
+//    protected static function newFactory(): PostFactory
+//    {
+//        return new PostFactory();
+//    }
 }

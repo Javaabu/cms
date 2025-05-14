@@ -18,11 +18,11 @@ abstract class ContentBlockFactory extends Factory
 
     public function getContentBlock()
     {
-        return (new EnglishContentBlock(true))->get();
+        return (new EnglishContentBlock(fake(), true))->get();
     }
 
     public function getLiteContentBlock()
     {
-        return (new EnglishContentBlock(true, true))->get();
+        return (new EnglishContentBlock(fake(), true, true))->get();
     }
 }

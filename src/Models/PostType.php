@@ -3,6 +3,7 @@
 namespace Javaabu\Cms\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Javaabu\Cms\Database\Factories\PostTypeFactory;
 use Javaabu\Helpers\AdminModel\AdminModel;
@@ -102,6 +103,11 @@ class PostType extends Model implements AdminModel, Translatable
     public function posts(): HasMany
     {
         return $this->hasMany(Post::class, 'type', 'slug');
+    }
+
+    public function categoryType(): BelongsTo
+    {
+        return $this->belongsTo(CategoryType::class, 'category_type_id', 'id');
     }
 
     protected static function newFactory(): PostTypeFactory
