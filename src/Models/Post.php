@@ -13,18 +13,22 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Javaabu\Cms\Enums\GalleryTypes;
 use Javaabu\Cms\Enums\PageStyles;
+use Javaabu\Cms\Traits\IsTaggable;
 use Javaabu\Helpers\AdminModel\AdminModel;
 use Javaabu\Helpers\AdminModel\IsAdminModel;
 use Javaabu\Helpers\Enums\PublishStatuses;
 use Javaabu\Helpers\Traits\HasSlug;
 use Javaabu\Helpers\Traits\Publishable;
+use Javaabu\Mediapicker\Concerns\InteractsWithAttachments;
+use Javaabu\Mediapicker\Contracts\HasAttachments;
 use Javaabu\Translatable\Contracts\Translatable;
 use Javaabu\Translatable\JsonTranslatable\IsJsonTranslatable;
 use Javaabu\Translatable\Models\Language;
 
 class Post extends Model implements
     AdminModel,
-    Translatable
+    Translatable,
+    HasAttachments
 {
     use IsJsonTranslatable;
     use IsAdminModel;
@@ -33,6 +37,8 @@ class Post extends Model implements
     use HasSlug;
     use IsJsonTranslatable;
     use HasFactory;
+    use InteractsWithAttachments;
+    use IsTaggable;
 
     protected static $status_class = PublishStatuses::class;
 
@@ -179,10 +185,10 @@ class Post extends Model implements
      * @param string $namespace
      * @return string
      */
-    public function url(string $action = 'show', string $locale = null, string $namespace = 'web'): string
+    public function url(string $action = 'show', string $locale = null, string $namespace = 'admin'): string
     {
         $controller = Str::lower(Str::plural(Str::kebab(class_basename(get_class($this)))));
-        $controller_action = $namespace . '.' . $controller . '.' . $action . '.' . $this->postType->slug;
+        $controller_action = $namespace . '.' . $controller . '.' . $action;
 
         $params = [
             'post_type' => $this->postType->slug,
@@ -214,6 +220,10 @@ class Post extends Model implements
         return $this->belongsTo(PostType::class, 'type', 'slug');
     }
 
+    public function categories(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
 
     /**
      * A search scope
@@ -226,7 +236,9 @@ class Post extends Model implements
     public function scopeSearch($query, $search, $locale = null): mixed
     {
         // fulltext search on db values or
-        return $query->translationsSearch('title', $search, $locale);
+        return config('cms.should_translate')
+            ? $query->translationsSearch('title', $search, $locale)
+            : $query->where('title', 'LIKE', '%'.$search.'%');
     }
 
     /**
@@ -314,16 +326,8 @@ class Post extends Model implements
      * @param string|null $locale
      * @return string|null
      */
-    public function translatedPermalink(string $action = 'show', string $locale = null): ?string
+    public function permalink(string $action = 'show'): ?string
     {
-        if (! $locale) {
-            $locale = app()->getLocale();
-        }
-
-        if ($this->lang->value != $locale && (is_null($this->translations) || $this->hide_translation)) {
-            return null;
-        }
-
         $post_type_slug = $this->postType->slug;
         $controller = Str::lower(Str::plural(Str::kebab(class_basename(get_class($this)))));
 
@@ -333,7 +337,9 @@ class Post extends Model implements
             $controller_action = 'web.pages.' . $action;
         }
 
-        $params = [$locale, $this->slug];
+        $params = [];
+
+        $params[] = $this->slug;
 
         return URL::route($controller_action, $params);
     }
@@ -435,6 +441,16 @@ class Post extends Model implements
                 ],
             ];
         }
+    }
+
+    /**
+     * With relations scope
+     *
+     * @param $query
+     */
+    public function scopeWithRelations($query)
+    {
+        return $query->withAttachments();
     }
 
     protected static function newFactory()

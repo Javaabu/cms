@@ -18,6 +18,8 @@ class CmsServiceProvider extends ServiceProvider
         'create_post_types_table',
         'create_posts_table',
         'create_categories_table',
+        'create_tags_table',
+        'create_tag_model_table',
     ];
 
     /**
@@ -69,9 +71,9 @@ class CmsServiceProvider extends ServiceProvider
             ], 'cms-flags');
 
             // Publish migrations
-            foreach ($this->migrations as $migration) {
+            foreach ($this->migrations as $i => $migration) {
                 $vendorMigration = __DIR__ . '/../database/migrations/' . $migration . '.php';
-                $appMigration = $this->generateMigrationName($migration, now()->addSecond());
+                $appMigration = $this->generateMigrationName($migration, now()->addSeconds($i));
 
                 $this->publishes([
                     $vendorMigration => $appMigration,
@@ -133,7 +135,7 @@ class CmsServiceProvider extends ServiceProvider
             try {
                 return Post::where('type', $post_type_slug ?: -1)
                     ->publishedOrPreview()
-                    ->notHiddenOfLocale($language)
+//                    ->notHiddenOfLocale($language)
                     ->whereSlug($value)
                     ->firstOrFail();
 
@@ -150,7 +152,7 @@ class CmsServiceProvider extends ServiceProvider
             try {
                 return Post::where('type', 'pages')
                     ->published()
-                    ->notHiddenOfLocale($language)
+//                    ->notHiddenOfLocale($language)
                     ->whereSlug($value)
                     ->firstOrFail();
             } catch (ModelNotFoundException $e) {

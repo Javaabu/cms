@@ -83,11 +83,11 @@ class Cms {
         foreach ($post_types as $post_type) {
             Route::get($post_type->slug, [config('cms.web.controllers.posts'), 'index'])
                 ->defaults('web_post_type_slug', $post_type->slug)
-                ->name('web.posts.index.' . $post_type->slug);
+                ->name('index.' . $post_type->slug);
 
             Route::get($post_type->slug . '/{post_slug}', [config('cms.web.controllers.posts'), 'show'])
                 ->defaults('web_post_type_slug', $post_type)
-                ->name('web.posts.show.' . $post_type->slug);
+                ->name('show.' . $post_type->slug);
 
 //            Route::get($post_type->slug . '/{post_slug}/files', [PostsController::class, 'downloadFiles'])
 //                ->defaults('web_post_type_slug', $post_type)

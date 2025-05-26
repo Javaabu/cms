@@ -50,5 +50,8 @@ return [
 
     'should_translate' => false,
 
-    'use_default_view_for' => ['downloads', 'announcements', 'publications', 'jobs', 'blogs'],
+    'use_default_view_for' => [],
+
+    'views_folder' => 'post_type'
+
 ];

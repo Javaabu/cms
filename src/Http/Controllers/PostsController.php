@@ -64,7 +64,6 @@ class PostsController extends Controller
             ->onEachSide(1)
             ->appends($request->except('page'));
 
-
         return view($post_type->getWebView(), compact('posts', 'post_type', 'title', 'search'));
     }
 
@@ -76,12 +75,12 @@ class PostsController extends Controller
         $post_documents = $post->attachments_for_translation;
 
         $related_posts = $post_type->posts()
-//            ->similarToTags($post)
+            ->similarToTags($post)
             ->published()
             ->withRelations()
             ->orderBy('tag_similarity', 'DESC')
             ->latest('published_at')
-            ->limit($post_type->getRelatedPostsCount())
+//            ->limit($post_type->getRelatedPostsCount())
             ->get();
 
         // Need to load full models. Above statement only gives specific fields.

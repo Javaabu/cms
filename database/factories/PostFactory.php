@@ -4,10 +4,12 @@ namespace Javaabu\Cms\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Carbon;
+use Javaabu\Auth\User;
 use Javaabu\Cms\Models\Post;
 use Javaabu\Cms\Models\PostType;
 use Javaabu\Cms\Support\Faker\Factory\ContentBlockFactory;
 use Javaabu\Helpers\Enums\PublishStatuses;
+use Javaabu\Mediapicker\Models\Attachment;
 
 class PostFactory extends ContentBlockFactory
 {

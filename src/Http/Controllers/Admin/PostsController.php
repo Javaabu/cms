@@ -184,7 +184,7 @@ class PostsController extends Controller
     public function edit(PostType $type, Post $post)
     {
         $this->authorize('update', $post);
-        $post->dontShowTranslationFallbacks();
+//        $post->dontShowTranslationFallbacks();
         return view('admin.posts.edit', compact('post', 'type'));
     }
 
