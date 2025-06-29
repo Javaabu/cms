@@ -50,6 +50,8 @@ return [
 
     'should_translate' => false,
 
+    'default_language' => 'en',
+
     'use_default_view_for' => [],
 
     'views_folder' => 'post_type'
