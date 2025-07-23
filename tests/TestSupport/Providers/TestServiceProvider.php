@@ -12,8 +12,10 @@ class TestServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->loadMigrationsFrom([
+            __DIR__ . '/../../../vendor/javaabu/translatable/database/migrations',
             __DIR__ . '/../../../database/migrations',
             __DIR__ . '/../database',
+
         ]);
     }
 

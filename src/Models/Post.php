@@ -159,10 +159,12 @@ class Post extends Model implements
     /**
      * Get the admin localized url
      *
-     * @param null $locale
+     * @param  null         $locale
+     * @param  string|null  $route_name
+     * @param  string       $portal
      * @return string
      */
-    public function getAdminLocalizedUrl($locale = null)
+    public function getAdminLocalizedUrl($locale = null, ?string $route_name = null, string $portal = "admin"): string
     {
         return $this->url('show', $locale);
     }

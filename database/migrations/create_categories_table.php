@@ -26,7 +26,7 @@ return new class extends Migration
             $table->timestamps();
 
             // slugs must be unique for the category
-            $table->unique(['slug', 'type_id'], 'unique_type_slug');
+            $table->unique(['slug', 'type_id'], 'unique_category_slug');
 
             $table->foreign('type_id')
                 ->references('id')
