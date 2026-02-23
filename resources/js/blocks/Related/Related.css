@@ -1,0 +1,33 @@
+/**
+ * Media Image CSS
+ */
+
+.related {
+    padding: 20px 0;
+}
+
+.related input,
+.related select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e4e4e4;
+    border-radius: 3px;
+    outline: none;
+    font-size: 14px;
+}
+
+.related .cdx-input {
+    margin-bottom: 15px;
+}
+
+
+.related .model-wrapper {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+}
+
+.related .model-wrapper select,
+.related .model-wrapper input {
+    width: calc(50% - 7px);
+}

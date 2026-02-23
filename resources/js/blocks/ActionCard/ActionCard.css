@@ -1,0 +1,47 @@
+/**
+ * Media Image CSS
+ */
+
+.action-card {
+    padding: 20px 0;
+}
+
+.action-card input,
+.action-card [contenteditable] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e4e4e4;
+    border-radius: 3px;
+    outline: none;
+    font-size: 14px;
+}
+
+.action-card .cdx-input {
+    margin-bottom: 15px;
+}
+
+.action-card [contenteditable] {
+    min-height: 100px;
+}
+
+.action-card img {
+    max-width: 100%;
+    margin-bottom: 15px;
+}
+
+.action-card .image-wrapper {
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.action-card.left {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+}
+
+.action-card.left .image-wrapper,
+.action-card.left .input-wrapper {
+    width: calc(50% - 7px);
+}
+

@@ -1,43 +1,41 @@
 {
     "name": "javaabu/cms",
-    "description": "Content Management System integration for Laravel Projects",
+    "description": "A flexible CMS package for Laravel with support for custom post types and categories",
     "homepage": "https://github.com/Javaabu/cms",
     "license": "MIT",
     "keywords": [
         "javaabu",
         "laravel",
-        "cms"
+        "cms",
+        "post-types",
+        "categories"
     ],
     "authors": [
         {
-            "name": "FlameXode",
-            "email": "wovencoast14782@techie.com",
+            "name": "Javaabu",
+            "email": "info@javaabu.com",
             "role": "Developer"
         }
     ],
     "require": {
-        "php": "^8.3",
-        "illuminate/support": "^9.0 || ^10.0 || ^11.0 || ^12.0",
-        "javaabu/helpers": "^1.61",
-        "javaabu/translatable": "^1.13",
-        "javaabu/menu-builder": "^1.6",
-        "kalnoy/nestedset": "^6.0",
-        "javaabu/auth": "^1.16",
+        "php": "^8.2",
+        "illuminate/support": "^11.0 || ^12.0",
+        "kalnoy/nestedset": "v6.0.5",
+        "naxeem/thaana-transliterator": "^1.0",
+        "anhskohbo/no-captcha": "^3.0",
+        "mariuzzo/laravel-js-localization": "dev-l12-compatibility",
+        "predis/predis": "^2.2",
         "diglactic/laravel-breadcrumbs": "^10.0",
-        "lorisleiva/laravel-actions": "^2.9",
         "javaabu/mediapicker": "^1.0@dev"
     },
     "require-dev": {
         "laravel/pint": "^1.14",
-        "orchestra/testbench": "^7.0 || ^8.0 || ^9.0 || ^10.0",
-        "phpunit/phpunit": "^9.5 || ^10.5 || ^11.5.3"
+        "orchestra/testbench": "^9.0 || ^10.0",
+        "phpunit/phpunit": "^10.5 || ^11.5.3"
     },
     "autoload": {
         "psr-4": {
-            "Javaabu\\Cms\\": "src/",
-            "Javaabu\\Cms\\Database\\Factories\\": "database/factories/",
-            "Javaabu\\Cms\\Database\\Seeders\\": "database/seeders/"
-
+            "Javaabu\\Cms\\": "src/"
         }
     },
     "autoload-dev": {
@@ -60,7 +58,7 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/Javaabu/mediapicker.git"
+            "url": "https://github.com/Javaabu/Laravel-JS-Localization.git"
         }
     ]
 }

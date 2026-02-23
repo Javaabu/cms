@@ -1,0 +1,72 @@
+{
+    "name": "@javaabu/cms",
+    "version": "1.0.0",
+    "description": "A flexible CMS package for Laravel with Editor.js support and Vite integration",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "laravel",
+        "cms",
+        "editorjs",
+        "content-management",
+        "vite",
+        "assets"
+    ],
+    "author": "Javaabu",
+    "license": "MIT",
+    "dependencies": {
+        "@calumk/editorjs-columns": "^0.3.2",
+        "@editorjs/delimiter": "^1.4.2",
+        "@editorjs/editorjs": "^2.29.1",
+        "@editorjs/embed": "^2.7.4",
+        "@editorjs/header": "^2.6.0",
+        "@editorjs/image": "^2.6.0",
+        "@editorjs/link": "^2.3.1",
+        "@editorjs/list": "^1.6.1",
+        "@editorjs/quote": "^2.4.0",
+        "@editorjs/raw": "^2.2.0",
+        "@editorjs/simple-image": "^1.4.0",
+        "@editorjs/table": "^1.3.0",
+        "aos": "^2.3.4",
+        "autosize": "^4.0.2",
+        "bootbox": "^6.0.0",
+        "bootstrap": "^5.3.0",
+        "bootstrap-4": "^4.6.0",
+        "bootstrap-notify": "^3.1.3",
+        "dropzone": "^5.7.1",
+        "flatpickr": "^4.6.13",
+        "jasny-bootstrap": "^4.0.0",
+        "jq-simple-connect": "^1.0.0",
+        "jquery": "^3.7.0",
+        "jquery-mapael": "^2.2.0",
+        "jquery-scroll-lock": "^3.1.3",
+        "jquery.scrollbar": "^0.2.11",
+        "jscroll": "^2.4.1",
+        "lightbox2": "^2.11.4",
+        "moment": "^2.29.4",
+        "moment-timezone": "^0.5.45",
+        "odometer": "^0.4.8",
+        "popper.js": "^1.16.1",
+        "raphael": "^2.3.0",
+        "select2": "^4.1.0-rc.0",
+        "simplebar": "^5.3.1",
+        "slick-carousel": "^1.8.1",
+        "sweetalert2": "^11.10.0",
+        "apexcharts": "^3.45.0"
+    },
+    "peerDependencies": {
+        "laravel-mix": "^6.0",
+        "vite": "^5.0.0"
+    },
+    "devDependencies": {
+        "laravel-vite-plugin": "^1.0.0",
+        "rollup-plugin-concat": "^1.0.3",
+        "rollup-plugin-copy": "^3.5.0",
+        "vite-plugin-static-copy": "^2.3.1",
+        "sass": "^1.70.0",
+        "vite": "^6.0.11",
+        "rtlcss": "^4.1.1"
+    }
+}

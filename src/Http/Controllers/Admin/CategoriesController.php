@@ -3,22 +3,22 @@
 namespace Javaabu\Cms\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
-use Javaabu\Cms\Http\Requests\CategoriesRequest;
 use Javaabu\Cms\Models\Category;
 use Javaabu\Cms\Models\CategoryType;
 use Javaabu\Helpers\Http\Controllers\Controller;
 use Javaabu\Helpers\Traits\HasOrderbys;
+use Javaabu\Cms\Http\Requests\CategoriesRequest;
 
 class CategoriesController extends Controller
 {
     use HasOrderbys;
 
     /**
-     * Create a new  controller instance.
+     * Create a new controller instance.
      */
     public function __construct()
     {
-        //$this->authorizeResource(Category::class);
+        // Authorization handled per-method due to CategoryType binding
     }
 
     /**
@@ -27,21 +27,21 @@ class CategoriesController extends Controller
     protected static function initOrderbys()
     {
         static::$orderbys = [
-            'id' => _d('Id'),
-            'created_at' => _d('Created At'),
-            'updated_at' => _d('Updated At'),
-            'name' => _d('Name')
+            'id' => __('Id'),
+            'created_at' => __('Created At'),
+            'updated_at' => __('Updated At'),
+            'name' => __('Name'),
         ];
     }
 
     /**
      * Display a listing of the resource.
      */
-    public function index($locale, CategoryType $type, Request $request)
+    public function index(CategoryType $type, Request $request)
     {
         $this->authorize('viewAny', $type);
 
-        $title = _d('All Categories');
+        $title = __('All Categories');
         $orderby = $this->getOrderBy($request, 'created_at');
         $order = $this->getOrder($request, 'created_at', $orderby);
         $per_page = $this->getPerPage($request);
@@ -54,7 +54,7 @@ class CategoriesController extends Controller
         $search = null;
         if ($search = $request->input('search')) {
             $categories->search($search);
-            $title = _d('Categories matching \':search\'', ['search' => $search]);
+            $title = __('Categories matching \':search\'', ['search' => $search]);
         }
 
         if ($primary_language = $request->input('primary_language')) {
@@ -69,33 +69,26 @@ class CategoriesController extends Controller
             }
         }
 
-        $categories->with('type.postType')
-                   ->withCount('posts', 'staffs', 'statistics');
-
-        if ($request->download) {
-            return (new CategoriesExport($categories))->download('categories.xlsx');
-        }
-
         $categories = $categories->paginate($per_page)
                                  ->appends($request->except('page'));
 
-        return view('admin.categories.index', compact('categories', 'type', 'title', 'per_page', 'search'));
+        return view('cms::admin.categories.index', compact('categories', 'type', 'title', 'per_page', 'search'));
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create($locale, CategoryType $type, Request $request)
+    public function create(CategoryType $type, Request $request)
     {
         $this->authorize('create', $type);
 
-        return view('admin.categories.create', compact('type'));
+        return view('cms::admin.categories.create', compact('type'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store($locale, CategoryType $type, CategoriesRequest $request)
+    public function store(CategoryType $type, CategoriesRequest $request)
     {
         $this->authorize('create', $type);
 
@@ -107,53 +100,48 @@ class CategoriesController extends Controller
 
         $category->lang = $request->input('lang', app()->getLocale());
 
-        if ($request->has('icon')) {
-            $category->icon = $request->input('icon');
-        }
-
-        if ($request->has('color')) {
-            $category->color = $request->input('color');
-        }
-
         $category->save();
 
-        $category->updateSingleAttachment('featured_image', $request);
+        if (method_exists($category, 'updateSingleAttachment')) {
+            $category->updateSingleAttachment('featured_image', $request);
+        }
 
         if ($request->expectsJson()) {
             return response()->json($category);
         }
 
-        $this->flashSuccessMessage();
+        $this->flashSuccessMessage(__('Category successfully created!'));
 
-        return redirect()->action([CategoriesController::class, 'edit'], [$locale, $type, $category]);
+        return redirect()->route('admin.categories.edit', [$type, $category]);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show($locale, CategoryType $type, Category $category)
+    public function show(CategoryType $type, Category $category)
     {
         $this->authorize('view', $category);
 
-        return redirect()->action([CategoriesController::class, 'edit'], [$locale, $type, $category]);
+        return redirect()->route('admin.categories.edit', [$type, $category]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit($locale, CategoryType $type, Category $category)
+    public function edit(CategoryType $type, Category $category)
     {
         $this->authorize('update', $category);
 
         $allowed_categories = Category::categoryList($type->id, $category->id);
-//        $category->dontShowTranslationFallbacks();
-        return view('admin.categories.edit', compact('category', 'type', 'allowed_categories'));
+        $category->dontShowTranslationFallbacks();
+
+        return view('cms::admin.categories.edit', compact('category', 'type', 'allowed_categories'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update($locale, CategoryType $type, CategoriesRequest $request, Category $category)
+    public function update(CategoryType $type, CategoriesRequest $request, Category $category)
     {
         $this->authorize('update', $category);
 
@@ -171,29 +159,23 @@ class CategoriesController extends Controller
             }
         }
 
-        if ($request->has('icon')) {
-            $category->icon = $request->input('icon');
-        }
-
-        if ($request->has('color')) {
-            $category->color = $request->input('color');
-        }
-
         $category->hide_translation = $request->input('hide_translation', false);
 
         $category->save();
 
-        $category->updateSingleAttachment('featured_image', $request);
+        if (method_exists($category, 'updateSingleAttachment')) {
+            $category->updateSingleAttachment('featured_image', $request);
+        }
 
-        $this->flashSuccessMessage();
+        flash(__('Category successfully updated!'))->success();
 
-        return redirect()->action([CategoriesController::class, 'edit'], [$locale, $type, $category]);
+        return redirect()->route('admin.categories.edit', [$type, $category]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($locale, CategoryType $type, Category $category, Request $request)
+    public function destroy(CategoryType $type, Category $category, Request $request)
     {
         $this->authorize('delete', $category);
 
@@ -209,13 +191,15 @@ class CategoriesController extends Controller
             return response()->json(true);
         }
 
-        return redirect()->action([CategoriesController::class, 'index'], [$locale, $type]);
+        $this->flashSuccessMessage(__('Category successfully updated!'));
+
+        return redirect()->route('admin.categories.index', $type);
     }
 
     /**
      * Perform bulk action on the resource
      */
-    public function bulk($locale, CategoryType $type, Request $request)
+    public function bulk(CategoryType $type, Request $request)
     {
         $this->authorize('viewAny', $type);
 
@@ -241,8 +225,8 @@ class CategoriesController extends Controller
                 break;
         }
 
-        $this->flashSuccessMessage();
+        $this->flashSuccessMessage(__('Bulk action completed successfully!'));
 
-        return $this->redirect($request, action([CategoriesController::class, 'index'], [$locale, $type]));
+        return redirect()->route('admin.categories.index', $type);
     }
 }

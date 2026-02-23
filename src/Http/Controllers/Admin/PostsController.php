@@ -3,23 +3,23 @@
 namespace Javaabu\Cms\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
-use Javaabu\Cms\Enums\PostTypeFeatures;
-use Javaabu\Cms\Http\Requests\PostRequest;
 use Javaabu\Cms\Models\Post;
 use Javaabu\Cms\Models\PostType;
 use Javaabu\Helpers\Http\Controllers\Controller;
 use Javaabu\Helpers\Traits\HasOrderbys;
+use Javaabu\Cms\Http\Requests\PostsRequest;
+use Javaabu\Cms\Enums\PostTypeFeatures;
 
 class PostsController extends Controller
 {
     use HasOrderbys;
 
     /**
-     * Create a new  controller instance.
+     * Create a new controller instance.
      */
     public function __construct()
     {
-        //$this->authorizeResource(Post::class);
+        // Authorization handled per-method due to PostType binding
     }
 
     /**
@@ -28,9 +28,9 @@ class PostsController extends Controller
     protected static function initOrderbys()
     {
         static::$orderbys = [
-            'id' => _d('Id'),
-            'created_at' => _d('Created At'),
-            'title' => _d('Title'),
+            'id' => __('Id'),
+            'created_at' => __('Created At'),
+            'title' => __('Title'),
         ];
     }
 
@@ -41,18 +41,18 @@ class PostsController extends Controller
     {
         $this->authorize('viewAny', $type);
 
-        $title = _d('All :type', ['type' => _d($type->name_en)]);
+        $title = __('All :type', ['type' => $type->name]);
         $orderby = $this->getOrderBy($request, 'created_at');
         $order = $this->getOrder($request, 'created_at', $orderby);
         $per_page = $this->getPerPage($request);
 
-        $posts = $type->userVisiblePosts()
-            ->orderBy($orderby, $order);
+        $posts = $type->posts()
+                      ->orderBy($orderby, $order);
 
         $search = null;
         if ($search = $request->input('search')) {
             $posts->search($search);
-            $title = _d('Posts matching \':search\'', ['search' => $search]);
+            $title = __('Posts matching \':search\'', ['search' => $search]);
         }
 
         if ($primary_language = $request->input('primary_language')) {
@@ -60,7 +60,6 @@ class PostsController extends Controller
         }
 
         if ($request->filled('is_translated')) {
-            // TODO: Make json translatable scope
             if ($request->boolean('is_translated')) {
                 $posts->whereNotNull('translations');
             } else {
@@ -70,6 +69,10 @@ class PostsController extends Controller
 
         if ($date_field = $request->input('date_field')) {
             $posts->dateBetween($date_field, $request->input('date_from'), $request->input('date_to'));
+        }
+
+        if ($department_id = $request->input('department')) {
+            $posts->whereDepartmentId($department_id);
         }
 
         if ($category = $request->input('category')) {
@@ -84,14 +87,14 @@ class PostsController extends Controller
             $posts->onlyTrashed();
         }
 
-//        if ($request->download) {
-//            return (new PostsExport($posts))->download('posts.xlsx');
-//        }
+        if (method_exists($posts, 'with')) {
+            $posts->with('department');
+        }
 
         $posts = $posts->paginate($per_page)
-            ->appends($request->except('page'));
+                       ->appends($request->except('page'));
 
-        return view('admin.posts.index', compact('posts', 'type', 'title', 'per_page', 'search', 'trashed'));
+        return view('cms::admin.posts.index', compact('posts', 'type', 'title', 'per_page', 'search', 'trashed'));
     }
 
     /**
@@ -100,13 +103,13 @@ class PostsController extends Controller
     public function create(PostType $type, Request $request)
     {
         $this->authorize('create', $type);
-        return view('admin.posts.create', compact('type'));
+        return view('cms::admin.posts.create', compact('type'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(PostType $type, PostRequest $request)
+    public function store(PostType $type, PostsRequest $request)
     {
         $this->authorize('create', $type);
 
@@ -115,58 +118,58 @@ class PostsController extends Controller
         $post->postType()->associate($type);
 
         if ($action = $request->input('action')) {
-            $post->{$action}();
+            if (method_exists($post, $action)) {
+                $post->{$action}();
+            }
         } elseif ($status = $request->input('status')) {
-            $post->updateStatus($status);
+            if (method_exists($post, 'updateStatus')) {
+                $post->updateStatus($status);
+            }
         }
 
         $post->slug = $request->input('slug');
 
         $post->lang = $request->input('lang', app()->getLocale());
 
+        if ($request->has('department') && method_exists($post, 'department')) {
+            $post->department()->associate($request->input('department'));
+        }
 
         if ($request->input('never_expire')) {
             $post->expire_at = null;
         }
 
         if ($type->hasFeature(PostTypeFeatures::PAGE_STYLE) && $request->has('sidebar_menu')) {
-            $post->sidebarMenu()->associate($request->input('sidebar_menu'));
-        }
-
-        if ($request->input('component')) {
-            $post->projectComponent()->associate($request->input('component'));
-        }
-
-        if ($type->hasFeature(PostTypeFeatures::COORDS) && $request->hasAny(['lat', 'lng'])) {
-            $post->setCoordinates($request->input('lat'), $request->input('lng'));
-        }
-
-        if ($type->hasFeature(PostTypeFeatures::CITY) && $request->input('city')) {
-            $post->city()->associate($request->input('city'));
+            if (method_exists($post, 'sidebarMenu')) {
+                $post->sidebarMenu()->associate($request->input('sidebar_menu'));
+            }
         }
 
         $post->save();
 
-        if ($request->has('sync_categories')) {
+        if ($request->has('sync_categories') && method_exists($post, 'categories')) {
             $post->categories()->sync($request->input('categories', []));
         }
 
-        $post->updateSingleAttachment('featured_image', $request);
-
-        if ($request->has('sync_documents')) {
-            $post->updateAttachmentMedia($request->input('documents', []), PostTypeFeatures::getCollectionName(PostTypeFeatures::DOCUMENTS));
+        if (method_exists($post, 'updateSingleAttachment')) {
+            $post->updateSingleAttachment('featured_image', $request);
         }
 
-        if ($request->has('sync_image_gallery')) {
-            $post->updateAttachmentMedia($request->input('image_gallery', []), PostTypeFeatures::getCollectionName(PostTypeFeatures::IMAGE_GALLERY));
+        if ($request->has('sync_documents') && method_exists($post, 'updateAttachmentMedia')) {
+            $post->updateAttachmentMedia($request->input('documents', []), PostTypeFeatures::DOCUMENTS->getCollectionName());
+        }
+
+        if ($request->has('sync_image_gallery') && method_exists($post, 'updateAttachmentMedia')) {
+            $post->updateAttachmentMedia($request->input('image_gallery', []), PostTypeFeatures::IMAGE_GALLERY->getCollectionName());
         }
 
         if ($request->expectsJson()) {
             return response()->json($post);
         }
-        $this->flashSuccessMessage();
 
-        return redirect()->action([PostsController::class, 'edit'], [$type, $post]);
+        $this->flashSuccessMessage(__('Post successfully created!'));
+
+        return redirect()->route('admin.posts.edit', [$type, $post]);
     }
 
     /**
@@ -175,7 +178,7 @@ class PostsController extends Controller
     public function show(PostType $type, Post $post)
     {
         $this->authorize('view', $post);
-        return redirect()->action([static::class, 'edit'], [$type, $post]);
+        return redirect()->route('admin.posts.edit', [$type, $post]);
     }
 
     /**
@@ -184,14 +187,14 @@ class PostsController extends Controller
     public function edit(PostType $type, Post $post)
     {
         $this->authorize('update', $post);
-//        $post->dontShowTranslationFallbacks();
-        return view('admin.posts.edit', compact('post', 'type'));
+        $post->dontShowTranslationFallbacks();
+        return view('cms::admin.posts.edit', compact('post', 'type'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(PostRequest $request, PostType $type, Post $post)
+    public function update(PostsRequest $request, PostType $type, Post $post)
     {
         $this->authorize('update', $post);
 
@@ -204,9 +207,13 @@ class PostsController extends Controller
         $post->fill($request->validated());
 
         if ($action = $request->input('action')) {
-            $post->{$action}();
+            if (method_exists($post, $action)) {
+                $post->{$action}();
+            }
         } elseif ($status = $request->input('status')) {
-            $post->updateStatus($status);
+            if (method_exists($post, 'updateStatus')) {
+                $post->updateStatus($status);
+            }
         }
 
         if ($slug = $request->input('slug')) {
@@ -214,66 +221,69 @@ class PostsController extends Controller
         }
 
         $post->hide_translation = $request->input('hide_translation', false);
-        $post->recently_updated = $request->input('recently_updated', false);
+
+        if (property_exists($post, 'recently_updated')) {
+            $post->recently_updated = $request->input('recently_updated', false);
+        }
+
+        if ($request->has('department') && method_exists($post, 'department')) {
+            $post->department()->associate($request->input('department'));
+        }
 
         if ($request->input('never_expire')) {
             $post->expire_at = null;
         }
 
-        // Should check for feature here?
         if ($type->hasFeature(PostTypeFeatures::PAGE_STYLE) && $request->has('sidebar_menu')) {
-            $post->sidebarMenu()->associate($request->input('sidebar_menu'));
-        }
-
-        if ($request->input('component')) {
-            $post->projectComponent()->associate($request->input('component'));
-        }
-
-        if ($type->hasFeature(PostTypeFeatures::COORDS) && $request->hasAny(['lat', 'lng'])) {
-            $post->setCoordinates($request->input('lat'), $request->input('lng'));
-        }
-
-        if ($type->hasFeature(PostTypeFeatures::CITY) && $request->input('city')) {
-            $post->city()->associate($request->input('city'));
+            if (method_exists($post, 'sidebarMenu')) {
+                $post->sidebarMenu()->associate($request->input('sidebar_menu'));
+            }
         }
 
         $post->save();
 
-        if ($request->has('sync_tags')) {
+        if ($request->has('sync_tags') && method_exists($post, 'syncTags')) {
             $post->syncTags($request->input('tags', []));
         }
 
-        if ($request->has('sync_categories')) {
+        if ($request->has('sync_categories') && method_exists($post, 'categories')) {
             $post->categories()->sync($request->input('categories', []));
         }
 
-        $post->updateSingleAttachment('featured_image', $request);
+        if (method_exists($post, 'updateSingleAttachment')) {
+            $post->updateSingleAttachment('featured_image', $request);
+        }
 
-        // Should check for feature here?
         if ($type->hasFeature(PostTypeFeatures::DOCUMENTS) && $request->has('sync_documents')) {
-            $post->updateAttachmentMedia(
-                $request->input('documents', []),
-                // Use translated collection where necessary
-                PostTypeFeatures::getCollectionName(PostTypeFeatures::DOCUMENTS, $post->is_translation)
-            );
+            if (method_exists($post, 'updateAttachmentMedia')) {
+                $post->updateAttachmentMedia(
+                    $request->input('documents', []),
+                    PostTypeFeatures::DOCUMENTS->getCollectionName($post->is_translation ?? false)
+                );
+            }
         }
 
         if ($type->hasFeature(PostTypeFeatures::RELATED_GALLERIES) && $request->has('sync_related_galleries')) {
-            $post->relatedGalleries()->sync($request->input('related_galleries', []));
+            if (method_exists($post, 'relatedGalleries')) {
+                $post->relatedGalleries()->sync($request->input('related_galleries', []));
+            }
         }
 
-        // Should check for feature here?
         if ($type->hasFeature(PostTypeFeatures::IMAGE_GALLERY) && $request->has('sync_image_gallery')) {
-            $post->updateAttachmentMedia($request->input('image_gallery', []), PostTypeFeatures::getCollectionName(PostTypeFeatures::IMAGE_GALLERY));
+            if (method_exists($post, 'updateAttachmentMedia')) {
+                $post->updateAttachmentMedia($request->input('image_gallery', []), PostTypeFeatures::IMAGE_GALLERY->getCollectionName());
+            }
         }
 
         if ($type->hasFeature(PostTypeFeatures::FORMAT) && $request->has('sync_image_gallery')) {
-            $post->updateAttachmentMedia($request->input('image_gallery', []), PostTypeFeatures::getCollectionName(PostTypeFeatures::FORMAT));
+            if (method_exists($post, 'updateAttachmentMedia')) {
+                $post->updateAttachmentMedia($request->input('image_gallery', []), PostTypeFeatures::FORMAT->getCollectionName());
+            }
         }
 
-        $this->flashSuccessMessage();
+        $this->flashSuccessMessage(__('Post successfully updated!'));
 
-        return redirect()->action([static::class, 'edit'], [$type, $post]);
+        return redirect()->route('admin.posts.edit', [$type, $post]);
     }
 
     /**
@@ -295,7 +305,9 @@ class PostsController extends Controller
             return response()->json(true);
         }
 
-        return redirect()->action([static::class, 'index'], [$type]);
+        $this->flashSuccessMessage(__('Post successfully deleted!'));
+
+        return redirect()->route('admin.posts.index', $type);
     }
 
     /**
@@ -315,9 +327,9 @@ class PostsController extends Controller
     {
         //find the model
         $post = $postType->posts()
-            ->onlyTrashed()
-            ->where('id', $id)
-            ->firstOrFail();
+                         ->onlyTrashed()
+                         ->where('id', $id)
+                         ->firstOrFail();
 
         $this->authorize('forceDelete', $post);
 
@@ -334,7 +346,9 @@ class PostsController extends Controller
             return response()->json(true);
         }
 
-        return redirect()->action([static::class, 'trash'], [$postType]);
+        $this->flashSuccessMessage(__('Post permanently deleted!'));
+
+        return redirect()->route('admin.posts.trash', $postType);
     }
 
     /**
@@ -344,9 +358,9 @@ class PostsController extends Controller
     {
         //find the model
         $post = $postType->posts()
-            ->onlyTrashed()
-            ->where('id', $id)
-            ->firstOrFail();
+                         ->onlyTrashed()
+                         ->where('id', $id)
+                         ->firstOrFail();
 
         $this->authorize('restore', $post);
 
@@ -363,7 +377,9 @@ class PostsController extends Controller
             return response()->json(true);
         }
 
-        return redirect()->action([static::class, [$postType]]);
+        $this->flashSuccessMessage(__('Post successfully restored!'));
+
+        return redirect()->route('admin.posts.index', $postType);
     }
 
     /**
@@ -389,12 +405,13 @@ class PostsController extends Controller
                 $this->authorize('delete', $type);
 
                 $type->posts()
-                    ->whereIn('id', $ids)
-                    ->userCan('delete', $type)
-                    ->get()
-                    ->each(function (Post $post) {
-                        $post->delete();
-                    });
+                     ->whereIn('id', $ids)
+                     ->get()
+                     ->each(function (Post $post) {
+                         if (auth()->user()->can('delete', $post)) {
+                             $post->delete();
+                         }
+                     });
                 break;
 
             case 'reject':
@@ -405,23 +422,28 @@ class PostsController extends Controller
 
                 if ($action == 'draft') {
                     $this->authorize('create', $type);
-                    $posts->userCan('edit', $type);
                 } else {
-                    $this->authorize('publish_' . $type->permission_slug);
-                    $posts->userCan('publish', $type);
+                    $this->authorize('publish', $type);
                 }
 
                 $posts->whereIn('id', $ids)
-                    ->get()
-                    ->each(function (Post $post) use ($action) {
-                        $post->{$action}();
-                        $post->save();
-                    });
+                      ->get()
+                      ->each(function (Post $post) use ($action, $type) {
+                          if (method_exists($post, $action)) {
+                              if ($action == 'draft' && auth()->user()->can('update', $post)) {
+                                  $post->{$action}();
+                                  $post->save();
+                              } elseif ($action != 'draft' && auth()->user()->can('publish', $type)) {
+                                  $post->{$action}();
+                                  $post->save();
+                              }
+                          }
+                      });
                 break;
         }
 
-        $this->flashSuccessMessage("{$ids_count} Posts updated!");
+        $this->flashSuccessMessage(__(':count Posts updated!', ['count' => $ids_count]));
 
-        return $this->redirect($request, action([static::class, 'index'], [$type]));
+        return redirect()->route('admin.posts.index', $type);
     }
 }

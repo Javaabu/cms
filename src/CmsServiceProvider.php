@@ -2,24 +2,32 @@
 
 namespace Javaabu\Cms;
 
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
+use Illuminate\Support\ServiceProvider;
+use Javaabu\Cms\Models\Category;
+use Javaabu\Cms\Models\CategoryType;
 use Javaabu\Cms\Models\Post;
 use Javaabu\Cms\Models\PostType;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\ServiceProvider;
+use Javaabu\Cms\Policies\CategoryPolicy;
+use Javaabu\Cms\Policies\CategoryTypePolicy;
+use Javaabu\Cms\Policies\PostPolicy;
+use Javaabu\Cms\Policies\PostTypePolicy;
+use Javaabu\Cms\Console\Commands\SetupCmsCommand;
 
 class CmsServiceProvider extends ServiceProvider
 {
-    protected array $migrations = [
-        'create_category_types_table',
-        'create_post_types_table',
-        'create_posts_table',
-        'create_categories_table',
-        'create_tags_table',
-        'create_tag_model_table',
+    /**
+     * The policy mappings for the package.
+     *
+     * @var array
+     */
+    protected $policies = [
+        CategoryType::class => CategoryTypePolicy::class,
+        Category::class => CategoryPolicy::class,
+        PostType::class => PostTypePolicy::class,
+        Post::class => PostPolicy::class,
+        \Javaabu\Cms\Media\Media::class => \Javaabu\Cms\Policies\MediaPolicy::class,
     ];
 
     /**
@@ -27,13 +35,59 @@ class CmsServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->offerPublishing();
 
+        // Register policies
         $this->registerPolicies();
 
-        $this->loadViewsFrom(__DIR__.'/../resources/views', 'cms');
+        Relation::enforceMorphMap([
+            'post_type'      => PostType::class,
+            'post'           => Post::class,
+            'category'       => Category::class,
+            'category_type'  => CategoryType::class,
+            'media'          => \Javaabu\Cms\Media\Media::class,
+        ]);
 
-        $this->registerRouteModelBindings();
+        // Load migrations
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+
+        // Load views
+        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'cms');
+
+        // Publish config
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__ . '/../config/cms.php' => config_path('cms.php'),
+            ], 'cms-config');
+
+            // Publish migrations
+            $this->publishes([
+                __DIR__ . '/../database/migrations' => database_path('migrations'),
+            ], 'cms-migrations');
+
+            // Publish views
+            $this->publishes([
+                __DIR__ . '/../resources/views' => resource_path('views/vendor/cms'),
+            ], 'cms-views');
+
+            // Publish assets - JS blocks and media related SASS
+            $this->publishes([
+                __DIR__ . '/../resources/js/blocks' => resource_path('js/vendor/cms/blocks'),
+                __DIR__ . '/../resources/sass/media/_media-library.scss' => resource_path('sass/admin/inc/_media-library.scss'),
+                __DIR__ . '/../resources/sass/media/_fileinput-overrides.scss' => resource_path('sass/admin/inc/_fileinput-overrides.scss'),
+            ], 'cms-assets');
+        }
+    }
+
+    /**
+     * Register the package's policies.
+     *
+     * @return void
+     */
+    protected function registerPolicies()
+    {
+        foreach ($this->policies as $model => $policy) {
+            Gate::policy($model, $policy);
+        }
     }
 
     /**
@@ -41,165 +95,25 @@ class CmsServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        // merge package config with user defined config
-        $this->mergeConfigFrom(__DIR__ . '/../config/config.php', 'cms');
 
-        $this->registerSingletons();
-    }
+        // Require helpers defined on the package.
+        require_once __DIR__ . '/Helpers/helpers.php';
 
-    /**
-     * Offer publishing
-     *
-     * @return void
-     */
-    public function offerPublishing(): void
-    {
-        // declare publishes
+        // Merge package config with user defined config
+        $this->mergeConfigFrom(__DIR__ . '/../config/cms.php', 'cms');
+
         if ($this->app->runningInConsole()) {
-            $this->publishes([
-                __DIR__ . '/../config/config.php' => config_path('cms.php'),
-            ], 'cms-config');
-
-            // Publish views
-            $this->publishes([
-                __DIR__ . '/../resources/views' => resource_path('views/vendor/cms'),
-            ], 'cms-views');
-
-            // Publish flags
-            $this->publishes([
-                __DIR__ . '/../resources/dist/flags' => public_path('vendors/flags'),
-            ], 'cms-flags');
-
-            // Publish migrations
-            foreach ($this->migrations as $i => $migration) {
-                $vendorMigration = __DIR__ . '/../database/migrations/' . $migration . '.php';
-                $appMigration = $this->generateMigrationName($migration, now()->addSeconds($i));
-
-                $this->publishes([
-                    $vendorMigration => $appMigration,
-                ], 'cms-migrations');
-            }
-        }
-    }
-
-    public function registerPolicies()
-    {
-        $policies = $this->getPolicies();
-
-        foreach ($policies as $key => $value) {
-            Gate::policy($key, $value);
-        }
-    }
-
-    public function registerSingletons(): void
-    {
-        $this->app->singleton(Cms::class, function () {
-            return new Cms();
-        });
-
-        $this->app->alias(Cms::class, 'cms');
-    }
-
-    public function registerRouteModelBindings()
-    {
-        Route::bind('post_type', function ($value, $route) {
-            try {
-                return PostType::whereSlug($value)
-                    ->firstOrFail();
-            } catch (ModelNotFoundException $e) {
-                abort(404);
-            }
-
-            return $value;
-        });
-
-        Route::bind('post', function ($value, $route) {
-            $post_type = $route->parameter('post_type');
-            $post_type_slug = is_object($post_type) ? $post_type->slug : $post_type;
-
-            try {
-                return Post::where('type', $post_type_slug ?: -1)
-                    ->findOrFail($value);
-            } catch (ModelNotFoundException $e) {
-                abort(404);
-            }
-
-            return $value;
-        });
-
-        Route::bind('post_slug', function ($value, $route) {
-            $language = $route->parameter('language');
-            $post_type = $route->parameter('web_post_type_slug');
-            $post_type_slug = is_object($post_type) ? $post_type->slug : $post_type;
-
-            try {
-                return Post::where('type', $post_type_slug ?: -1)
-                    ->publishedOrPreview()
-//                    ->notHiddenOfLocale($language)
-                    ->whereSlug($value)
-                    ->firstOrFail();
-
-            } catch (ModelNotFoundException $e) {
-                abort(404);
-            }
-
-            return $value;
-        });
-
-        Route::bind('page_slug', function ($value, $route) {
-            $language = $route->parameter('language');
-
-            try {
-                return Post::where('type', 'pages')
-                    ->published()
-//                    ->notHiddenOfLocale($language)
-                    ->whereSlug($value)
-                    ->firstOrFail();
-            } catch (ModelNotFoundException $e) {
-                abort(404);
-            }
-
-            return $value;
-        });
-    }
-
-    protected function generateMigrationName(string $migrationFileName, Carbon $now): string
-    {
-        $migrationsPath = 'migrations/' . dirname($migrationFileName) . '/';
-        $migrationFileName = basename($migrationFileName);
-
-        $len = strlen($migrationFileName) + 4;
-
-        if (Str::contains($migrationFileName, '/')) {
-            $migrationsPath .= Str::of($migrationFileName)->beforeLast('/')->finish('/');
-            $migrationFileName = Str::of($migrationFileName)->afterLast('/');
+            // Register commands
+            $this->commands([
+                SetupCmsCommand::class,
+            ]);
         }
 
-        foreach (glob(database_path("{$migrationsPath}*.php")) as $filename) {
-            if ((substr($filename, -$len) === $migrationFileName . '.php')) {
-                return $filename;
-            }
-        }
-
-        $timestamp = $now->format('Y_m_d_His');
-        $migrationFileName = Str::of($migrationFileName)->snake()->finish('.php');
-
-        return database_path($migrationsPath . $timestamp . '_' . $migrationFileName);
-    }
-
-    private function getPolicies(): array
-    {
-        $policies = [];
-
-        foreach (config('cms.policies') as $model_name => $policy) {
-            $policies[config("cms.models.{$model_name}")] = $policy;
-        }
-
-        return $policies;
-    }
-
-    public function registerBreadcrumbs()
-    {
-
+        // Register facades or singletons if needed
     }
 }
+
+
+
+
+

@@ -2,23 +2,14 @@
 
 namespace Javaabu\Cms\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
-use Javaabu\Cms\Database\Factories\PostTypeFactory;
-use Javaabu\Cms\Enums\PostTypeFeatures;
-use Javaabu\Helpers\AdminModel\AdminModel;
-use Javaabu\Helpers\AdminModel\IsAdminModel;
 use Illuminate\Database\Eloquent\Model;
-use Javaabu\Translatable\Contracts\Translatable;
-use Javaabu\Translatable\JsonTranslatable\IsJsonTranslatable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
+use Javaabu\Cms\Enums\PostTypeFeatures;
 
-class PostType extends Model implements AdminModel, Translatable
+class PostType extends Model
 {
-    use HasFactory;
-    use IsAdminModel;
-    use IsJsonTranslatable;
     /**
      * The attributes that are mass assignable.
      *
@@ -26,38 +17,25 @@ class PostType extends Model implements AdminModel, Translatable
      */
     protected $fillable = [
         'name',
+        'singular_name',
+        'slug',
+        'icon',
+        'category_type_id',
+        'features',
+        'description',
+        'og_description',
+        'order_column',
     ];
 
     /**
-     * The attributes that are cast to native types.
+     * The attributes that should be cast.
      *
      * @var array
      */
     protected $casts = [
-        'name' => 'string',
-        'singular_name' => 'string',
-        'slug' => 'string',
-        'icon' => 'string',
         'features' => 'array',
-        'og_description' => 'string',
         'order_column' => 'integer',
-        'hide_translation' => 'boolean',
     ];
-
-    public function getAdminUrlAttribute(): string
-    {
-        return 'post_type';
-    }
-
-    public function getPermissionSlugAttribute(): string
-    {
-        return Str::slug($this->slug, '_');
-    }
-
-    public function setSlugAttribute($value)
-    {
-        $this->attributes['slug'] = Str::slug($value);
-    }
 
     /**
      * Get the route key name
@@ -67,73 +45,14 @@ class PostType extends Model implements AdminModel, Translatable
         return 'slug';
     }
 
-    public function getTranslatables(): array
-    {
-        if (! config('cms.should_translate')) {
-            return [];
-        }
-
-        return [
-            'name',
-            'singular_name',
-            'og_description',
-        ];
-    }
-
-    public function categoryType(): BelongsTo
-    {
-        return $this->belongsTo(CategoryType::class, 'category_type_id', 'id');
-    }
-
-    public function getFeatureName($feature): ?string
-    {
-        if (! $this->hasFeature($feature)) {
-            return null;
-        }
-
-        $feature_title = $this->features[$feature];
-
-        if (gettype($feature_title) == 'boolean') {
-            return PostTypeFeatures::getLabel($feature);
-        }
-
-        if (gettype($feature_title) == 'string') {
-            return Str::title($feature_title);
-        }
-
-        return null;
-    }
-
-    public function hasFeature($feature): bool
-    {
-        return array_key_exists($feature, $this->features);
-    }
-
     /**
-     * Gets the views to use for the post type
+     * Get the permission slug
      *
-     * @param string $action
      * @return string
      */
-    public function getWebView(string $action = 'index', string $namespace = 'web'): string
+    public function getPermissionSlugAttribute(): string
     {
-        $default_views = config('cms.use_default_view_for');
-
-        $view = in_array($this->slug, $default_views) ? 'default' : $this->slug;
-        return $namespace . '.' . config('cms.views_folder') . '.' . $view . '.' . $action;
-    }
-
-    public function getPaginatorCount(): int
-    {
-        return get_setting($this->slug . '_per_page') ?? get_setting('per_page');
-    }
-
-    /**
-     * A post type has many posts
-     */
-    public function userVisiblePosts()
-    {
-        return $this->posts()->userVisibleForPostType($this);
+        return Str::slug($this->slug, '_');
     }
 
     /**
@@ -146,9 +65,150 @@ class PostType extends Model implements AdminModel, Translatable
         return $this->hasMany(Post::class, 'type', 'slug');
     }
 
-    protected static function newFactory(): PostTypeFactory
+    /**
+     * Relationship to category type
+     *
+     * @return BelongsTo
+     */
+    public function categoryType(): BelongsTo
     {
-        return PostTypeFactory::new();
+        return $this->belongsTo(CategoryType::class);
+    }
+
+    /**
+     * Get categories for this post type
+     */
+    public function categoriesFor()
+    {
+        if (!$this->category_type_id) {
+            return collect([]);
+        }
+
+        return Category::where('type_id', $this->category_type_id)
+            ->defaultOrder()
+            ->get();
+    }
+
+    /**
+     * Set slug attribute
+     *
+     * @param $value
+     */
+    public function setSlugAttribute($value): void
+    {
+        $this->attributes['slug'] = Str::slug($value);
+    }
+
+    /**
+     * Get title attribute
+     */
+    public function getTitleAttribute(): string
+    {
+        return $this->name;
+    }
+
+    /**
+     * Get lowercase name
+     */
+    public function getLowerNameAttribute(): string
+    {
+        return Str::lower($this->name);
+    }
+
+    /**
+     * Get lowercase singular name
+     */
+    public function getLowerSingularNameAttribute(): string
+    {
+        return Str::lower($this->singular_name);
+    }
+
+    /**
+     * Check if post type has a feature
+     *
+     * @param string|PostTypeFeatures $feature
+     * @return bool
+     */
+    public function hasFeature(string|PostTypeFeatures $feature): bool
+    {
+        if ($feature instanceof PostTypeFeatures) {
+            $feature = $feature->value;
+        }
+
+        return is_array($this->features) && array_key_exists($feature, $this->features);
+    }
+
+    /**
+     * Get feature name/label
+     *
+     * @param string|PostTypeFeatures $feature
+     * @return string|null
+     */
+    public function getFeatureName(string|PostTypeFeatures $feature): ?string
+    {
+        if ($feature instanceof PostTypeFeatures) {
+            $feature = $feature->value;
+        }
+
+        if (!$this->hasFeature($feature)) {
+            return null;
+        }
+
+
+        $feature_title = $this->features[$feature];
+
+        // If it's a boolean, use the enum label
+        if (is_bool($feature_title)) {
+            $enum = PostTypeFeatures::from($feature);
+            return $enum->label();
+        }
+
+        // If it's a string, return it as title case
+        if (is_string($feature_title)) {
+            return Str::title($feature_title);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get feature collection name
+     *
+     * @param string|PostTypeFeatures $feature
+     * @return string|null
+     */
+    public function getFeatureCollectionName(string|PostTypeFeatures $feature): ?string
+    {
+        if ($feature instanceof PostTypeFeatures) {
+            $feature = $feature->value;
+        }
+
+        if (!$this->hasFeature($feature)) {
+            return null;
+        }
+
+        $enum = PostTypeFeatures::from($feature);
+        return $enum?->getCollectionName();
+    }
+
+    /**
+     * Get the view to use for the post type
+     *
+     * @param string $action
+     * @return string
+     */
+    public function getWebView(string $action = 'index'): string
+    {
+        return 'cms::web.post-type.' . $this->slug . '.' . $action;
+    }
+
+    /**
+     * Get paginator count for the post type
+     *
+     * @return int
+     */
+    public function getPaginatorCount(): int
+    {
+        return config('cms.pagination.per_page', 15);
     }
 }
-

@@ -2,32 +2,42 @@
 
 namespace Javaabu\Cms\Models;
 
-use Illuminate\Database\Eloquent\Builder;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Illuminate\Http\File;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Str;
+use Javaabu\Activitylog\Traits\LogsActivity;
+use Javaabu\Cms\Enums\JsonTranslatable\IsJsonTranslatable;
+use Javaabu\Cms\Enums\JsonTranslatable\JsonTranslatable;
+use Javaabu\Cms\Enums\Languages;
+use Javaabu\Cms\Enums\RootSlugs\HasRootSlug;
+use Javaabu\Forms\Support\Icons\FontAwesomeIcons;
 use Javaabu\Helpers\AdminModel\AdminModel;
 use Javaabu\Helpers\AdminModel\IsAdminModel;
 use Javaabu\Helpers\Media\AllowedMimeTypes;
 use Javaabu\Helpers\Traits\HasSlug;
 use Javaabu\MenuBuilder\Traits\HasIcon;
-use Javaabu\Translatable\Contracts\Translatable;
-use Javaabu\Translatable\Facades\Languages;
-use Javaabu\Translatable\JsonTranslatable\IsJsonTranslatable;
 use Kalnoy\Nestedset\NodeTrait;
+use Illuminate\Support\Str;
+use Spatie\Image\Enums\Fit;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class Category extends Model implements AdminModel, Translatable
+class Category extends Model implements
+    AdminModel,
+    JsonTranslatable
 {
-    use IsAdminModel;
-    use HasIcon;
-    use IsJsonTranslatable;
-    use HasSlug;
     use NodeTrait;
+    use IsAdminModel;
+    use IsJsonTranslatable;
+    use HasRootSlug;
+    use LogsActivity;
+    use HasSlug;
+    use HasIcon;
+    use HasFactory;
 
-//    protected static string $icons_class = FontAwesomeIcons::class;
+    protected static string $icons_class = FontAwesomeIcons::class;
 
     /**
      * The attributes that would be logged
@@ -53,6 +63,15 @@ class Category extends Model implements AdminModel, Translatable
     ];
 
     /**
+     * The attributes that are translatable.
+     *
+     * @var array
+     */
+    protected $translatable = [
+        'name',
+    ];
+
+    /**
      * The attributes that are cast to native types.
      *
      * @var array
@@ -64,6 +83,8 @@ class Category extends Model implements AdminModel, Translatable
         'translations' => 'array',
         'lang' => Languages::class,
     ];
+
+    protected $with = ['type', 'parent'];
 
     /**
      * The attributes that are searchable.
@@ -94,7 +115,7 @@ class Category extends Model implements AdminModel, Translatable
      * Get a scoped query
      *
      * @param $type_id
-     * @return \Kalnoy\Nestedset\QueryBuilder
+     * @return Category
      */
     public static function scopedQuery($type_id)
     {
@@ -143,7 +164,7 @@ class Category extends Model implements AdminModel, Translatable
      * @param null $skip_id id to not return
      * @return array
      */
-    public static function categoriesOf($type_id, $skip_id = null): array
+    public static function categoriesOf($type_id, $skip_id = null)
     {
         if ($skip_id instanceof Category) {
             $skip_id = $skip_id->id;
@@ -195,7 +216,7 @@ class Category extends Model implements AdminModel, Translatable
      * @param string $value
      * @return bool
      */
-    public function isUniqueSlug($value): bool
+    public function isUniqueSlug($value)
     {
         //check if slug exists
         $id_key = $this->getKeyName();
@@ -221,49 +242,49 @@ class Category extends Model implements AdminModel, Translatable
             });
     }
 
-//    /**
-//     * Register image conversions
-//     *
-//     * @param Media|null $media
-//     */
-//    public function registerAttachmentConversions(Media $media = null)
-//    {
-//        $this->addAttachmentConversion('shareable_image')
-//            ->width(1200)
-//            ->height(630)
-//            ->fit(Fit::Crop, 1200, 630)
-//            ->performOnCollections('featured_image');
-//
-//        $this->addAttachmentConversion('header_image')
-//            ->width(1920)
-//            ->height(300)
-//            ->fit(Fit::Crop, 1920, 300)
-//            ->performOnCollections('featured_image');
-//    }
+    /**
+     * Register image conversions
+     *
+     * @param Media|null $media
+     */
+    public function registerAttachmentConversions(Media $media = null)
+    {
+        $this->addAttachmentConversion('shareable_image')
+            ->width(1200)
+            ->height(630)
+            ->fit(Fit::Crop, 1200, 630)
+            ->performOnCollections('featured_image');
 
-//    public function getPermalinkAttribute(): string
-//    {
-//        // TODO: Implement getPermalinkAttribute() method.
-//        $category_type = $this->type;
-//
-//        if ($category_type->slug == 'department-categories') {
-//            $route_name = 'web.departments.index';
-//        } elseif ($category_type->slug == 'staff-categories') {
-//            $route_name = 'web.staff-directory.index';
-//        } else {
-//            $route_name = "web.posts.index.{$category_type->postType->slug}";
-//        }
-//
-//        $locale = app()->getLocale();
-//
-//        // is post has current locale,
-//        if (! $this->hasTranslations($locale)) {
-//            $locale = Languages::getOppositeLocale($locale);
-//        }
-//
-//        $route = translate_route($route_name, [], true, $locale);
-//        return add_query_arg(['category' => $this->id], $route);
-//    }
+        $this->addAttachmentConversion('header_image')
+            ->width(1920)
+            ->height(300)
+            ->fit(Fit::Crop, 1920, 300)
+            ->performOnCollections('featured_image');
+    }
+
+    public function getPermalinkAttribute(): string
+    {
+        // TODO: Implement getPermalinkAttribute() method.
+        $category_type = $this->type;
+
+        if ($category_type->slug == 'department-categories') {
+            $route_name = 'web.departments.index';
+        } elseif ($category_type->slug == 'staff-categories') {
+            $route_name = 'web.staff-directory.index';
+        } else {
+            $route_name = "web.posts.index.{$category_type->postType->slug}";
+        }
+
+        $locale = app()->getLocale();
+
+        // is post has current locale,
+        if (! $this->hasTranslations($locale)) {
+            $locale = Languages::getOppositeLocale($locale);
+        }
+
+        $route = translate_route($route_name, [], true, $locale);
+        return add_query_arg(['category' => $this->id], $route);
+    }
 
     public function getOgExcerptAttribute()
     {
@@ -353,7 +374,9 @@ class Category extends Model implements AdminModel, Translatable
      */
     public function scopeUserVisible($query, CategoryType $type)
     {
-        $user = auth()->user();
+        $user = auth()->user() instanceof User ?
+            auth()->user() :
+            auth()->guard('web_admin')->user();
 
         if ($user && $user->can('create', $type)) {
             //can view all
@@ -373,6 +396,7 @@ class Category extends Model implements AdminModel, Translatable
         return $this->morphedByMany(Post::class, 'model', 'category_model');
     }
 
+
     /**
      * Get link to post admin link
      */
@@ -383,32 +407,5 @@ class Category extends Model implements AdminModel, Translatable
         }
 
         return translate_route('admin.posts.index', $this->type->postType);
-    }
-
-
-    /**
-     * get projects url
-     */
-    public function getProjectsUrlAttribute()
-    {
-        return route('web.projects.index', ['language' => app()->getLocale(), 'category' => $this->id]);
-    }
-
-    /**
-     * get map link
-     */
-    public function getMapLinkAttribute(): string
-    {
-        return route('web.map', ['language' => app()->getLocale(), 'zoom' => 7, 'category' => $this->slug]);
-    }
-
-    public function getTranslatables(): array
-    {
-        if (! config('cms.should_translate')) {
-            return [];
-        }
-        return [
-            'name',
-        ];
     }
 }

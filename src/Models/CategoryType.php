@@ -2,76 +2,23 @@
 
 namespace Javaabu\Cms\Models;
 
-use Javaabu\Cms\Models\PostType;
-use Javaabu\Helpers\Traits\HasSlug;
-use Javaabu\Helpers\AdminModel\IsAdminModel;
-use Javaabu\Helpers\AdminModel\AdminModel;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
-use Javaabu\Translatable\Contracts\Translatable;
-use Javaabu\Translatable\JsonTranslatable\IsJsonTranslatable;
-class CategoryType extends Model implements AdminModel, Translatable
+
+class CategoryType extends Model
 {
-    use IsAdminModel;
-    use HasSlug;
-    use IsJsonTranslatable;
-
-    /**
-     * The attributes that would be logged
-     *
-     * @var array
-     */
-    protected static array $logAttributes = ['*'];
-
-    /**
-     * Changes to these attributes only will not trigger a log
-     *
-     * @var array
-     */
-    protected static array $ignoreChangedAttributes = ['created_at', 'updated_at'];
-
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = ['name'];
-
-    protected $searchable = ['name'];
-
-    public function getTranslatables(): array
-    {
-        if (! config('cms.should_translate')) {
-            return [];
-        }
-        return [
-            'name',
-            'singular_name',
-        ];
-    }
-
-    /**
-     * Get the admin url attribute
-     */
-    public function getAdminUrlAttribute(): string
-    {
-        return '#';
-    }
-
-    public function getSlugSeparator()
-    {
-        return '_';
-    }
-
-    /**
-     * Get the permission slug
-     * @return string
-     */
-    public function getPermissionSlugAttribute(): string
-    {
-        return Str::slug($this->slug, '_');
-    }
+    protected $fillable = [
+        'name',
+        'singular_name',
+        'slug',
+    ];
 
     /**
      * Get the route key name
@@ -81,15 +28,15 @@ class CategoryType extends Model implements AdminModel, Translatable
         return 'slug';
     }
 
-//    /**
-//     * A category type has many categories
-//     *
-//     * @return HasMany
-//     */
-//    public function categories(): HasMany
-//    {
-//        return $this->hasMany(Category::class, 'type_id');
-//    }
+    /**
+     * A category type has many categories
+     *
+     * @return HasMany
+     */
+    public function categories(): HasMany
+    {
+        return $this->hasMany(Category::class, 'type_id');
+    }
 
     /**
      * Slugify the value
@@ -103,11 +50,35 @@ class CategoryType extends Model implements AdminModel, Translatable
     }
 
     /**
+     * Set name attribute and auto-generate slug
+     *
+     * @param $value
+     */
+    public function setNameAttribute($value): void
+    {
+        $this->attributes['name'] = $value;
+
+        // Auto-generate slug if not set
+        if (empty($this->attributes['slug'])) {
+            $this->attributes['slug'] = Str::slug($value);
+        }
+    }
+
+    /**
      * get title
      */
     public function getTitleAttribute()
     {
         return $this->name;
+    }
+
+    /**
+     * Get the permission slug
+     * @return string
+     */
+    public function getPermissionSlugAttribute(): string
+    {
+        return Str::slug($this->slug, '_');
     }
 
     /**
