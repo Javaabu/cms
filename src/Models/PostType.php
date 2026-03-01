@@ -199,7 +199,7 @@ class PostType extends Model
      */
     public function getWebView(string $action = 'index'): string
     {
-        return 'cms::web.post-type.' . $this->slug . '.' . $action;
+        return 'web.post-type.' . $this->slug . '.' . $action;
     }
 
     /**
