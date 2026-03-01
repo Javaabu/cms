@@ -185,8 +185,11 @@ class Routes
             return $value;
         });
 
-        $registrar = Route::domain($domain)
-            ->middleware($middleware);
+        $registrar = Route::middleware($middleware);
+
+        if ($domain) {
+            $registrar->domain($domain);
+        }
 
         if ($prefix) {
             $registrar->prefix($prefix);
