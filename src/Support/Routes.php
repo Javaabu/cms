@@ -83,7 +83,7 @@ class Routes
         // Categories Routes
         Route::group([
             'prefix' => 'category-types',
-            'as'     => 'categories.',
+            'as' => 'categories.',
         ], function () {
             Route::get('{category_type}', '\Javaabu\Cms\Http\Controllers\Admin\CategoriesController@index')
                 ->name('index');
@@ -100,27 +100,27 @@ class Routes
             Route::match(['PUT', 'PATCH'], '/', [CategoriesController::class, 'bulk'])->name('bulk');
         });
 
-       /* // Posts Routes
-        Route::get('{post_type}', '\Javaabu\Cms\Http\Controllers\Admin\PostsController@index')
-            ->name('posts.index');
-        Route::get('{post_type}/trash', '\Javaabu\Cms\Http\Controllers\Admin\PostsController@index')
-            ->name('posts.index');
-        Route::get('{post_type}/create', '\Javaabu\Cms\Http\Controllers\Admin\PostsController@create')
-            ->name('posts.create');
-        Route::post('{post_type}', '\Javaabu\Cms\Http\Controllers\Admin\PostsController@store')
-            ->name('posts.store');
-        Route::get('{post_type}/{post}', '\Javaabu\Cms\Http\Controllers\Admin\PostsController@show')
-            ->name('posts.show');
-        Route::get('{post_type}/{post}/edit', '\Javaabu\Cms\Http\Controllers\Admin\PostsController@edit')
-            ->name('posts.edit');
-        Route::put('{post_type}/{post}', '\Javaabu\Cms\Http\Controllers\Admin\PostsController@update')
-            ->name('posts.update');
-        Route::delete('{post_type}/{post}', '\Javaabu\Cms\Http\Controllers\Admin\PostsController@destroy')
-            ->name('posts.destroy');*/
+        /* // Posts Routes
+         Route::get('{post_type}', '\Javaabu\Cms\Http\Controllers\Admin\PostsController@index')
+             ->name('posts.index');
+         Route::get('{post_type}/trash', '\Javaabu\Cms\Http\Controllers\Admin\PostsController@index')
+             ->name('posts.index');
+         Route::get('{post_type}/create', '\Javaabu\Cms\Http\Controllers\Admin\PostsController@create')
+             ->name('posts.create');
+         Route::post('{post_type}', '\Javaabu\Cms\Http\Controllers\Admin\PostsController@store')
+             ->name('posts.store');
+         Route::get('{post_type}/{post}', '\Javaabu\Cms\Http\Controllers\Admin\PostsController@show')
+             ->name('posts.show');
+         Route::get('{post_type}/{post}/edit', '\Javaabu\Cms\Http\Controllers\Admin\PostsController@edit')
+             ->name('posts.edit');
+         Route::put('{post_type}/{post}', '\Javaabu\Cms\Http\Controllers\Admin\PostsController@update')
+             ->name('posts.update');
+         Route::delete('{post_type}/{post}', '\Javaabu\Cms\Http\Controllers\Admin\PostsController@destroy')
+             ->name('posts.destroy');*/
 
         Route::group([
             'prefix' => '{post_type}',
-            'as'     => 'posts.',
+            'as' => 'posts.',
         ], function () {
             Route::match(['PUT', 'PATCH'], '/', [PostsController::class, 'bulk'])->name('bulk');
             Route::get('/trash', [PostsController::class, 'trash'])->name('trash');
@@ -185,22 +185,26 @@ class Routes
             return $value;
         });
 
-        Route::domain($domain)
-            ->prefix($prefix)
-            ->middleware($middleware)
-            ->group(function () {
-                // Post Type Index Routes
-                Route::get('{postType}', '\Javaabu\Cms\Http\Controllers\PostsController@index')
-                    ->name('posts.index');
+        $registrar = Route::domain($domain)
+            ->middleware($middleware);
 
-                // Post Single View Route
-                Route::get('{postType}/{post}', '\Javaabu\Cms\Http\Controllers\PostsController@show')
-                    ->name('posts.show');
+        if ($prefix) {
+            $registrar->prefix($prefix);
+        }
 
-                // Category Posts Route
-                Route::get('{postType}/category/{category}', '\Javaabu\Cms\Http\Controllers\PostsController@category')
-                    ->name('posts.category');
-            });
+        $registrar->group(function () {
+            // Post Type Index Routes
+            Route::get('{postType}', '\Javaabu\Cms\Http\Controllers\PostsController@index')
+                ->name('posts.index');
+
+            // Post Single View Route
+            Route::get('{postType}/{post}', '\Javaabu\Cms\Http\Controllers\PostsController@show')
+                ->name('posts.show');
+
+            // Category Posts Route
+            Route::get('{postType}/category/{category}', '\Javaabu\Cms\Http\Controllers\PostsController@category')
+                ->name('posts.category');
+        });
     }
 
     /**
@@ -222,22 +226,29 @@ class Routes
     ): void {
         $controller = $controller ?? '\Javaabu\Cms\Http\Controllers\PostsController';
 
-        Route::domain($domain)
-            ->prefix($prefix)
-            ->middleware($middleware)
-            ->group(function () use ($postTypeSlug, $controller) {
-                // Post Type Index
-                Route::get($postTypeSlug, $controller . '@index')
-                    ->name("{$postTypeSlug}.index");
+        $registrar = Route::middleware($middleware);
 
-                // Single Post View
-                Route::get("{$postTypeSlug}/{post}", $controller . '@show')
-                    ->name("{$postTypeSlug}.show");
+        if ($domain) {
+            $registrar->domain($domain);
+        }
 
-                // Category Filter
-                Route::get("{$postTypeSlug}/category/{category}", $controller . '@category')
-                    ->name("{$postTypeSlug}.category");
-            });
+        if ($prefix) {
+            $registrar->prefix($prefix);
+        }
+
+        $registrar->group(function () use ($postTypeSlug, $controller) {
+            // Post Type Index
+            Route::get($postTypeSlug, $controller . '@index')
+                ->name("{$postTypeSlug}.index");
+
+            // Single Post View
+            Route::get("{$postTypeSlug}/{post}", $controller . '@show')
+                ->name("{$postTypeSlug}.show");
+
+            // Category Filter
+            Route::get("{$postTypeSlug}/category/{category}", $controller . '@category')
+                ->name("{$postTypeSlug}.category");
+        });
     }
 
 
@@ -253,7 +264,7 @@ class Routes
                     ->can('view_' . $post_type->permission_slug)
                     ->active(optional(request()->route('post_type'))->slug == $post_type->slug)
                     ->url(translate_route('admin.posts.index', $post_type->slug))
-                    ->icon( $post_type->icon)
+                    ->icon($post_type->icon)
                     ->count(Post::query()->userVisibleForPostType($post_type)->postType($post_type->slug)->pending()),
             ];
 
