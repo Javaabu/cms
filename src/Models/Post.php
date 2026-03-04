@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Javaabu\Activitylog\Traits\LogsActivity;
@@ -18,6 +19,7 @@ use Javaabu\Cms\Enums\IsExpirable;
 use Javaabu\Cms\Enums\JsonTranslatable\IsJsonTranslatable;
 use Javaabu\Cms\Enums\Languages;
 use Javaabu\Cms\Enums\PostStatus;
+use Javaabu\Cms\Enums\PostTypeFeatures;
 use Javaabu\Helpers\AdminModel\AdminModel;
 use Javaabu\Helpers\AdminModel\IsAdminModel;
 use Javaabu\Helpers\Enums\PublishStatuses;
@@ -42,7 +44,7 @@ class Post extends Model implements
     use Publishable;
     use HasSlug;
     use HaveCategories;
-   // use IsTaggable;
+    // use IsTaggable;
     use IsJsonTranslatable;
     //use WithDepartmentPermissions;
     use IsExpirable;
@@ -281,6 +283,88 @@ class Post extends Model implements
     public function getTitleAttrAttribute(): string
     {
         return Str::limit($this->title, 50);
+    }
+
+    /**
+     * Get the permalink
+     *
+     * @return string|null
+     */
+    public function getPermalinkAttribute(): ?string
+    {
+        $locale = $this->lang?->value ?? app()->getLocale();
+        $postTypeSlug = $this->postType->slug;
+
+        // Check if translations exist for the current locale
+        if (! $this->hasTranslations($locale)) {
+            $locale = \App\Helpers\Translation\Enums\Languages::getOppositeLocale($locale);
+        }
+
+        try {
+            // For custom post types registered via Routes::customPostType
+            // Route name format: web.post-types.{postTypeSlug}.show (e.g., web.post-types.news.show)
+            return route("web.post-types.{$postTypeSlug}.show", [$locale, $this->slug]);
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            \Log::debug('Permalink generation failed for post ' . $this->id . ': ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Get the permalink
+     *
+     * @return string
+     */
+    public function getPreviewLinkAttribute(): string
+    {
+        $postTypeSlug = $this->postType->slug;
+        $locale = app()->getLocale();
+
+        // Check if translations exist for the current locale
+        if (! $this->hasTranslations($locale)) {
+            $locale = Languages::getOppositeLocale($locale);
+        }
+
+        try {
+            // For custom post types registered via Routes::customPostType
+            // Route name format: web.post-types.{postTypeSlug}.show
+            return URL::temporarySignedRoute(
+                "web.post-types.{$postTypeSlug}.show",
+                now()->addDay(),
+                [$locale, $this->slug]
+            );
+        } catch (\Exception $e) {
+            return URL::to('/');
+        }
+    }
+
+    /**
+     * Returns the url
+     *
+     * @param string $action
+     * @param string|null $locale
+     * @return string|null
+     */
+    public function translatedPermalink(string $action = 'show', string $locale = null): ?string
+    {
+        if (! $locale) {
+            $locale = app()->getLocale();
+        }
+
+        if ($this->lang->value  != $locale && (is_null($this->translations) || $this->hide_translation)) {
+            return null;
+        }
+
+        $postTypeSlug = $this->postType->slug;
+
+        try {
+            // For custom post types registered via Routes::customPostType
+            // Route name format: web.post-types.{postTypeSlug}.{action}
+            return URL::route("web.post-types.{$postTypeSlug}.{$action}", [$locale, $this->slug]);
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**

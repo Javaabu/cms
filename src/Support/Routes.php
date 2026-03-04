@@ -242,17 +242,17 @@ class Routes
         $registrar->group(function () use ($postTypeSlug, $controller) {
             // Post Type Index
             Route::get($postTypeSlug, $controller . '@index')
-                ->name("{$postTypeSlug}.index")
+                ->name("post-types.{$postTypeSlug}.index")
                 ->defaults('postType', $postTypeSlug);
 
             // Single Post View
             Route::get("{$postTypeSlug}/{post}", $controller . '@show')
-                ->name("{$postTypeSlug}.show")
+                ->name("post-types.{$postTypeSlug}.show")
                 ->defaults('postType', $postTypeSlug);
 
             // Category Filter
             Route::get("{$postTypeSlug}/category/{category}", $controller . '@category')
-                ->name("{$postTypeSlug}.category")
+                ->name("post-types.{$postTypeSlug}.category")
                 ->defaults('postType', $postTypeSlug);
         });
     }
