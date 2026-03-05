@@ -47,7 +47,7 @@ class PostsController extends Controller
         $per_page = $this->getPerPage($request);
 
         $posts = $type->posts()
-                      ->orderBy($orderby, $order);
+            ->orderBy($orderby, $order);
 
         $search = null;
         if ($search = $request->input('search')) {
@@ -92,7 +92,7 @@ class PostsController extends Controller
         }
 
         $posts = $posts->paginate($per_page)
-                       ->appends($request->except('page'));
+            ->appends($request->except('page'));
 
         return view('cms::admin.posts.index', compact('posts', 'type', 'title', 'per_page', 'search', 'trashed'));
     }
@@ -131,7 +131,7 @@ class PostsController extends Controller
 
         $post->lang = $request->input('lang', app()->getLocale());
 
-        if ($request->has('department') && method_exists($post, 'department')) {
+        if ($request->has('department') && method_exists($post, 'department') && \Illuminate\Support\Facades\Schema::hasColumn($post->getTable(), 'department_id')) {
             $post->department()->associate($request->input('department'));
         }
 
@@ -199,7 +199,7 @@ class PostsController extends Controller
         $this->authorize('update', $post);
 
         // If this is not a translation, set lang
-        if ((! $request->input('is_translation')) && $request->input('lang')) {
+        if ((!$request->input('is_translation')) && $request->input('lang')) {
             $post->lang = $request->input('lang');
             app()->setLocale($post->lang->value);
         }
@@ -226,7 +226,7 @@ class PostsController extends Controller
             $post->recently_updated = $request->input('recently_updated', false);
         }
 
-        if ($request->has('department') && method_exists($post, 'department')) {
+        if ($request->has('department') && method_exists($post, 'department') && \Illuminate\Support\Facades\Schema::hasColumn($post->getTable(), 'department_id')) {
             $post->department()->associate($request->input('department'));
         }
 
@@ -293,7 +293,7 @@ class PostsController extends Controller
     {
         $this->authorize('delete', $post);
 
-        if (! $post->delete()) {
+        if (!$post->delete()) {
             if ($request->expectsJson()) {
                 return response()->json(false, 500);
             }
@@ -327,14 +327,14 @@ class PostsController extends Controller
     {
         //find the model
         $post = $postType->posts()
-                         ->onlyTrashed()
-                         ->where('id', $id)
-                         ->firstOrFail();
+            ->onlyTrashed()
+            ->where('id', $id)
+            ->firstOrFail();
 
         $this->authorize('forceDelete', $post);
 
         // send error
-        if (! $post->forceDelete()) {
+        if (!$post->forceDelete()) {
             if ($request->expectsJson()) {
                 return response()->json(false, 500);
             }
@@ -358,14 +358,14 @@ class PostsController extends Controller
     {
         //find the model
         $post = $postType->posts()
-                         ->onlyTrashed()
-                         ->where('id', $id)
-                         ->firstOrFail();
+            ->onlyTrashed()
+            ->where('id', $id)
+            ->firstOrFail();
 
         $this->authorize('restore', $post);
 
         // send error
-        if (! $post->restore()) {
+        if (!$post->restore()) {
             if ($request->expectsJson()) {
                 return response()->json(false, 500);
             }
@@ -390,8 +390,8 @@ class PostsController extends Controller
         $this->authorize('viewAny', $type);
 
         $this->validate($request, [
-            'action'  => 'required|in:delete,publish,draft,markAsPending',
-            'posts'   => 'required|array',
+            'action' => 'required|in:delete,publish,draft,markAsPending',
+            'posts' => 'required|array',
             'posts.*' => 'exists:posts,id,type,' . $type->slug,
         ]);
 
@@ -405,13 +405,13 @@ class PostsController extends Controller
                 $this->authorize('delete', $type);
 
                 $type->posts()
-                     ->whereIn('id', $ids)
-                     ->get()
-                     ->each(function (Post $post) {
-                         if (auth()->user()->can('delete', $post)) {
-                             $post->delete();
-                         }
-                     });
+                    ->whereIn('id', $ids)
+                    ->get()
+                    ->each(function (Post $post) {
+                        if (auth()->user()->can('delete', $post)) {
+                            $post->delete();
+                        }
+                    });
                 break;
 
             case 'reject':
@@ -427,18 +427,18 @@ class PostsController extends Controller
                 }
 
                 $posts->whereIn('id', $ids)
-                      ->get()
-                      ->each(function (Post $post) use ($action, $type) {
-                          if (method_exists($post, $action)) {
-                              if ($action == 'draft' && auth()->user()->can('update', $post)) {
-                                  $post->{$action}();
-                                  $post->save();
-                              } elseif ($action != 'draft' && auth()->user()->can('publish', $type)) {
-                                  $post->{$action}();
-                                  $post->save();
-                              }
-                          }
-                      });
+                    ->get()
+                    ->each(function (Post $post) use ($action, $type) {
+                        if (method_exists($post, $action)) {
+                            if ($action == 'draft' && auth()->user()->can('update', $post)) {
+                                $post->{$action}();
+                                $post->save();
+                            } elseif ($action != 'draft' && auth()->user()->can('publish', $type)) {
+                                $post->{$action}();
+                                $post->save();
+                            }
+                        }
+                    });
                 break;
         }
 

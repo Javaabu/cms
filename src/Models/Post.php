@@ -124,6 +124,30 @@ class Post extends Model implements
     }
 
     /**
+     * Get the content blocks
+     * Default to one single raw block
+     *
+     * @return array
+     */
+    public function getContentBlocksAttribute()
+    {
+        $blocks = json_decode($this->content, true);
+
+        if ($blocks) {
+            return $blocks['blocks'];
+        } else {
+            return [
+                [
+                    'type' => 'paragraph',
+                    'data' => [
+                        'text' => $this->content,
+                    ],
+                ],
+            ];
+        }
+    }
+
+    /**
      * Post type relationship
      *
      * @return BelongsTo
@@ -286,6 +310,21 @@ class Post extends Model implements
     }
 
     /**
+     * Scope that provides ability to view post previews where has valid signature.
+     *
+     * @param $query
+     * @return mixed
+     */
+    public function scopePublishedOrPreview($query)
+    {
+        if (request()->hasValidSignature()) {
+            return $query;
+        }
+
+        return $query->published();
+    }
+
+    /**
      * Get the permalink
      *
      * @return string|null
@@ -296,7 +335,7 @@ class Post extends Model implements
         $postTypeSlug = $this->postType->slug;
 
         // Check if translations exist for the current locale
-        if (! $this->hasTranslations($locale)) {
+        if (!$this->hasTranslations($locale)) {
             $locale = \App\Helpers\Translation\Enums\Languages::getOppositeLocale($locale);
         }
 
@@ -322,7 +361,7 @@ class Post extends Model implements
         $locale = app()->getLocale();
 
         // Check if translations exist for the current locale
-        if (! $this->hasTranslations($locale)) {
+        if (!$this->hasTranslations($locale)) {
             $locale = Languages::getOppositeLocale($locale);
         }
 
@@ -348,11 +387,11 @@ class Post extends Model implements
      */
     public function translatedPermalink(string $action = 'show', string $locale = null): ?string
     {
-        if (! $locale) {
+        if (!$locale) {
             $locale = app()->getLocale();
         }
 
-        if ($this->lang->value  != $locale && (is_null($this->translations) || $this->hide_translation)) {
+        if ($this->lang->value != $locale && (is_null($this->translations) || $this->hide_translation)) {
             return null;
         }
 

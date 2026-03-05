@@ -45,12 +45,25 @@ class Routes
         });
 
         Route::bind('post', function ($value, $route) {
-            $post_type = $route->parameter('post_type');
+            $post_type = $route->parameter('post_type') ?: $route->parameter('postType');
             $post_type_slug = is_object($post_type) ? $post_type->slug : $post_type;
 
             try {
-                return Post::where('type', $post_type_slug ?: -1)
-                    ->findOrFail($value);
+                $query = Post::where('type', $post_type_slug ?: -1);
+
+                if (Str::startsWith($route->getName(), 'admin.')) {
+                    return $query->findOrFail($value);
+                }
+
+                $language = $route->parameter('language');
+                if ($language) {
+                    $query->notHiddenOfLocale($language);
+                }
+
+                return $query->whereSlug($value)
+                    ->publishedOrPreview()
+                    ->firstOrFail();
+
             } catch (ModelNotFoundException $e) {
                 abort(404);
             }
@@ -152,13 +165,17 @@ class Routes
 
         Route::bind('post_slug', function ($value, $route) {
             $language = $route->parameter('language');
-            $post_type = $route->parameter('web_post_type_slug');
+            $post_type = $route->parameter('post_type') ?: $route->parameter('postType');
             $post_type_slug = is_object($post_type) ? $post_type->slug : $post_type;
 
             try {
-                return Post::where('type', $post_type_slug ?: -1)
-                    ->publishedOrPreview()
-                    ->notHiddenOfLocale($language)
+                $query = Post::where('type', $post_type_slug ?: -1);
+
+                if ($language) {
+                    $query->notHiddenOfLocale($language);
+                }
+
+                return $query->publishedOrPreview()
                     ->whereSlug($value)
                     ->firstOrFail();
 
