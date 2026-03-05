@@ -27,15 +27,15 @@ class PostsRequest extends FormRequest
         $post = $this->route('post');
 
         $rules = [
-            'title'             => 'string|max:500',
-            'slug'              => 'string|max:255',
-            'content'           => 'nullable|string',
-            'excerpt'           => 'nullable|string|max:500',
-            'status'            => 'nullable|string|in:draft,published,pending',
-            'published_at'      => 'nullable|date',
-            'featured_image'    => 'nullable',
-            'hide_translation'  => 'boolean',
-            'menu_order'        => 'nullable|integer|between:0,9999999',
+            'title' => 'string|max:500',
+            'slug' => 'string|max:255',
+            'content' => 'nullable|string',
+            'excerpt' => 'nullable|string|max:500',
+            'status' => 'nullable|string|in:draft,published,pending',
+            'published_at' => 'nullable|date',
+            'featured_image' => 'nullable',
+            'hide_translation' => 'boolean',
+            'menu_order' => 'nullable|integer|between:0,9999999',
         ];
 
         // Categories validation if post type has categories feature
@@ -54,11 +54,11 @@ class PostsRequest extends FormRequest
 
         // Documents validation
         $rules['documents'] = 'nullable|array';
-        $rules['documents.*'] = 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:51200';
+        $rules['documents.*'] = 'exists:media,id';
 
         // Image gallery validation
         $rules['image_gallery'] = 'nullable|array';
-        $rules['image_gallery.*'] = 'file|mimes:jpeg,jpg,png,gif,webp|max:10240';
+        $rules['image_gallery.*'] = 'exists:media,id';
 
         // Expiry validation
         $published_at = $this->input('published_at') ?? optional($post)->published_at;
@@ -82,7 +82,7 @@ class PostsRequest extends FormRequest
         $rules['recently_updated'] = 'nullable|boolean';
 
         // On create, make required fields
-        if (! $post) {
+        if (!$post) {
             $rules['title'] .= '|required';
             $rules['slug'] .= '|required';
         }
