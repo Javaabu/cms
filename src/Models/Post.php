@@ -23,7 +23,7 @@ use Javaabu\Cms\Enums\PostTypeFeatures;
 use Javaabu\Helpers\AdminModel\AdminModel;
 use Javaabu\Helpers\AdminModel\IsAdminModel;
 use Javaabu\Helpers\Enums\PublishStatuses;
-use Javaabu\Helpers\Media\AllowedMimeTypes;
+use Javaabu\Cms\Media\AllowedMimeTypes;
 use Javaabu\Helpers\Traits\HasSlug;
 use Javaabu\Helpers\Traits\Publishable;
 use Javaabu\Mediapicker\Concerns\InteractsWithAttachments;
