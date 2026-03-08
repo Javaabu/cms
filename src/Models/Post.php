@@ -67,6 +67,19 @@ class Post extends Model implements
      */
     protected static array $ignoreChangedAttributes = ['created_at', 'updated_at'];
 
+    /**
+     * The attributes that are translatable.
+     *
+     * @var array
+     */
+    protected $translatable = [
+        'title',
+        'content',
+        'excerpt',
+        'meta_title',
+        'meta_description',
+    ];
+
 
     /**
      * The attributes that are mass assignable.

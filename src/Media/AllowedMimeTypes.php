@@ -22,6 +22,7 @@ abstract class AllowedMimeTypes
             'image/x-png',
             'image/svg',
             'image/svg+xml',
+            'image/webp',
             'application/json', // lottie
         ],
 
