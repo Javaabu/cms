@@ -80,6 +80,17 @@ class Post extends Model implements
         'meta_description',
     ];
 
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        'featured_image_url',
+        'published_at_formatted',
+        'permalink',
+    ];
+
 
     /**
      * The attributes that are mass assignable.
@@ -633,5 +644,21 @@ class Post extends Model implements
             ->fit(Fit::Max, 1200, 800)
             ->performOnCollections('featured_image')
             ->nonQueued();
+    }
+
+    /**
+     * Get featured image url attribute
+     */
+    public function getFeaturedImageUrlAttribute(): string
+    {
+        return $this->getFirstAttachmentUrl('featured_image');
+    }
+
+    /**
+     * Get published at formatted attribute
+     */
+    public function getPublishedAtFormattedAttribute(): string
+    {
+        return $this->published_at ? $this->published_at->isoFormat('DD MMMM Y') : '';
     }
 }
