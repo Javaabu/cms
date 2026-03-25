@@ -167,7 +167,7 @@ class CategoriesController extends Controller
             $category->updateSingleAttachment('featured_image', $request);
         }
 
-        flash(__('Category successfully updated!'))->success();
+        $this->flashSuccessMessage(__('Category successfully updated!'));
 
         return redirect()->route('admin.categories.edit', [$type, $category]);
     }
