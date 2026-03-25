@@ -81,7 +81,7 @@ class Routes
         });
 
         Route::bind('category', function ($value, $route) {
-            $category_type = $route->parameter('category-type');
+            $category_type = $route->parameter('category_type');
             $category_type_id = is_object($category_type) ? $category_type->id : $category_type;
 
             try {
