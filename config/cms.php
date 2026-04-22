@@ -321,4 +321,23 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Database Settings
+    |--------------------------------------------------------------------------
+    |
+    | Here you can specify the table names to use for the CMS models.
+    |
+    */
+
+    'database' => [
+        'posts' => 'posts',
+        'post_types' => 'post_types',
+        'categories' => 'categories',
+        'category_types' => 'category_types',
+        'category_model' => 'category_model',
+        'tags' => 'tags',
+        'tag_model' => 'tag_model',
+    ],
+
 ];

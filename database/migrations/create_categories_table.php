@@ -13,7 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('categories', function (Blueprint $table) {
+        $tableName = config('cms.database.categories', 'categories');
+        $categoryTypesTable = config('cms.database.category_types', 'category_types');
+
+        Schema::create($tableName, function (Blueprint $table) use ($categoryTypesTable) {
             $table->id();
             $table->foreignId('type_id');
             $table->string('name');
@@ -30,10 +33,12 @@ return new class extends Migration
 
             $table->foreign('type_id')
                 ->references('id')
-                ->on('category_types')
+                ->on($categoryTypesTable)
                 ->onDelete('cascade');
 
-            $table->jsonTranslatable();
+            if (config('cms.should_translate', false)) {
+                $table->jsonTranslatable();
+            }
         });
     }
 
@@ -44,6 +49,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('categories');
+        Schema::dropIfExists(config('cms.database.categories', 'categories'));
     }
 };

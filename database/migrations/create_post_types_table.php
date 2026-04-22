@@ -9,7 +9,10 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('post_types', function (Blueprint $table) {
+        $tableName = config('cms.database.post_types', 'post_types');
+        $categoryTypesTable = config('cms.database.category_types', 'category_types');
+
+        Schema::create($tableName, function (Blueprint $table) use ($categoryTypesTable) {
             $table->id();
             $table->string('name');
             $table->string('singular_name');
@@ -17,18 +20,21 @@ return new class extends Migration
             $table->string('icon');
             $table->foreignId('category_type_id')
                 ->nullable()
-                ->constrained()
+                ->constrained($categoryTypesTable)
                 ->nullOnDelete();
             $table->json('features')->nullable();
             $table->string('og_description')->nullable();
             $table->unsignedInteger('order_column')->default(0);
             $table->timestamps();
-            $table->jsonTranslatable();
+            
+            if (config('cms.should_translate', false)) {
+                $table->jsonTranslatable();
+            }
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('post_types');
+        Schema::dropIfExists(config('cms.database.post_types', 'post_types'));
     }
 };

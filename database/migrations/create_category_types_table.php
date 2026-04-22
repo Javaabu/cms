@@ -12,13 +12,18 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('category_types', function (Blueprint $table) {
+        $tableName = config('cms.database.category_types', 'category_types');
+
+        Schema::create($tableName, function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('singular_name');
             $table->string('slug')->unique();
             $table->timestamps();
-            $table->jsonTranslatable();
+
+            if (config('cms.should_translate', false)) {
+                $table->jsonTranslatable();
+            }
         });
     }
 
@@ -29,6 +34,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('category_types');
+        Schema::dropIfExists(config('cms.database.category_types', 'category_types'));
     }
 };

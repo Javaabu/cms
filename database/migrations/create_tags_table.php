@@ -12,11 +12,16 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('tags', function (Blueprint $table) {
+        $tableName = config('cms.database.tags', 'tags');
+
+        Schema::create($tableName, function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
             $table->timestamps();
-            $table->jsonTranslatable();
+            
+            if (config('cms.should_translate', false)) {
+                $table->jsonTranslatable();
+            }
         });
     }
 
@@ -27,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tags');
+        Schema::dropIfExists(config('cms.database.tags', 'tags'));
     }
 };

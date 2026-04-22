@@ -13,7 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('tag_model', function (Blueprint $table) {
+        $tableName = config('cms.database.tag_model', 'tag_model');
+        $tagsTable = config('cms.database.tags', 'tags');
+
+        Schema::create($tableName, function (Blueprint $table) use ($tagsTable) {
             $table->id();
             $table->unique(['model_id', 'model_type', 'tag_id'], 'unique_model_tag');
             $table->morphs('model');
@@ -23,7 +26,7 @@ return new class extends Migration
 
             $table->foreign('tag_id')
                 ->references('id')
-                ->on('tags')
+                ->on($tagsTable)
                 ->onDelete('cascade');
         });
     }
@@ -35,6 +38,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tag_model');
+        Schema::dropIfExists(config('cms.database.tag_model', 'tag_model'));
     }
 };

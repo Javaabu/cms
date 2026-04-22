@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateCategoryModelTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -13,7 +13,10 @@ class CreateCategoryModelTable extends Migration
      */
     public function up()
     {
-        Schema::create('category_model', function (Blueprint $table) {
+        $tableName = config('cms.database.category_model', 'category_model');
+        $categoriesTable = config('cms.database.categories', 'categories');
+
+        Schema::create($tableName, function (Blueprint $table) use ($categoriesTable) {
             $table->id();
             $table->unique(['model_id', 'model_type', 'category_id'], 'unique_model_category');
             $table->morphs('model');
@@ -22,7 +25,7 @@ class CreateCategoryModelTable extends Migration
 
             $table->foreign('category_id')
                   ->references('id')
-                  ->on('categories')
+                  ->on($categoriesTable)
                   ->onDelete('cascade');
         });
     }
@@ -34,6 +37,6 @@ class CreateCategoryModelTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('category_model');
+        Schema::dropIfExists(config('cms.database.category_model', 'category_model'));
     }
-}
+};

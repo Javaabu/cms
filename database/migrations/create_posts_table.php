@@ -9,7 +9,10 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('posts', function (Blueprint $table) {
+        $tableName = config('cms.database.posts', 'posts');
+        $postTypesTable = config('cms.database.post_types', 'post_types');
+
+        Schema::create($tableName, function (Blueprint $table) use ($postTypesTable) {
             $table->id();
             $table->string('type');
 
@@ -35,27 +38,28 @@ return new class extends Migration
             // Coordinates
             $table->text('coords')->nullable();
             $table->foreignId('city_id')->nullable()->index();
-
-            $table->jsonTranslatable();
+            if (config('cms.should_translate', false)) {
+                $table->jsonTranslatable();
+            }
 
             // slugs must be unique for the category
             $table->unique(['slug', 'type'], 'unique_type_slug');
 
             $table->foreign('type')
                 ->references('slug')
-                ->on('post_types')
+                ->on($postTypesTable)
                 ->onDelete('cascade')
                 ->onUpdate('cascade');
         });
 
         // Full Text Index
         if (! app()->runningUnitTests()) {
-            DB::statement("ALTER TABLE posts ADD FULLTEXT fulltext_index (`title`, `content`)");
+            DB::statement("ALTER TABLE {$tableName} ADD FULLTEXT fulltext_index (`title`, `content`)");
         }
     }
 
     public function down()
     {
-        Schema::dropIfExists('posts');
+        Schema::dropIfExists(config('cms.database.posts', 'posts'));
     }
 };
