@@ -3,7 +3,7 @@
 namespace Javaabu\Cms\Enums;
 
 use Carbon\Carbon;
-use App\Helpers\Translation\Enums\Languages;
+use Javaabu\Cms\Enums\Languages;
 
 trait IsExpirable
 {

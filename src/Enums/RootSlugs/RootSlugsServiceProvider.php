@@ -6,7 +6,6 @@ namespace Javaabu\Cms\Enums\RootSlugs;
 use Illuminate\Routing\Router;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
-use App\Http\Controllers\HomeController;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Javaabu\Cms\Models\PostType;
 
@@ -53,7 +52,7 @@ class RootSlugsServiceProvider extends ServiceProvider
         $listing_types = $slugs['post_type'];
 
         $listing_types->each(function (PostType $postType) use ($router) {
-            $router->get($postType->slug, [HomeController::class, 'shortArchive'])
+            $router->get($postType->slug, ['\App\Http\Controllers\HomeController', 'shortArchive'])
                    ->name('web.short-archive.' . $postType->slug)
                    ->defaults('archive', $postType->slug);
 

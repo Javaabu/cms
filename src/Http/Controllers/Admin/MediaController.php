@@ -10,7 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Contracts\View\View;
 use Javaabu\Cms\Http\Requests\MediaRequest;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Contracts\View\Factory;

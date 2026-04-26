@@ -2,9 +2,9 @@
 
 namespace Javaabu\Cms\Enums;
 
-use App\Models\Category;
+use Javaabu\Cms\Models\Category;
 use Illuminate\Support\Arr;
-use App\Models\CategoryType;
+use Javaabu\Cms\Models\CategoryType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;

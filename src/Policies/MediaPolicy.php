@@ -2,7 +2,7 @@
 
 namespace Javaabu\Cms\Policies;
 
-use App\Models\User;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 

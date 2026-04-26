@@ -2,7 +2,7 @@
 
 namespace Javaabu\Cms\Models;
 
-use App\Models\User;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;

@@ -2,7 +2,6 @@
 
 namespace Javaabu\Cms\Media;
 
-use App\Models\User;
 use Javaabu\Cms\Enums\JsonTranslatable\IsJsonTranslatable;
 use Javaabu\Cms\Enums\JsonTranslatable\JsonTranslatable;
 use Javaabu\Cms\Enums\Languages;

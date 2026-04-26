@@ -2,8 +2,8 @@
 
 namespace Javaabu\Cms\Models;
 
-use App\Helpers\Translation\JsonTranslatable\JsonTranslatable;
-use App\Models\User;
+use Javaabu\Cms\Enums\JsonTranslatable\JsonTranslatable;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -198,7 +198,7 @@ class Post extends Model implements
      */
     public function department(): BelongsTo
     {
-        return $this->belongsTo('App\Models\Department', 'department_id');
+        return $this->belongsTo(config('cms.models.department', 'App\Models\Department'), 'department_id');
     }
 
     /**
@@ -360,7 +360,7 @@ class Post extends Model implements
 
         // Check if translations exist for the current locale
         if (!$this->hasTranslations($locale)) {
-            $locale = \App\Helpers\Translation\Enums\Languages::getOppositeLocale($locale);
+            $locale = \Javaabu\Cms\Enums\Languages::getOppositeLocale($locale);
         }
 
         try {
