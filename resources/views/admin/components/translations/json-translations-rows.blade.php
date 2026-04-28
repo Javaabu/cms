@@ -1,3 +1,4 @@
+@if(config('cms.should_translate'))
 @php
     use App\Helpers\Translation\Enums\Languages;$create_url = $create_url ?? '';
 @endphp
@@ -23,3 +24,4 @@
         </div>
     </td>
 @endforeach
+@endif

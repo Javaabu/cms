@@ -1,6 +1,8 @@
 @php
     use Javaabu\Cms\Enums\Languages;
-    $is_translation = isset($model) && $model->lang->value != app()->getLocale();
+    $lang = $model->lang ?? null;
+    $langValue = $lang instanceof \BackedEnum ? $lang->value : $lang;
+    $is_translation = isset($model) && $langValue && $langValue != app()->getLocale();
 @endphp
 
 @if($is_translation)

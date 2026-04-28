@@ -7,16 +7,11 @@ use Javaabu\Helpers\AdminModel\IsAdminModel;
 use Javaabu\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Javaabu\Helpers\Traits\HasSlug;
-use Javaabu\Translatable\Contracts\Translatable;
-use Javaabu\Translatable\JsonTranslatable\IsJsonTranslatable;
 
 class Tag extends Model implements AdminModel
-//    , Translatable
 {
     use IsAdminModel;
     use LogsActivity;
-//    use HasSlugForTranslatables;
-//    use IsJsonTranslatable;
 
     /**
      * The attributes that would be logged
@@ -55,12 +50,6 @@ class Tag extends Model implements AdminModel
      */
     protected $searchable = ['name',];
 
-    public function getTranslatables(): array
-    {
-        return [
-            'name',
-        ];
-    }
 
     /**
      * Get the admin url attribute
@@ -89,7 +78,7 @@ class Tag extends Model implements AdminModel
      */
     public function getSlugAttribute(): string
     {
-        return str($this->translate('name', 'en'))->slug();
+        return str($this->name)->slug();
     }
 
     /**

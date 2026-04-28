@@ -247,7 +247,9 @@ class MediaController extends Controller
      */
     public function edit($locale, Media $media)
     {
-        $media->dontShowTranslationFallbacks();
+        if (method_exists($media, 'dontShowTranslationFallbacks')) {
+            $media->dontShowTranslationFallbacks();
+        }
         return view('cms::admin.media.edit', compact('media'));
     }
 
@@ -263,7 +265,8 @@ class MediaController extends Controller
         // If this is not a translation, set lang
         if ((! $request->input('is_translation')) && $request->input('lang')) {
             $media->lang = $request->input('lang');
-            app()->setLocale($media->lang->value);
+            $lang = $media->lang;
+            app()->setLocale($lang instanceof \BackedEnum ? $lang->value : $lang);
         }
 
         if ($request->input('translation')) {

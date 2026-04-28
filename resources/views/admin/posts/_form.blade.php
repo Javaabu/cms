@@ -9,7 +9,9 @@
         'type' => $type
     ];
     extract($data);
-    $is_translation = isset($model) && $model->lang->value != app()->getLocale();
+    $lang = $model->lang ?? null;
+    $langValue = $lang instanceof \BackedEnum ? $lang->value : $lang;
+    $is_translation = isset($model) && $langValue && $langValue != app()->getLocale();
 @endphp
 <div class="row">
     <div class="col-md-8">
@@ -42,7 +44,9 @@
     <div class="col-md-4">
         @component('cms::admin.components.post-type.form.publish', $data)
             @slot('before')
-                @include('cms::admin.components.post-type.form.translations')
+                @if(config('cms.should_translate'))
+                    @include('cms::admin.components.post-type.form.translations')
+                @endif
 
             @if(\Illuminate\Support\Facades\Schema::hasTable('departments'))
                 @include('cms::admin.posts.form._department-selector')

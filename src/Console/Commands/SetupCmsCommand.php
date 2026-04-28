@@ -46,6 +46,9 @@ class SetupCmsCommand extends Command
         $this->info('✓ Config published successfully');
         $this->newLine();
 
+        // Setup translations
+        $this->setupTranslations();
+
         // Update package.json and vite.config.js
         $this->setupFrontend();
 
@@ -110,6 +113,72 @@ class SetupCmsCommand extends Command
         $this->displayNextSteps();
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Handle translation setup
+     */
+    protected function setupTranslations()
+    {
+        if ($this->confirm('Do you want to enable multi-language translations?', false)) {
+            $this->comment('🌐 Enabling translations...');
+
+            $configPath = config_path('cms.php');
+
+            if (File::exists($configPath)) {
+                $content = File::get($configPath);
+
+                // Update should_translate
+                $content = preg_replace(
+                    "/(['\"]should_translate['\"]\s*=>\s*)false/",
+                    "$1true",
+                    $content
+                );
+
+                // Update models
+                $replacements = [
+                    'post' => '\Javaabu\Cms\Models\TranslatablePost::class',
+                    'category' => '\Javaabu\Cms\Models\TranslatableCategory::class',
+                    'tag' => '\Javaabu\Cms\Models\TranslatableTag::class',
+                ];
+
+                foreach ($replacements as $key => $newClass) {
+                    $content = preg_replace(
+                        "/(['\"]$key['\"]\s*=>\s*).*?,/",
+                        "$1$newClass,",
+                        $content
+                    );
+                }
+
+                // Update controllers
+                $controllerReplacements = [
+                    'posts' => '\Javaabu\Cms\Translatable\Http\Controllers\Admin\PostsController::class',
+                    'categories' => '\Javaabu\Cms\Translatable\Http\Controllers\Admin\CategoriesController::class',
+                ];
+
+                foreach ($controllerReplacements as $key => $newClass) {
+                    $content = preg_replace(
+                        "/(['\"]$key['\"]\s*=>\s*).*?,/",
+                        "$1$newClass,",
+                        $content
+                    );
+                }
+
+                // Update web controllers
+                $content = preg_replace(
+                    "/(['\"]web['\"]\s*=>\s*\[\s*['\"]controllers['\"]\s*=>\s*\[\s*['\"]posts['\"]\s*=>\s*).*?,/",
+                    "$1\Javaabu\Cms\Translatable\Http\Controllers\PostsController::class,",
+                    $content
+                );
+
+                File::put($configPath, $content);
+                $this->info('✓ Translations enabled and models updated in config/cms.php');
+            } else {
+                $this->warn('✗ could not find config/cms.php to update translation settings.');
+            }
+
+            $this->newLine();
+        }
     }
 
     /**

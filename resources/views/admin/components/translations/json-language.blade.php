@@ -1,3 +1,4 @@
+@if(config('cms.should_translate'))
 @php
     $create_url = $create_url ?? '';
     $translatable = $model ?? $create_url;
@@ -102,3 +103,4 @@
 
     </div>
 </div>
+@endif

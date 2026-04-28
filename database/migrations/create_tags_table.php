@@ -18,10 +18,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->timestamps();
-            
-            if (config('cms.should_translate', false)) {
-                $table->jsonTranslatable();
-            }
+            $table->jsonTranslatable();
         });
     }
 

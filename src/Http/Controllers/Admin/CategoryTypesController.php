@@ -77,7 +77,9 @@ class CategoryTypesController extends Controller
     {
         $category_type = new CategoryType($request->validated());
 
-        $category_type->lang = $request->input('lang', app()->getLocale());
+        if (config('cms.should_translate')) {
+            $category_type->lang = $request->input('lang', app()->getLocale());
+        }
 
         $category_type->save();
 
@@ -99,7 +101,9 @@ class CategoryTypesController extends Controller
      */
     public function edit(CategoryType $category_type)
     {
-        $category_type->dontShowTranslationFallbacks();
+        if (method_exists($category_type, 'dontShowTranslationFallbacks')) {
+            $category_type->dontShowTranslationFallbacks();
+        }
         return view('cms::admin.category-types.edit', compact('category_type'));
     }
 
@@ -108,10 +112,13 @@ class CategoryTypesController extends Controller
      */
     public function update(CategoryTypesRequest $request, CategoryType $category_type)
     {
-        // If this is not a translation, set lang
-        if ((! $request->input('is_translation')) && $request->input('lang')) {
-            $category_type->lang = $request->input('lang');
-            app()->setLocale($category_type->lang->value);
+        if (config('cms.should_translate')) {
+            // If this is not a translation, set lang
+            if ((! $request->input('is_translation')) && $request->input('lang')) {
+                $category_type->lang = $request->input('lang');
+                $lang = $category_type->lang;
+                app()->setLocale($lang instanceof \BackedEnum ? $lang->value : $lang);
+            }
         }
 
         $category_type->fill($request->validated());
@@ -120,7 +127,9 @@ class CategoryTypesController extends Controller
             $category_type->slug = $slug;
         }
 
-        $category_type->hide_translation = $request->input('hide_translation', false);
+        if (config('cms.should_translate') && method_exists($category_type, 'hide_translation')) {
+            $category_type->hide_translation = $request->input('hide_translation', false);
+        }
 
         $category_type->save();
 

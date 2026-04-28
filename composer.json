@@ -26,7 +26,8 @@
         "mariuzzo/laravel-js-localization": "dev-l12-compatibility",
         "predis/predis": "^2.2",
         "diglactic/laravel-breadcrumbs": "^10.0",
-        "javaabu/mediapicker": "^1.0@dev"
+        "javaabu/mediapicker": "^1.0@dev",
+        "javaabu/translatable": "^2.10"
     },
     "require-dev": {
         "laravel/pint": "^1.14",

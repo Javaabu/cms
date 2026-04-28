@@ -187,7 +187,9 @@ class PostsController extends Controller
     public function edit(PostType $type, Post $post)
     {
         $this->authorize('update', $post);
-        $post->dontShowTranslationFallbacks();
+        if (method_exists($post, 'dontShowTranslationFallbacks')) {
+            $post->dontShowTranslationFallbacks();
+        }
         return view('cms::admin.posts.edit', compact('post', 'type'));
     }
 
@@ -199,9 +201,10 @@ class PostsController extends Controller
         $this->authorize('update', $post);
 
         // If this is not a translation, set lang
-        if ((!$request->input('is_translation')) && $request->input('lang')) {
+        if (config('cms.should_translate') && (!$request->input('is_translation')) && $request->input('lang')) {
             $post->lang = $request->input('lang');
-            app()->setLocale($post->lang->value);
+            $lang = $post->lang;
+            app()->setLocale($lang instanceof \BackedEnum ? $lang->value : $lang);
         }
 
         $post->fill($request->validated());
@@ -221,10 +224,7 @@ class PostsController extends Controller
         }
 
         $post->hide_translation = $request->input('hide_translation', false);
-
-        if (property_exists($post, 'recently_updated')) {
-            $post->recently_updated = $request->input('recently_updated', false);
-        }
+        $post->recently_updated = $request->input('recently_updated', false);
 
         if ($request->has('department') && method_exists($post, 'department') && \Illuminate\Support\Facades\Schema::hasColumn($post->getTable(), 'department_id')) {
             $post->department()->associate($request->input('department'));

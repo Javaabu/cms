@@ -96,6 +96,68 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Translation Settings
+    |--------------------------------------------------------------------------
+    |
+    | Enable or disable multi-language translations for posts, categories, etc.
+    |
+    */
+
+    'should_translate' => false,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Language
+    |--------------------------------------------------------------------------
+    |
+    | The default language to use when translations are enabled.
+    |
+    */
+
+    'default_language' => 'en',
+
+    /*
+    |--------------------------------------------------------------------------
+    | CMS Models
+    |--------------------------------------------------------------------------
+    |
+    | Define the model classes used by the CMS. You can extend these classes
+    | and override them here.
+    |
+    */
+
+    'models' => [
+        'post' => \Javaabu\Cms\Models\Post::class,
+        'post_type' => \Javaabu\Cms\Models\PostType::class,
+        'category' => \Javaabu\Cms\Models\Category::class,
+        'category_type' => \Javaabu\Cms\Models\CategoryType::class,
+        'tag' => \Javaabu\Cms\Models\Tag::class,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Controller Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Define controllers used by the CMS for web and admin routes.
+    |
+    */
+
+    'web' => [
+        'controllers' => [
+            'posts' => \Javaabu\Cms\Http\Controllers\PostsController::class,
+        ],
+    ],
+
+    'admin' => [
+        'controllers' => [
+            'posts' => \Javaabu\Cms\Http\Controllers\Admin\PostsController::class,
+            'categories' => \Javaabu\Cms\Http\Controllers\Admin\CategoriesController::class,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Default Category Types
     |--------------------------------------------------------------------------
     |
@@ -338,6 +400,23 @@ return [
         'category_model' => 'category_model',
         'tags' => 'tags',
         'tag_model' => 'tag_model',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Root Slugs Settings
+    |--------------------------------------------------------------------------
+    |
+    | Configure the cache for post type root slugs.
+    |
+    */
+
+    'rootslugs' => [
+        'cache' => [
+            'key' => 'javaabu.cms.rootslugs',
+            'expiration_time' => 86400, // 24 hours
+            'store' => 'default',
+        ],
     ],
 
 ];

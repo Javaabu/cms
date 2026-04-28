@@ -133,7 +133,9 @@ class CategoriesController extends Controller
         $this->authorize('update', $category);
 
         $allowed_categories = Category::categoryList($type->id, $category->id);
-        $category->dontShowTranslationFallbacks();
+        if (method_exists($category, 'dontShowTranslationFallbacks')) {
+            $category->dontShowTranslationFallbacks();
+        }
 
         return view('cms::admin.categories.edit', compact('category', 'type', 'allowed_categories'));
     }
@@ -159,7 +161,9 @@ class CategoriesController extends Controller
             }
         }
 
-        $category->hide_translation = $request->input('hide_translation', false);
+        if (method_exists($category, 'hide_translation')) {
+            $category->hide_translation = $request->input('hide_translation', false);
+        }
 
         $category->save();
 

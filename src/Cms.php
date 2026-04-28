@@ -18,27 +18,31 @@ class Cms {
     public function registerPostTypes($postTypes): void
     {
         $count = 0;
+        $post_type_model = config('cms.models.post_type', PostType::class);
+        $category_type_model = config('cms.models.category_type', CategoryType::class);
+
         foreach ($postTypes as $slug => $data) {
-            $type = PostType::whereSlug($slug)->first();
+            $type = $post_type_model::whereSlug($slug)->first();
 
             if (! $type) {
-                $type = new PostType();
+                $type = new $post_type_model();
             }
 
             $name = Str::title(str_replace('-', ' ', $slug));
             $type->name = $data['name'] ?? $name;
             $type->singular_name = $data['name_singular'] ?? Str::singular($data['name'] ?? $name);
             if (config('cms.should_translate')) {
-                $type->lang = config('cms.default_language');
+                // PostType stores lang as plain string — no Languages enum cast
+                $type->lang = config('cms.default_language', 'en');
             }
 
             $type->slug = $slug;
             $type->icon = $data['icon'];
 
-            $category_type = CategoryType::whereSlug($slug . '-categories')->first();
+            $category_type = $category_type_model::whereSlug($slug . '-categories')->first();
 
             if (! $category_type) {
-                $category_type = new CategoryType();
+                $category_type = new $category_type_model();
             }
 
             $category_type->name = $data['name'] ?? $name . ' Categories';
@@ -163,7 +167,9 @@ class Cms {
 
     public function adminMenuItems(array $menus = [])
     {
-        $all_post_types = PostType::all();
+        $post_type_model = config('cms.models.post_type', PostType::class);
+        $post_model = config('cms.models.post', Post::class);
+        $all_post_types = $post_type_model::all();
 
         foreach ($all_post_types as $post_type) {
             $name = Str::title($post_type->name);
@@ -172,13 +178,12 @@ class Cms {
                     ->controller(config('cms.admin.controllers.posts'))
                     ->can('view_' . $post_type->permission_slug)
                     ->active(optional(request()->route('post_type'))->slug == $post_type->slug)
-//                    ->url(config('cms.should_translate')
-//                        ? translate_route('admin.posts.index', $post_type->slug)
-//                        : route('admin.posts.index', $post_type->slug)
-//                    )
-                    ->url(translate_route('admin.posts.index', $post_type->slug))
+                    ->url(config('cms.should_translate')
+                        ? translate_route('admin.posts.index', $post_type->slug)
+                        : route('admin.posts.index', $post_type->slug)
+                    )
                     ->icon('zmdi-' . $post_type->icon)
-                    ->count(Post::query()->userVisibleForPostType($post_type)->postType($post_type->slug)->pending()),
+                    ->count($post_model::query()->userVisibleForPostType($post_type)->postType($post_type->slug)->pending()),
             ];
 
             if ($post_type->hasFeature(PostTypeFeatures::CATEGORIES)) {
@@ -186,11 +191,10 @@ class Cms {
                     ->controller(config('cms.admin.controllers.categories'))
                     ->can('view_' . Str::singular($post_type->permission_slug) . '_categories')
                     ->active(optional(request()->route('category_type'))->slug == Str::singular($post_type->slug) . '-categories')
-//                    ->url(config('cms.should_translate')
-//                        ? translate_route('admin.categories.index', Str::singular($post_type->slug) . '-categories')
-//                        : route('admin.categories.index', Str::singular($post_type->slug) . '-categories')
-//                    )
-                    ->url(translate_route('admin.categories.index', Str::singular($post_type->slug) . '-categories'))
+                    ->url(config('cms.should_translate')
+                        ? translate_route('admin.categories.index', Str::singular($post_type->slug) . '-categories')
+                        : route('admin.categories.index', Str::singular($post_type->slug) . '-categories')
+                    )
                 ;
 
                 $menus[] =
@@ -214,7 +218,8 @@ class Cms {
     public function seedPostTypePermissions(array $existing_permissions = []): array
     {
         $data = [];
-        $all_post_types = PostType::all();
+        $post_type_model = config('cms.models.post_type', PostType::class);
+        $all_post_types = $post_type_model::all();
 
         foreach ($all_post_types as $post_type) {
             $permissions = $this->constructPostTypePermissions($post_type);
@@ -259,7 +264,8 @@ class Cms {
     public function seedCategoryTypePermissions(array $existing_permissions = []): array
     {
         $data = [];
-        $all_category_types = CategoryType::all();
+        $category_type_model = config('cms.models.category_type', CategoryType::class);
+        $all_category_types = $category_type_model::all();
 
         foreach ($all_category_types as $category_type) {
             $permissions = $this->constructCategoryTypePermissions($category_type);

@@ -4,7 +4,7 @@ namespace Javaabu\Cms\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Javaabu\Cms\Models\Post;
-use Javaabu\Cms\Tests\TestCase;
+use Orchestra\Testbench\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
 class ExampleTest extends TestCase

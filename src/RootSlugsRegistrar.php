@@ -41,7 +41,7 @@ class RootSlugsRegistrar
      */
     protected function initializeCache()
     {
-        self::$cache_expiration_time = config('rootslugs.cache.expiration_time');
+        self::$cache_expiration_time = config('cms.rootslugs.cache.expiration_time');
 
         if (app()->version() <= '5.5') {
             if (self::$cache_expiration_time instanceof DateInterval) {
@@ -50,7 +50,7 @@ class RootSlugsRegistrar
             }
         }
 
-        self::$cache_key = config('rootslugs.cache.key');
+        self::$cache_key = config('cms.rootslugs.cache.key');
 
         $this->cache = $this->getCacheStoreFromConfig();
     }
@@ -63,7 +63,7 @@ class RootSlugsRegistrar
     protected function getCacheStoreFromConfig(): Repository
     {
         // the 'default' fallback here is from the translation.php config file, where 'default' means to use config(cache.default)
-        $cache_driver = config('rootslugs.cache.store', 'default');
+        $cache_driver = config('cms.rootslugs.cache.store', 'default');
 
         // when 'default' is specified, no action is required since we already have the default instance
         if ($cache_driver === 'default') {

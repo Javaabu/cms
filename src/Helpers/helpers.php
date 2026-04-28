@@ -14,6 +14,10 @@ if (! function_exists('translate_route')) {
      */
     function translate_route(string $name, $parameters = [], bool $absolute = true, $locale = null): string
     {
+        if (! config('cms.should_translate')) {
+            return route($name, $parameters, $absolute);
+        }
+
         if (! $locale) {
             $locale = app()->getLocale();
         }
@@ -37,6 +41,10 @@ if (! function_exists('translate_action')) {
      */
     function translate_action(string $name, array $parameters = [], bool $absolute = true, $locale = null): string
     {
+        if (! config('cms.should_translate')) {
+            return action($name, $parameters, $absolute);
+        }
+
         if (! $locale) {
             $locale = app()->getLocale();
         }

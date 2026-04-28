@@ -9,9 +9,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Javaabu\Activitylog\Traits\LogsActivity;
-use Javaabu\Cms\Enums\JsonTranslatable\IsJsonTranslatable;
-use Javaabu\Cms\Enums\JsonTranslatable\JsonTranslatable;
-use Javaabu\Cms\Enums\Languages;
 use Javaabu\Cms\Enums\RootSlugs\HasRootSlug;
 use Javaabu\Forms\Support\Icons\FontAwesomeIcons;
 use Javaabu\Helpers\AdminModel\AdminModel;
@@ -25,12 +22,10 @@ use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class Category extends Model implements
-    AdminModel,
-    JsonTranslatable
+    AdminModel
 {
     use NodeTrait;
     use IsAdminModel;
-    use IsJsonTranslatable;
     use HasRootSlug;
     use LogsActivity;
     use HasSlug;
@@ -62,14 +57,6 @@ class Category extends Model implements
         'name',
     ];
 
-    /**
-     * The attributes that are translatable.
-     *
-     * @var array
-     */
-    protected $translatable = [
-        'name',
-    ];
 
     /**
      * The attributes that are cast to native types.
@@ -80,8 +67,6 @@ class Category extends Model implements
         'name' => 'string',
         'slug' => 'string',
         'order_column' => 'integer',
-        'translations' => 'array',
-        'lang' => Languages::class,
     ];
 
     protected $with = ['type', 'parent'];
@@ -100,7 +85,14 @@ class Category extends Model implements
      */
     public function getAdminUrlAttribute(): string
     {
-        return translate_route('admin.categories.edit', [$this->type, $this]);
+        $route = 'admin.categories.edit';
+        $params = [$this->type, $this];
+
+        if (config('cms.should_translate')) {
+            return translate_route($route, $params);
+        }
+
+        return route($route, $params);
     }
 
     /**
@@ -193,7 +185,7 @@ class Category extends Model implements
      */
     public function scopeSearch($query, $search, $locale = null): mixed
     {
-        return $query->translationsSearch('name', $search, $locale);
+        return $query->where('name', 'like', "%{$search}%");
     }
 
     /**
@@ -264,7 +256,6 @@ class Category extends Model implements
 
     public function getPermalinkAttribute(): string
     {
-        // TODO: Implement getPermalinkAttribute() method.
         $category_type = $this->type;
 
         if ($category_type->slug == 'department-categories') {
@@ -275,14 +266,7 @@ class Category extends Model implements
             $route_name = "web.posts.index.{$category_type->postType->slug}";
         }
 
-        $locale = app()->getLocale();
-
-        // is post has current locale,
-        if (! $this->hasTranslations($locale)) {
-            $locale = Languages::getOppositeLocale($locale);
-        }
-
-        $route = translate_route($route_name, [], true, $locale);
+        $route = route($route_name);
         return add_query_arg(['category' => $this->id], $route);
     }
 
@@ -403,9 +387,18 @@ class Category extends Model implements
     public function getPostAdminLinkAttribute(): string
     {
         if ($this->type->slug == 'staff-categories') {
-            return translate_route('admin.staff.index');
+            return $this->adminRoute('admin.staff.index');
         }
 
-        return translate_route('admin.posts.index', $this->type->postType);
+        return $this->adminRoute('admin.posts.index', $this->type->postType);
+    }
+
+    protected function adminRoute(string $name, mixed $parameters = []): string
+    {
+        if (config('cms.should_translate')) {
+            return translate_route($name, $parameters);
+        }
+
+        return route($name, $parameters);
     }
 }

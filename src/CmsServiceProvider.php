@@ -9,6 +9,7 @@ use Javaabu\Cms\Models\Category;
 use Javaabu\Cms\Models\CategoryType;
 use Javaabu\Cms\Models\Post;
 use Javaabu\Cms\Models\PostType;
+use Javaabu\Cms\Models\Tag;
 use Javaabu\Cms\Policies\CategoryPolicy;
 use Javaabu\Cms\Policies\CategoryTypePolicy;
 use Javaabu\Cms\Policies\PostPolicy;
@@ -23,11 +24,11 @@ class CmsServiceProvider extends ServiceProvider
      * @var array
      */
     protected $policies = [
-        CategoryType::class => CategoryTypePolicy::class,
-        Category::class => CategoryPolicy::class,
-        PostType::class => PostTypePolicy::class,
-        Post::class => PostPolicy::class,
-        \Javaabu\Cms\Media\Media::class => \Javaabu\Cms\Policies\MediaPolicy::class,
+        'category_type' => CategoryTypePolicy::class,
+        'category' => CategoryPolicy::class,
+        'post_type' => PostTypePolicy::class,
+        'post' => PostPolicy::class,
+        'media' => \Javaabu\Cms\Policies\MediaPolicy::class,
     ];
 
     /**
@@ -40,10 +41,11 @@ class CmsServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         Relation::enforceMorphMap([
-            'post_type'      => PostType::class,
-            'post'           => Post::class,
-            'category'       => Category::class,
-            'category_type'  => CategoryType::class,
+            'post_type'      => config('cms.models.post_type', PostType::class),
+            'post'           => config('cms.models.post', Post::class),
+            'category'       => config('cms.models.category', Category::class),
+            'category_type'  => config('cms.models.category_type', CategoryType::class),
+            'tag'            => config('cms.models.tag', Tag::class),
             'media'          => \Javaabu\Cms\Media\Media::class,
         ]);
 
@@ -85,8 +87,12 @@ class CmsServiceProvider extends ServiceProvider
      */
     protected function registerPolicies()
     {
-        foreach ($this->policies as $model => $policy) {
-            Gate::policy($model, $policy);
+        foreach ($this->policies as $key => $policy) {
+            $model = $key == 'media' ? \Javaabu\Cms\Media\Media::class : config("cms.models.$key");
+
+            if ($model) {
+                Gate::policy($model, $policy);
+            }
         }
     }
 
@@ -110,6 +116,7 @@ class CmsServiceProvider extends ServiceProvider
         }
 
         // Register facades or singletons if needed
+        $this->app->register(\Javaabu\Cms\Enums\RootSlugs\RootSlugsServiceProvider::class);
     }
 }
 

@@ -2,7 +2,6 @@
 
 namespace Javaabu\Cms\Models;
 
-use Javaabu\Cms\Enums\JsonTranslatable\JsonTranslatable;
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,8 +15,6 @@ use Carbon\Carbon;
 use Javaabu\Activitylog\Traits\LogsActivity;
 use Javaabu\Cms\Enums\HaveCategories;
 use Javaabu\Cms\Enums\IsExpirable;
-use Javaabu\Cms\Enums\JsonTranslatable\IsJsonTranslatable;
-use Javaabu\Cms\Enums\Languages;
 use Javaabu\Cms\Enums\PostStatus;
 use Javaabu\Cms\Enums\PostTypeFeatures;
 use Javaabu\Helpers\AdminModel\AdminModel;
@@ -34,18 +31,15 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class Post extends Model implements
     AdminModel,
-    HasAttachments,
-    JsonTranslatable
+    HasAttachments
 {
     use SoftDeletes;
     use IsAdminModel;
     use LogsActivity;
-    use SoftDeletes;
     use Publishable;
     use HasSlug;
     use HaveCategories;
     // use IsTaggable;
-    use IsJsonTranslatable;
     //use WithDepartmentPermissions;
     use IsExpirable;
     use InteractsWithAttachments;
@@ -67,18 +61,6 @@ class Post extends Model implements
      */
     protected static array $ignoreChangedAttributes = ['created_at', 'updated_at'];
 
-    /**
-     * The attributes that are translatable.
-     *
-     * @var array
-     */
-    protected $translatable = [
-        'title',
-        'content',
-        'excerpt',
-        'meta_title',
-        'meta_description',
-    ];
 
     /**
      * The accessors to append to the model's array form.
@@ -134,7 +116,6 @@ class Post extends Model implements
         'last_updated_at' => 'datetime',
         'recently_updated' => 'boolean',
         'menu_order' => 'integer',
-        'lang' => Languages::class,
     ];
 
     protected $with = ['postType', 'categories'];
@@ -234,7 +215,7 @@ class Post extends Model implements
      * @param string $search
      * @return Builder
      */
-    public function scopeSearch($query, $search): Builder
+    public function scopeSearch($query, $search, $locale = null): Builder
     {
         return $query->where('title', 'like', "%{$search}%")
             ->orWhere('content', 'like', "%{$search}%");
@@ -355,18 +336,12 @@ class Post extends Model implements
      */
     public function getPermalinkAttribute(): ?string
     {
-        $locale = $this->lang?->value ?? app()->getLocale();
         $postTypeSlug = $this->postType->slug;
-
-        // Check if translations exist for the current locale
-        if (!$this->hasTranslations($locale)) {
-            $locale = \Javaabu\Cms\Enums\Languages::getOppositeLocale($locale);
-        }
 
         try {
             // For custom post types registered via Routes::customPostType
             // Route name format: web.post-types.{postTypeSlug}.show (e.g., web.post-types.news.show)
-            return route("web.post-types.{$postTypeSlug}.show", [$locale, $this->slug]);
+            return route("web.post-types.{$postTypeSlug}.show", [$this->slug]);
         } catch (\Exception $e) {
             // Log the error for debugging
             \Log::debug('Permalink generation failed for post ' . $this->id . ': ' . $e->getMessage());
@@ -382,12 +357,6 @@ class Post extends Model implements
     public function getPreviewLinkAttribute(): string
     {
         $postTypeSlug = $this->postType->slug;
-        $locale = app()->getLocale();
-
-        // Check if translations exist for the current locale
-        if (!$this->hasTranslations($locale)) {
-            $locale = Languages::getOppositeLocale($locale);
-        }
 
         try {
             // For custom post types registered via Routes::customPostType
@@ -395,38 +364,10 @@ class Post extends Model implements
             return URL::temporarySignedRoute(
                 "web.post-types.{$postTypeSlug}.show",
                 now()->addDay(),
-                [$locale, $this->slug]
+                [$this->slug]
             );
         } catch (\Exception $e) {
             return URL::to('/');
-        }
-    }
-
-    /**
-     * Returns the url
-     *
-     * @param string $action
-     * @param string|null $locale
-     * @return string|null
-     */
-    public function translatedPermalink(string $action = 'show', string $locale = null): ?string
-    {
-        if (!$locale) {
-            $locale = app()->getLocale();
-        }
-
-        if ($this->lang->value != $locale && (is_null($this->translations) || $this->hide_translation)) {
-            return null;
-        }
-
-        $postTypeSlug = $this->postType->slug;
-
-        try {
-            // For custom post types registered via Routes::customPostType
-            // Route name format: web.post-types.{postTypeSlug}.{action}
-            return URL::route("web.post-types.{$postTypeSlug}.{$action}", [$locale, $this->slug]);
-        } catch (\Exception $e) {
-            return null;
         }
     }
 
@@ -660,5 +601,10 @@ class Post extends Model implements
     public function getPublishedAtFormattedAttribute(): string
     {
         return $this->published_at ? $this->published_at->isoFormat('DD MMMM Y') : '';
+    }
+
+    public function getAdminUrlAttribute(): string
+    {
+        return route('admin.posts.edit', [$this->postType, $this]);
     }
 }

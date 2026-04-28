@@ -21,9 +21,7 @@ return new class extends Migration
             $table->string('slug')->unique();
             $table->timestamps();
 
-            if (config('cms.should_translate', false)) {
-                $table->jsonTranslatable();
-            }
+            $table->jsonTranslatable();
         });
     }
 

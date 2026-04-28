@@ -34,10 +34,11 @@ class Routes
     ): void {
 
         Route::bind('post_type', function ($value, $route) {
+            $model = config('cms.models.post_type', PostType::class);
             try {
-                return PostType::whereSlug($value)
+                return $model::whereSlug($value)
                     ->firstOrFail();
-            } catch (ModelNotFoundException $e) {
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
                 abort(404);
             }
 
@@ -47,16 +48,17 @@ class Routes
         Route::bind('post', function ($value, $route) {
             $post_type = $route->parameter('post_type') ?: $route->parameter('postType');
             $post_type_slug = is_object($post_type) ? $post_type->slug : $post_type;
+            $model = config('cms.models.post', Post::class);
 
             try {
-                $query = Post::where('type', $post_type_slug ?: -1);
+                $query = $model::where('type', $post_type_slug ?: -1);
 
                 if (Str::startsWith($route->getName(), 'admin.')) {
                     return $query->findOrFail($value);
                 }
 
                 $language = $route->parameter('language');
-                if ($language) {
+                if ($language && method_exists($model, 'scopeNotHiddenOfLocale')) {
                     $query->notHiddenOfLocale($language);
                 }
 
@@ -64,7 +66,7 @@ class Routes
                     ->publishedOrPreview()
                     ->firstOrFail();
 
-            } catch (ModelNotFoundException $e) {
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
                 abort(404);
             }
 
@@ -72,10 +74,11 @@ class Routes
         });
 
         Route::bind('category_type', function ($value, $route) {
+            $model = config('cms.models.category_type', CategoryType::class);
             try {
-                return CategoryType::where('slug', $value)
+                return $model::where('slug', $value)
                     ->firstOrFail();
-            } catch (ModelNotFoundException $e) {
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
                 abort(404);
             }
         });
@@ -83,11 +86,12 @@ class Routes
         Route::bind('category', function ($value, $route) {
             $category_type = $route->parameter('category_type');
             $category_type_id = is_object($category_type) ? $category_type->id : $category_type;
+            $model = config('cms.models.category', Category::class);
 
             try {
-                return Category::where('type_id', $category_type_id ?: -1)
+                return $model::where('type_id', $category_type_id ?: -1)
                     ->findOrFail($value);
-            } catch (ModelNotFoundException $e) {
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
                 abort(404);
             }
         });
@@ -98,19 +102,15 @@ class Routes
             'prefix' => 'category-types',
             'as' => 'categories.',
         ], function () {
-            Route::get('{category_type}', '\Javaabu\Cms\Http\Controllers\Admin\CategoriesController@index')
-                ->name('index');
-            Route::get('{category_type}/create', '\Javaabu\Cms\Http\Controllers\Admin\CategoriesController@create')
-                ->name('create');
-            Route::post('{category_type}', '\Javaabu\Cms\Http\Controllers\Admin\CategoriesController@store')
-                ->name('store');
-            Route::get('{category_type}/{category}/edit', '\Javaabu\Cms\Http\Controllers\Admin\CategoriesController@edit')
-                ->name('edit');
-            Route::put('{category_type}/{category}', '\Javaabu\Cms\Http\Controllers\Admin\CategoriesController@update')
-                ->name('update');
-            Route::delete('{category_type}/{category}', '\Javaabu\Cms\Http\Controllers\Admin\CategoriesController@destroy')
-                ->name('destroy');
-            Route::match(['PUT', 'PATCH'], '/', [CategoriesController::class, 'bulk'])->name('bulk');
+            $controller = config('cms.admin.controllers.categories', \Javaabu\Cms\Http\Controllers\Admin\CategoriesController::class);
+
+            Route::get('{category_type}', [$controller, 'index'])->name('index');
+            Route::get('{category_type}/create', [$controller, 'create'])->name('create');
+            Route::post('{category_type}', [$controller, 'store'])->name('store');
+            Route::get('{category_type}/{category}/edit', [$controller, 'edit'])->name('edit');
+            Route::put('{category_type}/{category}', [$controller, 'update'])->name('update');
+            Route::delete('{category_type}/{category}', [$controller, 'destroy'])->name('destroy');
+            Route::match(['PUT', 'PATCH'], '/', [$controller, 'bulk'])->name('bulk');
         });
 
         /* // Posts Routes
@@ -135,17 +135,19 @@ class Routes
             'prefix' => '{post_type}',
             'as' => 'posts.',
         ], function () {
-            Route::match(['PUT', 'PATCH'], '/', [PostsController::class, 'bulk'])->name('bulk');
-            Route::get('/trash', [PostsController::class, 'trash'])->name('trash');
-            Route::post('/{post:id}/restore', [PostsController::class, 'restore'])->name('restore');
-            Route::delete('/{post:id}/force-delete', [PostsController::class, 'forceDelete'])->name('force-delete');
-            Route::get('/', [PostsController::class, 'index'])->name('index');
-            Route::get('/create', [PostsController::class, 'create'])->name('create');
-            Route::post('/', [PostsController::class, 'store'])->name('store');
-            Route::get('/{post:id}', [PostsController::class, 'show'])->name('show');
-            Route::get('/{post:id}/edit', [PostsController::class, 'edit'])->name('edit');
-            Route::match(['PUT', 'PATCH'], '/{post:id}', [PostsController::class, 'update'])->name('update');
-            Route::delete('/{post:id}', [PostsController::class, 'destroy'])->name('destroy');
+            $controller = config('cms.admin.controllers.posts', \Javaabu\Cms\Http\Controllers\Admin\PostsController::class);
+
+            Route::match(['PUT', 'PATCH'], '/', [$controller, 'bulk'])->name('bulk');
+            Route::get('/trash', [$controller, 'trash'])->name('trash');
+            Route::post('/{post:id}/restore', [$controller, 'restore'])->name('restore');
+            Route::delete('/{post:id}/force-delete', [$controller, 'forceDelete'])->name('force-delete');
+            Route::get('/', [$controller, 'index'])->name('index');
+            Route::get('/create', [$controller, 'create'])->name('create');
+            Route::post('/', [$controller, 'store'])->name('store');
+            Route::get('/{post:id}', [$controller, 'show'])->name('show');
+            Route::get('/{post:id}/edit', [$controller, 'edit'])->name('edit');
+            Route::match(['PUT', 'PATCH'], '/{post:id}', [$controller, 'update'])->name('update');
+            Route::delete('/{post:id}', [$controller, 'destroy'])->name('destroy');
         });
     }
 
@@ -167,11 +169,12 @@ class Routes
             $language = $route->parameter('language');
             $post_type = $route->parameter('post_type') ?: $route->parameter('postType');
             $post_type_slug = is_object($post_type) ? $post_type->slug : $post_type;
+            $model = config('cms.models.post', Post::class);
 
             try {
-                $query = Post::where('type', $post_type_slug ?: -1);
+                $query = $model::where('type', $post_type_slug ?: -1);
 
-                if ($language) {
+                if ($language && method_exists($model, 'scopeNotHiddenOfLocale')) {
                     $query->notHiddenOfLocale($language);
                 }
 
@@ -179,7 +182,7 @@ class Routes
                     ->whereSlug($value)
                     ->firstOrFail();
 
-            } catch (ModelNotFoundException $e) {
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
                 abort(404);
             }
 
@@ -188,14 +191,19 @@ class Routes
 
         Route::bind('page_slug', function ($value, $route) {
             $language = $route->parameter('language');
+            $model = config('cms.models.post', Post::class);
 
             try {
-                return Post::where('type', 'pages')
-                    ->published()
-                    ->notHiddenOfLocale($language)
-                    ->whereSlug($value)
+                $query = $model::where('type', 'pages')
+                    ->published();
+
+                if ($language && method_exists($model, 'scopeNotHiddenOfLocale')) {
+                    $query->notHiddenOfLocale($language);
+                }
+
+                return $query->whereSlug($value)
                     ->firstOrFail();
-            } catch (ModelNotFoundException $e) {
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
                 abort(404);
             }
 
@@ -213,16 +221,18 @@ class Routes
         }
 
         $registrar->group(function () {
+            $controller = config('cms.web.controllers.posts', \Javaabu\Cms\Http\Controllers\PostsController::class);
+
             // Post Type Index Routes
-            Route::get('{postType}', '\Javaabu\Cms\Http\Controllers\PostsController@index')
+            Route::get('{postType}', [$controller, 'index'])
                 ->name('posts.index');
 
             // Post Single View Route
-            Route::get('{postType}/{post}', '\Javaabu\Cms\Http\Controllers\PostsController@show')
+            Route::get('{postType}/{post}', [$controller, 'show'])
                 ->name('posts.show');
 
             // Category Posts Route
-            Route::get('{postType}/category/{category}', '\Javaabu\Cms\Http\Controllers\PostsController@category')
+            Route::get('{postType}/category/{category}', [$controller, 'category'])
                 ->name('posts.category');
         });
     }
@@ -244,7 +254,7 @@ class Routes
         array $middleware = ['web'],
         ?string $controller = null
     ): void {
-        $controller = $controller ?? '\Javaabu\Cms\Http\Controllers\PostsController';
+        $controller = $controller ?? config('cms.web.controllers.posts', \Javaabu\Cms\Http\Controllers\PostsController::class);
 
         $registrar = Route::middleware($middleware);
 
@@ -278,7 +288,9 @@ class Routes
     public static function adminSideBarMenuItems(): array
     {
         $menus = [];
-        $all_post_types = PostType::all();
+        $post_type_model = config('cms.models.post_type', PostType::class);
+        $post_model = config('cms.models.post', Post::class);
+        $all_post_types = $post_type_model::all();
 
         foreach ($all_post_types as $post_type) {
             $name = Str::title($post_type->name);
@@ -286,15 +298,19 @@ class Routes
                 MenuItem::make($name)
                     ->can('view_' . $post_type->permission_slug)
                     ->active(optional(request()->route('post_type'))->slug == $post_type->slug)
-                    ->url(translate_route('admin.posts.index', $post_type->slug))
+                    ->url(config('cms.should_translate')
+                        ? translate_route('admin.posts.index', $post_type->slug)
+                        : route('admin.posts.index', $post_type->slug))
                     ->icon($post_type->icon)
-                    ->count(Post::query()->userVisibleForPostType($post_type)->postType($post_type->slug)->pending()),
+                    ->count($post_model::query()->userVisibleForPostType($post_type)->postType($post_type->slug)->pending()),
             ];
 
             if ($post_type->hasFeature(PostTypeFeatures::CATEGORIES)) {
                 $children[] = MenuItem::make(_d(':name Categories', ['name' => Str::singular($name)]))
                     ->can('view_' . Str::singular($post_type->permission_slug) . '_categories')
-                    ->url(translate_route('admin.categories.index', Str::singular($post_type->slug) . '-categories'))
+                    ->url(config('cms.should_translate')
+                        ? translate_route('admin.categories.index', Str::singular($post_type->slug) . '-categories')
+                        : route('admin.categories.index', Str::singular($post_type->slug) . '-categories'))
                     ->active(optional(request()->route('category_type'))->slug == Str::singular($post_type->slug) . '-categories');
 
                 $menus[] =
