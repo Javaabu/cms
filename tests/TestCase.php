@@ -10,7 +10,7 @@ use Javaabu\Cms\Tests\TestSupport\Providers\TestServiceProvider;
 
 abstract class TestCase extends BaseTestCase
 {
-    public static ?\Illuminate\Testing\TestResponse $latestResponse = null;
+    public static $latestResponse = null;
 
     public function setUp(): void
     {
