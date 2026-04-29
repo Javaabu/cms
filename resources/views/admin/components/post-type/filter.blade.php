@@ -1,5 +1,5 @@
 @php
-    use Illuminate\Support\Facades\Input;
+    use Illuminate\Http\Request;use Illuminate\Support\Facades\Input;
 @endphp
 @component('admin.components.filter')
     <div class="row">
@@ -14,7 +14,7 @@
             <div class="form-group">
                 {!! Form::label('status', _d('Status')) !!}
                 @php
-                    $selected_status = Input::get('status', old('status'));
+                    $selected_status = Request::input('status', old('status'));
                     $statuses = \Javaabu\Helpers\Enums\PublishStatuses::getLabels();
                 @endphp
                 {!! Form::select('status', ['' => ''] + $statuses, $selected_status, [
@@ -28,7 +28,7 @@
             <div class="form-group">
                 {!! Form::label('category', _d('Category')) !!}
                 @php
-                    $selected_category = Input::get('category', old('category'));
+                    $selected_category = Request::input('category', old('category'));
                     $categories = $category_type->categories()
                                                 ->whereId($selected_category)
                                                 ->get()
