@@ -144,7 +144,7 @@ class SetupCmsCommand extends Command
 
                 foreach ($replacements as $key => $newClass) {
                     $content = preg_replace(
-                        "/(['\"]$key['\"]\s*=>\s*).*?,/",
+                        "/(['\"]" . $key . "['\"]\s*=>\s*).*?,/",
                         "$1$newClass,",
                         $content
                     );
@@ -158,7 +158,7 @@ class SetupCmsCommand extends Command
 
                 foreach ($controllerReplacements as $key => $newClass) {
                     $content = preg_replace(
-                        "/(['\"]$key['\"]\s*=>\s*).*?,/",
+                        "/(['\"]" . $key . "['\"]\s*=>\s*).*?,/",
                         "$1$newClass,",
                         $content
                     );

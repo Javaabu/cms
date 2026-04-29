@@ -4,7 +4,7 @@ namespace Javaabu\Cms\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Javaabu\Cms\Models\Post;
-use Orchestra\Testbench\TestCase;
+use Javaabu\Cms\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
 class ExampleTest extends TestCase
@@ -18,5 +18,4 @@ class ExampleTest extends TestCase
 
         $this->assertInstanceOf(Post::class, $post);
     }
-
 }
