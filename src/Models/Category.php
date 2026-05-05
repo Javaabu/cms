@@ -55,6 +55,7 @@ class Category extends Model implements
      */
     protected $fillable = [
         'name',
+        'slug',
     ];
 
 
