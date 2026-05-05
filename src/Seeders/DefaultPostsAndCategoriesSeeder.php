@@ -8,6 +8,7 @@ use Javaabu\Cms\Enums\Languages;
 use Javaabu\Cms\Models\Category;
 use Javaabu\Cms\Models\CategoryType;
 use Javaabu\Cms\Models\PostType;
+use Javaabu\Cms\PostTypes\PostTypes;
 
 class DefaultPostsAndCategoriesSeeder extends Seeder
 {
@@ -54,7 +55,7 @@ class DefaultPostsAndCategoriesSeeder extends Seeder
      */
     protected function seedPostTypes()
     {
-        $postTypes = config('cms.default_post_types', []);
+        $postTypes = PostTypes::normalize(config('cms.default_post_types', []));
         $count = 0;
 
         foreach ($postTypes as $slug => $data) {
@@ -79,7 +80,7 @@ class DefaultPostsAndCategoriesSeeder extends Seeder
             $type->features = $data['features'] ?? [];
             $type->description = $data['description'] ?? null;
             $type->og_description = $data['og_description'] ?? null;
-            $type->order_column = $count;
+            $type->order_column = $data['order_column'] ?? $count;
 
             $type->save();
 

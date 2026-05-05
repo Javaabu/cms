@@ -53,22 +53,37 @@ You can customize these defaults in `config/cms.php` before running setup.
 
 ## Configuration
 
-After installation, configure your post types in `config/cms.php`:
+After installation, configure your post types in `config/cms.php`.
+You can use either arrays or the fluent API:
 
 ```php
-'post_types' => [
-    'news' => [
-        'label' => 'News',
-        'singular_label' => 'News Article',
-        'features' => ['categories', 'featured_image', 'excerpt'],
-        'category_types' => ['news-categories'],
-    ],
-    'blog' => [
-        'label' => 'Blog Posts',
-        'singular_label' => 'Blog Post',
-        'features' => ['categories', 'featured_image', 'excerpt', 'video-link'],
-        'category_types' => ['blog-categories'],
-    ],
+use Javaabu\Cms\Enums\PostTypeFeatures;
+use Javaabu\Cms\PostTypes\PostType;
+
+'default_post_types' => [
+    PostType::make('news')
+        ->name('News')
+        ->singularName('News Article')
+        ->icon('zmdi-assignment')
+        ->categoryType('news-categories')
+        ->feature(PostTypeFeatures::CATEGORIES)
+        ->feature(PostTypeFeatures::IMAGE_GALLERY)
+        ->feature('featured-image')
+        ->feature('excerpt')
+        ->description('Latest news and updates'),
+
+    PostType::make('blog')
+        ->name('Blog Posts')
+        ->singularName('Blog Post')
+        ->icon('zmdi-library')
+        ->categoryType('blog-categories')
+        ->features([
+            PostTypeFeatures::CATEGORIES,
+            PostTypeFeatures::IMAGE_GALLERY,
+            'featured-image',
+            'excerpt',
+            'video-link',
+        ]),
 ],
 
 'category_types' => [

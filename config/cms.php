@@ -1,5 +1,7 @@
 <?php
 
+use Javaabu\Cms\PostTypes\PostType;
+
 return [
 
     /*
@@ -212,148 +214,102 @@ return [
     |
     | Define default post types that can be installed during setup.
     | These will be created when running the setup command with --with-defaults.
+    | Supports both plain arrays and fluent definitions via:
+    | Javaabu\Cms\PostTypes\PostType::make('news')->name(...)
     |
     */
 
     'default_post_types' => [
-        'news' => [
-            'name' => 'News',
-            'name_dv' => 'ޚަބަރު',
-            'singular_name' => 'News Article',
-            'icon' => 'zmdi-assignment',
-            'category_type' => 'news-categories',
-            'features' => [
-                'image-gallery' => true,
-                'categories' => true,
-                'featured-image' => true,
-                'excerpt' => true,
-            ],
-            'description' => 'Latest news and updates',
-            'og_description' => 'Stay updated with our latest news',
-        ],
-        'blog' => [
-            'name' => 'Blog Posts',
-            'name_dv' => 'ބްލޮގް',
-            'singular_name' => 'Blog Post',
-            'icon' => 'zmdi-library',
-            'category_type' => 'blog-categories',
-            'features' => [
-                'image-gallery' => true,
-                'categories' => true,
-                'featured-image' => true,
-                'excerpt' => true,
-            ],
-            'description' => 'Blog articles and insights',
-            'og_description' => 'Read our latest blog posts',
-        ],
-        'downloads' => [
-            'name' => 'Downloads',
-            'name_dv' => 'ޑައުންލޯޑްސް',
-            'singular_name' => 'Download',
-            'icon' => 'zmdi-download',
-            'category_type' => 'download-categories',
-            'features' => [
-                'documents' => true,
-                'categories' => true,
-            ],
-            'description' => 'Downloadable files and documents',
-        ],
-        'announcements' => [
-            'name' => 'Announcements',
-            'name_dv' => 'އެނައުންސްމެންޓުތައް',
-            'singular_name' => 'Announcement',
-            'icon' => 'zmdi-alert-triangle',
-            'category_type' => 'announcement-categories',
-            'features' => [
-                'documents' => true,
-                'document-number' => true,
-                'expireable' => true,
-                'categories' => true,
-                'reference-no' => true,
-            ],
-            'description' => 'Important announcements and notices',
-        ],
-        'publications' => [
-            'name' => 'Publications',
-            'name_dv' => 'ޝާޢިއުކުރުންތައް',
-            'singular_name' => 'Publication',
-            'icon' => 'zmdi-book',
-            'category_type' => 'publication-categories',
-            'features' => [
-                'documents' => true,
-                'categories' => true,
-                'featured-image' => true,
-            ],
-            'description' => 'Published documents and materials',
-        ],
-        'jobs' => [
-            'name' => 'Jobs',
-            'name_dv' => 'ވަޒީފާތައް',
-            'singular_name' => 'Job',
-            'icon' => 'zmdi-case',
-            'category_type' => 'job-categories',
-            'features' => [
-                'documents' => true,
-                'document-number' => true,
-                'expireable' => true,
-                'categories' => true,
-                'reference-no' => true,
-            ],
-            'description' => 'Job openings and career opportunities',
-        ],
-        'galleries' => [
-            'name' => 'Galleries',
-            'name_dv' => 'ގެލަރީތައް',
-            'singular_name' => 'Gallery',
-            'icon' => 'zmdi-collection-image-o',
-            'category_type' => 'gallery-categories',
-            'features' => [
-                'image-gallery' => true,
-                'format' => true,
-                'categories' => true,
-            ],
-            'description' => 'Photo and video galleries',
-        ],
-        'tenders' => [
-            'name' => 'Tenders',
-            'name_dv' => 'ބީލަންތައް',
-            'singular_name' => 'Tender',
-            'icon' => 'zmdi-assignment',
-            'category_type' => 'tender-categories',
-            'features' => [
-                'documents' => true,
-                'document-number' => true,
-                'expireable' => true,
-                'categories' => true,
-                'reference-no' => true,
-                'gazette-link' => true,
-            ],
-            'description' => 'Tender notices and bids',
-        ],
-        'reports' => [
-            'name' => 'Reports',
-            'name_dv' => 'ރިޕޯތްތައް',
-            'singular_name' => 'Report',
-            'icon' => 'zmdi-collection-text',
-            'category_type' => 'report-categories',
-            'features' => [
-                'documents' => true,
-                'categories' => true,
-                'document-number' => true,
-            ],
-            'description' => 'Reports and statistics',
-        ],
-        'pages' => [
-            'name' => 'Pages',
-            'name_dv' => 'ސްފްޙާތައް',
-            'singular_name' => 'Page',
-            'icon' => 'zmdi-file',
-            'category_type' => null,
-            'features' => [
-                'page-style' => true,
-            ],
-            'description' => 'Static pages and content',
-        ],
+        PostType::make('news')
+            ->name('News')
+            ->nameDv('ޚަބަރު')
+            ->singularName('News Article')
+            ->icon('zmdi-assignment')
+            ->categoryType('news-categories')
+            ->features(['image-gallery', 'categories', 'featured-image', 'excerpt'])
+            ->description('Latest news and updates')
+            ->ogDescription('Stay updated with our latest news'),
+
+        PostType::make('blog')
+            ->name('Blog Posts')
+            ->nameDv('ބްލޮގް')
+            ->singularName('Blog Post')
+            ->icon('zmdi-library')
+            ->categoryType('blog-categories')
+            ->features(['image-gallery', 'categories', 'featured-image', 'excerpt'])
+            ->description('Blog articles and insights')
+            ->ogDescription('Read our latest blog posts'),
+
+        PostType::make('downloads')
+            ->name('Downloads')
+            ->nameDv('ޑައުންލޯޑްސް')
+            ->singularName('Download')
+            ->icon('zmdi-download')
+            ->categoryType('download-categories')
+            ->features(['documents', 'categories'])
+            ->description('Downloadable files and documents'),
+
+        PostType::make('announcements')
+            ->name('Announcements')
+            ->nameDv('އެނައުންސްމެންޓުތައް')
+            ->singularName('Announcement')
+            ->icon('zmdi-alert-triangle')
+            ->categoryType('announcement-categories')
+            ->features(['documents', 'document-number', 'expireable', 'categories', 'reference-no'])
+            ->description('Important announcements and notices'),
+
+        PostType::make('publications')
+            ->name('Publications')
+            ->nameDv('ޝާޢިއުކުރުންތައް')
+            ->singularName('Publication')
+            ->icon('zmdi-book')
+            ->categoryType('publication-categories')
+            ->features(['documents', 'categories', 'featured-image'])
+            ->description('Published documents and materials'),
+
+        PostType::make('jobs')
+            ->name('Jobs')
+            ->nameDv('ވަޒީފާތައް')
+            ->singularName('Job')
+            ->icon('zmdi-case')
+            ->categoryType('job-categories')
+            ->features(['documents', 'document-number', 'expireable', 'categories', 'reference-no'])
+            ->description('Job openings and career opportunities'),
+
+        PostType::make('galleries')
+            ->name('Galleries')
+            ->nameDv('ގެލަރީތައް')
+            ->singularName('Gallery')
+            ->icon('zmdi-collection-image-o')
+            ->categoryType('gallery-categories')
+            ->features(['image-gallery', 'format', 'categories'])
+            ->description('Photo and video galleries'),
+
+        PostType::make('tenders')
+            ->name('Tenders')
+            ->nameDv('ބީލަންތައް')
+            ->singularName('Tender')
+            ->icon('zmdi-assignment')
+            ->categoryType('tender-categories')
+            ->features(['documents', 'document-number', 'expireable', 'categories', 'reference-no', 'gazette-link'])
+            ->description('Tender notices and bids'),
+
+        PostType::make('reports')
+            ->name('Reports')
+            ->nameDv('ރިޕޯތްތައް')
+            ->singularName('Report')
+            ->icon('zmdi-collection-text')
+            ->categoryType('report-categories')
+            ->features(['documents', 'categories', 'document-number'])
+            ->description('Reports and statistics'),
+
+        PostType::make('pages')
+            ->name('Pages')
+            ->nameDv('ސްފްޙާތައް')
+            ->singularName('Page')
+            ->icon('zmdi-file')
+            ->features(['page-style'])
+            ->description('Static pages and content'),
     ],
 
     /*

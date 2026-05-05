@@ -8,6 +8,7 @@ use Javaabu\Cms\Enums\PostTypeFeatures;
 use Javaabu\Cms\Models\CategoryType;
 use Javaabu\Cms\Models\Post;
 use Javaabu\Cms\Models\PostType;
+use Javaabu\Cms\PostTypes\PostTypes;
 use Javaabu\Cms\Translatable\Http\Controllers\Admin\CategoriesController;
 use Javaabu\Cms\Translatable\Http\Controllers\Admin\PostsController as AdminPostsController;
 use Javaabu\Cms\Translatable\Http\Controllers\PostsController;
@@ -17,6 +18,7 @@ use Javaabu\Translatable\Facades\Languages;
 class Cms {
     public function registerPostTypes($postTypes): void
     {
+        $postTypes = PostTypes::normalize($postTypes);
         $count = 0;
         $post_type_model = config('cms.models.post_type', PostType::class);
         $category_type_model = config('cms.models.category_type', CategoryType::class);
