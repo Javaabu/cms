@@ -267,8 +267,7 @@ class PostTest extends TestCase
         ]);
 
         $post->publish();
-
-        $post->status = PostStatus::PUBLISHED->value;
+        $post->refresh();
 
         $this->assertDatabaseHas('posts', [
             'id' => $post->id,
@@ -334,7 +333,11 @@ class PostTest extends TestCase
             'published_at' => now()->subHour(),
         ]);
 
-        $post->published_at = null;
+        $post->setRawAttributes(array_merge($post->getAttributes(), [
+            'published_at' => null,
+        ]), true);
+
+        $this->assertNull($post->published_at);
 
         $post->publish();
         $post->refresh();
@@ -390,7 +393,11 @@ class PostTest extends TestCase
             'published_at' => now()->subHour(),
         ]);
 
-        $post->published_at = null;
+        $post->setRawAttributes(array_merge($post->getAttributes(), [
+            'published_at' => null,
+        ]), true);
+
+        $this->assertNull($post->published_at);
 
         $post->updateStatus(PostStatus::PUBLISHED->value, true);
         $post->refresh();

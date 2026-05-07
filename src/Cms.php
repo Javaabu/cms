@@ -32,11 +32,9 @@ class Cms {
 
             $name = Str::title(str_replace('-', ' ', $slug));
             $type->name = $data['name'] ?? $name;
-            $type->singular_name = $data['name_singular'] ?? Str::singular($data['name'] ?? $name);
-            if (config('cms.should_translate')) {
-                // PostType stores lang as plain string — no Languages enum cast
-                $type->lang = config('cms.default_language', 'en');
-            }
+            $type->singular_name = $data['name_singular'] ?? $data['singular_name'] ?? Str::singular($data['name'] ?? $name);
+            // PostType stores lang as plain string — no Languages enum cast
+            $type->lang = config('cms.default_language', 'en');
 
             $type->slug = $slug;
             $type->icon = $data['icon'];
@@ -48,8 +46,9 @@ class Cms {
             }
 
             $category_type->name = $data['name'] ?? $name . ' Categories';
-            $category_type->singular_name = $data['name_singular'] ?? Str::singular($data['name'] ?? $name) . ' Category';
+            $category_type->singular_name = $data['name_singular'] ?? $data['singular_name'] ?? Str::singular($data['name'] ?? $name) . ' Category';
             $category_type->slug = $slug . '_categories';
+            $category_type->lang = config('cms.default_language', 'en');
 
             $category_type->save();
 

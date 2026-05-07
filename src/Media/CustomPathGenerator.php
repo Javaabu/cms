@@ -1,13 +1,14 @@
 <?php
+
 /**
  * Custom path generator for media library
  */
 
 namespace Javaabu\Cms\Media;
 
-use Vinkla\Hashids\Facades\Hashids;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\MediaLibrary\Support\PathGenerator\PathGenerator;
+use Vinkla\Hashids\Facades\Hashids;
 
 class CustomPathGenerator implements PathGenerator
 {
@@ -16,7 +17,7 @@ class CustomPathGenerator implements PathGenerator
      */
     public function getPathForConversions(Media $media): string
     {
-        return $this->getPath($media) . 'c/';
+        return $this->getPath($media).'c/';
     }
 
     /*
@@ -27,7 +28,7 @@ class CustomPathGenerator implements PathGenerator
 
     public function getPath(Media $media): string
     {
-        return $this->getBasePath($media) . '/';
+        return $this->getBasePath($media).'/';
     }
 
     /*
@@ -38,8 +39,12 @@ class CustomPathGenerator implements PathGenerator
 
     protected function getBasePath(Media $media): string
     {
-        return Hashids::connection('uploads')
-                      ->encode($media->getKey());
+        if (class_exists(Hashids::class)) {
+            return Hashids::connection('uploads')
+                ->encode($media->getKey());
+        }
+
+        return (string) $media->getKey();
     }
 
     /*
@@ -48,11 +53,6 @@ class CustomPathGenerator implements PathGenerator
 
     public function getPathForResponsiveImages(Media $media): string
     {
-        return $this->getPath($media) . 'cri/';
+        return $this->getPath($media).'cri/';
     }
 }
-
-
-
-
-

@@ -228,7 +228,7 @@ class Routes
                 ->name('posts.index');
 
             // Post Single View Route
-            Route::get('{postType}/{post}', [$controller, 'show'])
+            Route::get('{postType}/{post_slug}', [$controller, 'show'])
                 ->name('posts.show');
 
             // Category Posts Route
@@ -273,7 +273,7 @@ class Routes
                 ->defaults('postType', $postTypeSlug);
 
             // Single Post View
-            Route::get("{$postTypeSlug}/{post}", $controller . '@show')
+            Route::get("{$postTypeSlug}/{post_slug}", $controller . '@show')
                 ->name("post-types.{$postTypeSlug}.show")
                 ->defaults('postType', $postTypeSlug);
 

@@ -3,23 +3,23 @@
 namespace Javaabu\Cms\Media\Attachment\HasAttachments;
 
 use DateTimeInterface;
-use Javaabu\Cms\Media\Attachment\Attachment;
-use Illuminate\Support\Arr;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\MediaLibrary\Conversions\Conversion;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Javaabu\Cms\Media\Attachment\Attachment;
 use Javaabu\Cms\Media\Attachment\AttachmentRepository;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use Javaabu\Cms\Media\Attachment\MediaAdder\MediaAdder;
-use Spatie\MediaLibrary\MediaCollections\MediaCollection;
-use Javaabu\Cms\Media\Attachment\MediaAdder\MediaAdderFactory;
+use Javaabu\Cms\Media\Attachment\Events\AttachmentCollectionHasBeenCleared;
 use Javaabu\Cms\Media\Attachment\Exceptions\AttachmentCannotBeDeleted;
 use Javaabu\Cms\Media\Attachment\Exceptions\AttachmentCannotBeUpdated;
-use Javaabu\Cms\Media\Attachment\Events\AttachmentCollectionHasBeenCleared;
 use Javaabu\Cms\Media\Attachment\Exceptions\MediaCannotBeAdded\MediaMimeTypeNotAllowed;
+use Javaabu\Cms\Media\Attachment\MediaAdder\MediaAdder;
+use Javaabu\Cms\Media\Attachment\MediaAdder\MediaAdderFactory;
+use Spatie\MediaLibrary\Conversions\Conversion;
+use Spatie\MediaLibrary\MediaCollections\MediaCollection;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 trait HasAttachmentsTrait
 {
@@ -58,7 +58,6 @@ trait HasAttachmentsTrait
     /**
      * Add a media from a request.
      *
-     * @param string $key
      *
      * @return MediaAdder
      */
@@ -70,8 +69,7 @@ trait HasAttachmentsTrait
     /**
      * Add multiple medias from a request by keys.
      *
-     * @param string[] $keys
-     *
+     * @param  string[]  $keys
      * @return MediaAdder[]
      */
     public function addMultipleAttachmentsFromRequest(array $keys)
@@ -91,10 +89,7 @@ trait HasAttachmentsTrait
     /**
      * Get attachment collection by its collectionName.
      *
-     * @param string $collectionName
-     * @param array|callable $filters
-     *
-     * @return Collection
+     * @param  array|callable  $filters
      */
     public function getAttachments(string $collectionName = 'default', $filters = []): Collection
     {
@@ -103,10 +98,6 @@ trait HasAttachmentsTrait
 
     /**
      * Get the attachment media
-     *
-     * @param string $collectionName
-     * @param array $filters
-     * @return null|Collection
      */
     public function getAttachmentMedia(string $collectionName = 'default', array $filters = []): ?Collection
     {
@@ -128,10 +119,6 @@ trait HasAttachmentsTrait
 
     /**
      * Get the first attachment media
-     *
-     * @param string $collectionName
-     * @param array $filters
-     * @return null|Attachment
      */
     public function getFirstAttachment(string $collectionName = 'default', array $filters = []): ?Attachment
     {
@@ -177,10 +164,7 @@ trait HasAttachmentsTrait
     /**
      * Update an attachment collection by deleting and inserting again with new values.
      *
-     * @param array $newAttachmentsArray
-     * @param string $collectionName
      *
-     * @return Collection
      *
      * @throws AttachmentCannotBeUpdated
      */
@@ -215,26 +199,20 @@ trait HasAttachmentsTrait
 
     /**
      * Remove attachments not in the array
-     *
-     * @param array $newAttachmentsArray
-     * @param string $collectionName
      */
     protected function removeAttachmentItemsNotPresentInArray(array $newAttachmentsArray, string $collectionName = 'default')
     {
         $this->getAttachments($collectionName)
-             ->reject(function (Attachment $currentAttachmentItem) use ($newAttachmentsArray) {
-                 return in_array($currentAttachmentItem->id, array_column($newAttachmentsArray, 'id'));
-             })
+            ->reject(function (Attachment $currentAttachmentItem) use ($newAttachmentsArray) {
+                return in_array($currentAttachmentItem->id, array_column($newAttachmentsArray, 'id'));
+            })
             ->each->delete();
     }
 
     /**
      * Update an attachment collection by deleting and inserting media again with new values.
      *
-     * @param array $newMediaArray
-     * @param string $collectionName
      *
-     * @return Collection
      *
      * @throws AttachmentCannotBeUpdated
      */
@@ -244,8 +222,8 @@ trait HasAttachmentsTrait
 
         // filter out already attached media
         $existing_media = $this->getAttachments($collectionName)
-                               ->pluck('media_id')
-                               ->all();
+            ->pluck('media_id')
+            ->all();
 
         $newMediaArray = array_diff($newMediaArray, $existing_media);
 
@@ -260,7 +238,7 @@ trait HasAttachmentsTrait
 
                 if (! $currentAttachment) {
                     $currentAttachment = $this->addAttachment($newMediaId)
-                                              ->toAttachmentCollection($collectionName);
+                        ->toAttachmentCollection($collectionName);
                 }
 
                 $currentAttachment->order_column = $orderColumn++;
@@ -272,24 +250,20 @@ trait HasAttachmentsTrait
 
     /**
      * Remove attachment media not in the array
-     *
-     * @param array $newMediaArray
-     * @param string $collectionName
      */
     protected function removeAttachmentMediaNotPresentInArray(array $newMediaArray, string $collectionName = 'default')
     {
         $this->getAttachments($collectionName)
-             ->reject(function (Attachment $currentAttachmentItem) use ($newMediaArray) {
-                 return in_array($currentAttachmentItem->media_id, $newMediaArray);
-             })
+            ->reject(function (Attachment $currentAttachmentItem) use ($newMediaArray) {
+                return in_array($currentAttachmentItem->media_id, $newMediaArray);
+            })
             ->each->delete();
     }
 
     /**
      * Attach a media to the model.
      *
-     * @param string|Media $media
-     *
+     * @param  string|Media  $media
      * @return MediaAdder
      */
     public function addAttachment($media)
@@ -300,9 +274,7 @@ trait HasAttachmentsTrait
     /**
      * Remove all attachments in the given collection except some.
      *
-     * @param string $collectionName
-     * @param Attachment[]|Collection $excludedAttachments
-     *
+     * @param  Attachment[]|Collection  $excludedAttachments
      * @return $this
      */
     public function clearAttachmentCollectionExcept(string $collectionName = 'default', $excludedAttachments = [])
@@ -318,9 +290,9 @@ trait HasAttachmentsTrait
         }
 
         $this->getAttachments($collectionName)
-             ->reject(function (Attachment $attachment) use ($excludedAttachments) {
-                 return $excludedAttachments->where('id', $attachment->id)->count();
-             })
+            ->reject(function (Attachment $attachment) use ($excludedAttachments) {
+                return $excludedAttachments->where('id', $attachment->id)->count();
+            })
             ->each->delete();
 
         if ($this->attachmentsIsPreloaded()) {
@@ -333,7 +305,6 @@ trait HasAttachmentsTrait
     /**
      * Remove all attachments in the given collection.
      *
-     * @param string $collectionName
      *
      * @return $this
      */
@@ -353,8 +324,6 @@ trait HasAttachmentsTrait
 
     /**
      * Check if attachments were preloaded
-     *
-     * @return bool
      */
     protected function attachmentsIsPreloaded(): bool
     {
@@ -365,7 +334,7 @@ trait HasAttachmentsTrait
      * Delete the associated attachment with the given id.
      * You may also pass a attachment object.
      *
-     * @param int|Attachment $attachmentId
+     * @param  int|Attachment  $attachmentId
      *
      * @throws AttachmentCannotBeDeleted
      */
@@ -398,9 +367,6 @@ trait HasAttachmentsTrait
 
     /**
      * Add attachment collection
-     *
-     * @param string $name
-     * @return MediaCollection
      */
     public function addAttachmentCollection(string $name): MediaCollection
     {
@@ -414,7 +380,6 @@ trait HasAttachmentsTrait
     /**
      * Cache the attachments on the object.
      *
-     * @param string $collectionName
      *
      * @return mixed
      */
@@ -422,7 +387,7 @@ trait HasAttachmentsTrait
     {
         $collection = $this->exists
             ? $this->attachments()->with('media')->get()
-            : collect($this->unAttachedAttachmentItems)->pluck('attachments');
+            : collect($this->unAttachedAttachmentItems)->pluck('attachment');
 
         return $collection
             ->filter(function (Attachment $attachmentItem) use ($collectionName) {
@@ -438,9 +403,6 @@ trait HasAttachmentsTrait
 
     /**
      * Prepare to attach
-     *
-     * @param Attachment $attachment
-     * @param MediaAdder $mediaAdder
      */
     public function prepareToAttachAttachments(Attachment $attachment, MediaAdder $mediaAdder)
     {
@@ -449,8 +411,6 @@ trait HasAttachmentsTrait
 
     /**
      * Process unattached attachments
-     *
-     * @param callable $callable
      */
     public function processUnattachedAttachments(callable $callable)
     {
@@ -463,9 +423,8 @@ trait HasAttachmentsTrait
 
     /**
      * Register all attachment conversions
-     * @param Media|null $media
      */
-    public function registerAllAttachmentConversions(Media $media = null)
+    public function registerAllAttachmentConversions(?Media $media = null)
     {
         $this->registerAttachmentCollections();
 
@@ -492,25 +451,17 @@ trait HasAttachmentsTrait
     /**
      * Register attachment media collections
      */
-    public function registerAttachmentCollections()
-    {
-    }
+    public function registerAttachmentCollections() {}
 
     /**
      * Register attachment media conversions
-     *
-     * @param Media|null $media
      */
-    public function registerAttachmentConversions(Media $media = null)
-    {
-    }
+    public function registerAttachmentConversions(?Media $media = null) {}
 
     /**
      * Updates the attachment collection with given media from request
      *
-     * @param $collection
-     * @param Request $request
-     * @param string $key the attachment field in the request
+     * @param  string  $key  the attachment field in the request
      * @return mixed
      */
     public function updateSingleAttachment($collection, Request $request, $key = '')
@@ -531,7 +482,7 @@ trait HasAttachmentsTrait
                 // attach only if different
                 if (empty($current_media) || $current_media->id != $media_id) {
                     $response = $this->addAttachment($media_id)
-                                     ->toAttachmentCollection($collection);
+                        ->toAttachmentCollection($collection);
                 }
             } else {
                 // clear
@@ -546,10 +497,6 @@ trait HasAttachmentsTrait
 
     /**
      * Get the first attachment media
-     *
-     * @param string $collectionName
-     * @param array $filters
-     * @return null|Media
      */
     public function getFirstAttachmentMedia(string $collectionName = 'default', array $filters = []): ?Media
     {
@@ -561,7 +508,6 @@ trait HasAttachmentsTrait
     /**
      * With attachments scope
      *
-     * @param $query
      * @return mixed
      */
     public function scopeWithAttachments($query)
@@ -572,8 +518,8 @@ trait HasAttachmentsTrait
     /**
      * Validate media mimetype
      *
-     * @param Media $media
-     * @param array ...$allowedMimeTypes
+     * @param  array  ...$allowedMimeTypes
+     *
      * @throws MediaMimeTypeNotAllowed
      */
     protected function guardAgainstInvalidMediaMimeType(Media $media, ...$allowedMimeTypes)
@@ -586,7 +532,7 @@ trait HasAttachmentsTrait
 
         $validation = Validator::make(
             ['mimetype' => $media->mime_type],
-            ['mimetype' => 'string|in:' . implode(',', $allowedMimeTypes)]
+            ['mimetype' => 'string|in:'.implode(',', $allowedMimeTypes)]
         );
 
         if ($validation->fails()) {
@@ -594,8 +540,3 @@ trait HasAttachmentsTrait
         }
     }
 }
-
-
-
-
-

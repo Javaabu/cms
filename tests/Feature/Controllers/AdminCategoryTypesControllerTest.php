@@ -13,7 +13,6 @@ use Javaabu\Cms\Http\Requests\CategoryTypesRequest;
 use Javaabu\Cms\Models\CategoryType;
 use Javaabu\Cms\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
-use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 class AdminCategoryTypesControllerTest extends TestCase
 {
@@ -27,6 +26,7 @@ class AdminCategoryTypesControllerTest extends TestCase
 
         Route::get('/_test/admin/category-types/{category_type}/edit', fn () => 'ok')->name('admin.category-types.edit');
         Route::get('/_test/admin/category-types', fn () => 'ok')->name('admin.category-types.index');
+        Route::getRoutes()->refreshNameLookups();
     }
 
     #[Test]
@@ -103,13 +103,11 @@ class AdminCategoryTypesControllerTest extends TestCase
         ]);
         $request->shouldReceive('input')->with('lang', \Mockery::any())->andReturn('dv');
 
-        try {
-            app(AdminCategoryTypesController::class)->store($request);
-        } catch (RouteNotFoundException) {
-        }
+        $response = app(AdminCategoryTypesController::class)->store($request);
 
         $created = CategoryType::query()->where('slug', 'announcements')->firstOrFail();
         $this->assertSame('dv', $created->lang);
+        $this->assertSame(route('admin.category-types.edit', $created), $response->getTargetUrl());
     }
 
     #[Test]
@@ -131,15 +129,13 @@ class AdminCategoryTypesControllerTest extends TestCase
         $request->shouldReceive('input')->with('lang')->andReturn('dv');
         $request->shouldReceive('input')->with('slug')->andReturn('announcements-updated');
 
-        try {
-            app(AdminCategoryTypesController::class)->update($request, $type);
-        } catch (RouteNotFoundException) {
-        }
+        $response = app(AdminCategoryTypesController::class)->update($request, $type);
 
         $type->refresh();
 
         $this->assertSame('en', $type->lang);
         $this->assertSame('announcements-updated', $type->slug);
+        $this->assertSame(route('admin.category-types.edit', $type), $response->getTargetUrl());
     }
 
     private function createCategoryType(string $slug): CategoryType

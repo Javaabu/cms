@@ -2,32 +2,35 @@
 
 namespace Javaabu\Cms\Enums\RootSlugs;
 
-use Exception;
 use DateInterval;
+use Exception;
 use Illuminate\Cache\CacheManager;
-use Illuminate\Support\Collection;
-use Illuminate\Contracts\Cache\Store;
 use Illuminate\Contracts\Cache\Repository;
+use Illuminate\Contracts\Cache\Store;
+use Illuminate\Support\Collection;
 use Javaabu\Cms\Models\PostType;
+
 use function array_key_exists;
 
 class RootSlugsRegistrar
 {
     /** @var DateInterval|int */
     public static $cache_expiration_time;
+
     /** @var string */
     public static $cache_key;
+
     /** @var Repository */
     protected $cache;
+
     /** @var CacheManager */
     protected $cache_manager;
+
     /** @var Collection */
     protected $slugs;
 
     /**
      * PermissionRegistrar constructor.
-     *
-     * @param CacheManager $cache_manager
      */
     public function __construct(CacheManager $cache_manager)
     {
@@ -41,7 +44,7 @@ class RootSlugsRegistrar
      */
     protected function initializeCache()
     {
-        self::$cache_expiration_time = config('rootslugs.cache.expiration_time');
+        self::$cache_expiration_time = config('cms.rootslugs.cache.expiration_time');
 
         if (app()->version() <= '5.5') {
             if (self::$cache_expiration_time instanceof DateInterval) {
@@ -50,20 +53,18 @@ class RootSlugsRegistrar
             }
         }
 
-        self::$cache_key = config('rootslugs.cache.key');
+        self::$cache_key = config('cms.rootslugs.cache.key');
 
         $this->cache = $this->getCacheStoreFromConfig();
     }
 
     /**
      * Get the cache store driver
-     *
-     * @return Repository
      */
     protected function getCacheStoreFromConfig(): Repository
     {
         // the 'default' fallback here is from the translation.php config file, where 'default' means to use config(cache.default)
-        $cache_driver = config('rootslugs.cache.store', 'default');
+        $cache_driver = config('cms.rootslugs.cache.store', 'default');
 
         // when 'default' is specified, no action is required since we already have the default instance
         if ($cache_driver === 'default') {
@@ -99,7 +100,10 @@ class RootSlugsRegistrar
 
                 try {
                     $slugs = [
-                        'post_type' => PostType::query()->whereJsonDoesntContain('features', ['root-page' => true])->get(),
+                        'post_type' => PostType::query()
+                            ->get()
+                            ->reject(fn (PostType $postType) => ($postType->features['root-page'] ?? false) === true)
+                            ->values(),
                     ];
                 } catch (Exception $e) {
                     return null;
@@ -114,8 +118,6 @@ class RootSlugsRegistrar
 
     /**
      * Get the instance of the Cache Store.
-     *
-     * @return Store
      */
     public function getCacheStore(): Store
     {
