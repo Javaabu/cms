@@ -13,16 +13,20 @@ use Javaabu\Cms\Enums\RootSlugs\HasRootSlug;
 use Javaabu\Forms\Support\Icons\FontAwesomeIcons;
 use Javaabu\Helpers\AdminModel\AdminModel;
 use Javaabu\Helpers\AdminModel\IsAdminModel;
-use Javaabu\Helpers\Media\AllowedMimeTypes;
+use Javaabu\Cms\Media\AllowedMimeTypes;
 use Javaabu\Helpers\Traits\HasSlug;
+use Javaabu\Mediapicker\Concerns\InteractsWithAttachments;
+use Javaabu\Mediapicker\Contracts\HasAttachments;
 use Javaabu\MenuBuilder\Traits\HasIcon;
 use Kalnoy\Nestedset\NodeTrait;
 use Illuminate\Support\Str;
 use Spatie\Image\Enums\Fit;
+use Spatie\MediaLibrary\MediaCollections\File;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class Category extends Model implements
-    AdminModel
+    AdminModel,
+    HasAttachments
 {
     use NodeTrait;
     use IsAdminModel;
@@ -31,6 +35,7 @@ class Category extends Model implements
     use HasSlug;
     use HasIcon;
     use HasFactory;
+    use InteractsWithAttachments;
 
     protected static string $icons_class = FontAwesomeIcons::class;
 

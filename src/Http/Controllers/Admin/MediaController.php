@@ -234,7 +234,7 @@ class MediaController extends Controller
      * @param Media $media
      * @return Response
      */
-    public function show($locale, Media $media)
+    public function show(Media $media)
     {
         return redirect()->to($media->url('edit'));
     }
@@ -245,7 +245,7 @@ class MediaController extends Controller
      * @param Media $media
      * @return Response
      */
-    public function edit($locale, Media $media)
+    public function edit(Media $media)
     {
         if (method_exists($media, 'dontShowTranslationFallbacks')) {
             $media->dontShowTranslationFallbacks();
@@ -260,7 +260,7 @@ class MediaController extends Controller
      * @param Media $media
      * @return JsonResponse|RedirectResponse
      */
-    public function update(MediaRequest $request, $locale, Media $media)
+    public function update(MediaRequest $request, Media $media)
     {
         // If this is not a translation, set lang
         if ((! $request->input('is_translation')) && $request->input('lang')) {
@@ -305,7 +305,7 @@ class MediaController extends Controller
      * @return Response
      * @throws Exception
      */
-    public function destroy($locale, Media $media, Request $request)
+    public function destroy(Media $media, Request $request)
     {
         if (! $media->delete()) {
             if ($request->expectsJson()) {
@@ -318,7 +318,7 @@ class MediaController extends Controller
             return response()->json(true);
         }
 
-        return redirect()->action('Admin\\MediaController@index');
+        return redirect()->to(translate_route('admin.media.index'));
     }
 
     /**
@@ -328,7 +328,7 @@ class MediaController extends Controller
      * @return Response
      * @internal param Inquiry $inquiry
      */
-    public function bulk($locale, Request $request)
+    public function bulk(Request $request)
     {
         $this->authorize('create', Media::class);
 

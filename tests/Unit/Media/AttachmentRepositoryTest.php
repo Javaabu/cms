@@ -3,11 +3,11 @@
 namespace Javaabu\Cms\Tests\Unit\Media;
 
 use Illuminate\Support\Collection;
-use Javaabu\Cms\Media\Attachment\Attachment;
-use Javaabu\Cms\Media\Attachment\AttachmentRepository;
-use Javaabu\Cms\Media\Attachment\HasAttachments\HasAttachments;
 use Javaabu\Cms\Media\Media;
 use Javaabu\Cms\Tests\TestCase;
+use Javaabu\Mediapicker\AttachmentCollections\AttachmentRepository;
+use Javaabu\Mediapicker\Contracts\HasAttachments;
+use Javaabu\Mediapicker\Models\Attachment;
 use Mockery;
 use PHPUnit\Framework\Attributes\Test;
 

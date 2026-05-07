@@ -96,6 +96,26 @@ class Routes
             }
         });
 
+        Route::bind('media', function ($value) {
+            return \Javaabu\Cms\Media\Media::query()->findOrFail($value);
+        });
+
+        Route::group([
+            'prefix' => 'media',
+            'as' => 'media.',
+        ], function () {
+            $controller = config('mediapicker.media_controller', MediaController::class);
+
+            Route::get('picker', [$controller, 'picker'])->name('picker');
+            Route::match(['PUT', 'PATCH'], '/', [$controller, 'bulk'])->name('bulk');
+            Route::get('/', [$controller, 'index'])->name('index');
+            Route::get('create', [$controller, 'create'])->name('create');
+            Route::post('/', [$controller, 'store'])->name('store');
+            Route::get('{media}', [$controller, 'show'])->name('show');
+            Route::get('{media}/edit', [$controller, 'edit'])->name('edit');
+            Route::match(['PUT', 'PATCH'], '{media}', [$controller, 'update'])->name('update');
+            Route::delete('{media}', [$controller, 'destroy'])->name('destroy');
+        });
 
         // Categories Routes
         Route::group([

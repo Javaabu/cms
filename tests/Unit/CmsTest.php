@@ -16,6 +16,14 @@ class CmsTest extends TestCase
     use RefreshDatabase;
 
     #[Test]
+    public function it_configures_mediapicker_to_use_cms_media_classes_by_default(): void
+    {
+        $this->assertSame(\Javaabu\Cms\Media\Media::class, config('mediapicker.media_model'));
+        $this->assertSame(\Javaabu\Cms\Http\Controllers\Admin\MediaController::class, config('mediapicker.media_controller'));
+        $this->assertSame(\Javaabu\Cms\Media\Media::class, config('media-library.media_model'));
+    }
+
+    #[Test]
     public function it_registers_post_types_with_default_configuration(): void
     {
         (new Cms())->registerPostTypes([

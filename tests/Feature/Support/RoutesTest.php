@@ -63,6 +63,19 @@ class RoutesTest extends TestCase
     }
 
     #[Test]
+    public function admin_routes_register_media_before_dynamic_post_type_routes(): void
+    {
+        RouteFacade::name('admin.')->group(fn () => Routes::admin(prefix: null, middleware: []));
+
+        $pickerRoute = RouteFacade::getRoutes()->match(request()->create('/media/picker', 'GET'));
+        $indexRoute = RouteFacade::getRoutes()->match(request()->create('/media', 'GET'));
+
+        $this->assertSame('admin.media.picker', $pickerRoute->getName());
+        $this->assertSame('admin.media.index', $indexRoute->getName());
+        $this->assertSame(\Javaabu\Cms\Http\Controllers\Admin\MediaController::class . '@picker', $pickerRoute->getActionName());
+    }
+
+    #[Test]
     public function web_post_slug_binding_exposes_only_published_posts_for_the_current_post_type(): void
     {
         Routes::web(middleware: []);

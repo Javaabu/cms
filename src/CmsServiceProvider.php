@@ -15,6 +15,13 @@ use Javaabu\Cms\Policies\CategoryTypePolicy;
 use Javaabu\Cms\Policies\PostPolicy;
 use Javaabu\Cms\Policies\PostTypePolicy;
 use Javaabu\Cms\Console\Commands\SetupCmsCommand;
+use Javaabu\Cms\Http\Controllers\Admin\MediaController;
+use Javaabu\Cms\Media\Media as CmsMedia;
+use Javaabu\Mediapicker\Http\Controllers\MediaController as MediapickerMediaController;
+use Javaabu\Mediapicker\MediapickerServiceProvider;
+use Javaabu\Mediapicker\Models\Media as MediapickerMedia;
+use ReflectionClass;
+use Spatie\MediaLibrary\MediaCollections\Models\Media as SpatieMedia;
 
 class CmsServiceProvider extends ServiceProvider
 {
@@ -46,11 +53,12 @@ class CmsServiceProvider extends ServiceProvider
             'category'       => config('cms.models.category', Category::class),
             'category_type'  => config('cms.models.category_type', CategoryType::class),
             'tag'            => config('cms.models.tag', Tag::class),
-            'media'          => \Javaabu\Cms\Media\Media::class,
+            'media'          => CmsMedia::class,
         ]);
 
         // Load migrations
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        $this->loadMediapickerMigrations();
 
         // Load views
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'cms');
@@ -88,7 +96,7 @@ class CmsServiceProvider extends ServiceProvider
     protected function registerPolicies()
     {
         foreach ($this->policies as $key => $policy) {
-            $model = $key == 'media' ? \Javaabu\Cms\Media\Media::class : config("cms.models.$key");
+            $model = $key == 'media' ? CmsMedia::class : config("cms.models.$key");
 
             if ($model) {
                 Gate::policy($model, $policy);
@@ -107,6 +115,8 @@ class CmsServiceProvider extends ServiceProvider
 
         // Merge package config with user defined config
         $this->mergeConfigFrom(__DIR__ . '/../config/cms.php', 'cms');
+        $this->app->register(MediapickerServiceProvider::class);
+        $this->configureMediapickerDefaults();
 
         if ($this->app->runningInConsole()) {
             // Register commands
@@ -117,6 +127,32 @@ class CmsServiceProvider extends ServiceProvider
 
         // Register facades or singletons if needed
         $this->app->register(\Javaabu\Cms\Enums\RootSlugs\RootSlugsServiceProvider::class);
+    }
+
+    protected function configureMediapickerDefaults(): void
+    {
+        $this->setConfigDefault('mediapicker.media_model', CmsMedia::class, MediapickerMedia::class);
+        $this->setConfigDefault('mediapicker.media_controller', MediaController::class, MediapickerMediaController::class);
+        $this->setConfigDefault('media-library.media_model', CmsMedia::class, SpatieMedia::class);
+    }
+
+    protected function setConfigDefault(string $key, mixed $value, mixed $packageDefault = null): void
+    {
+        $current = config($key);
+
+        if (is_null($current) || $current === $packageDefault) {
+            config([$key => $value]);
+        }
+    }
+
+    protected function loadMediapickerMigrations(): void
+    {
+        $provider = new ReflectionClass(MediapickerServiceProvider::class);
+        $migrations = dirname($provider->getFileName(), 2) . '/database/migrations';
+
+        if (is_dir($migrations)) {
+            $this->loadMigrationsFrom($migrations);
+        }
     }
 }
 
