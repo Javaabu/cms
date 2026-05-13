@@ -79,9 +79,21 @@ class PostType
         return $this;
     }
 
-    public function features(array $features): self
+    public function features(array|string|PostTypeFeatures ...$features): self
     {
         foreach ($features as $key => $value) {
+            if (is_array($value)) {
+                foreach ($value as $arrayKey => $arrayValue) {
+                    if (is_int($arrayKey)) {
+                        $this->feature($arrayValue, true);
+                        continue;
+                    }
+
+                    $this->feature($arrayKey, $arrayValue);
+                }
+                continue;
+            }
+
             if (is_int($key)) {
                 $this->feature($value, true);
                 continue;

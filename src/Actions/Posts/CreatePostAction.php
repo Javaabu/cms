@@ -8,7 +8,13 @@ use Javaabu\Cms\Models\Post;
 class CreatePostAction {
     public function handle(PostRequest $request)
     {
-        $post = Post::create($request->validated());
+        $validated = $request->validated();
+
+        $post = new Post($validated);
+        if (array_key_exists('lang', $validated)) {
+            $post->lang = $validated['lang'];
+        }
+        $post->save();
 
         return $post;
     }

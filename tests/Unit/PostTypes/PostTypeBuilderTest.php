@@ -19,8 +19,7 @@ class PostTypeBuilderTest extends TestCase
             ->singularName('News Article')
             ->icon('zmdi-assignment')
             ->categoryType('news-categories')
-            ->feature(PostTypeFeatures::CATEGORIES)
-            ->feature('excerpt')
+            ->features(PostTypeFeatures::CATEGORIES, 'excerpt')
             ->description('Latest news')
             ->ogDescription('Open graph description')
             ->orderColumn(9);
@@ -48,7 +47,7 @@ class PostTypeBuilderTest extends TestCase
         $normalized = PostTypes::normalize([
             PostType::make('news')
                 ->name('News')
-                ->feature(PostTypeFeatures::CATEGORIES)
+                ->features(PostTypeFeatures::CATEGORIES)
                 ->orderColumn(3),
             'blog' => [
                 'name' => 'Blog',
@@ -63,5 +62,22 @@ class PostTypeBuilderTest extends TestCase
         $this->assertSame(true, $normalized['news']['features']['categories']);
         $this->assertSame(3, $normalized['news']['order_column']);
         $this->assertSame('blog', $normalized['blog']['slug']);
+    }
+
+    #[Test]
+    public function it_supports_both_variadic_and_array_feature_definitions(): void
+    {
+        $postType = PostType::make('blog')
+            ->features(
+                PostTypeFeatures::CATEGORIES,
+                'excerpt',
+                ['featured-image' => 'Hero Image']
+            );
+
+        $this->assertSame([
+            'categories' => true,
+            'excerpt' => true,
+            'featured-image' => 'Hero Image',
+        ], $postType->toArray()['features']);
     }
 }

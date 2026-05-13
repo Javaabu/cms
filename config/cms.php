@@ -226,7 +226,7 @@ return [
             ->singularName('News Article')
             ->icon('zmdi-assignment')
             ->categoryType('news-categories')
-            ->features(['image-gallery', 'categories', 'featured-image', 'excerpt'])
+            ->features('image-gallery', 'categories', 'featured-image', 'excerpt')
             ->description('Latest news and updates')
             ->ogDescription('Stay updated with our latest news'),
 
@@ -236,7 +236,7 @@ return [
             ->singularName('Blog Post')
             ->icon('zmdi-library')
             ->categoryType('blog-categories')
-            ->features(['image-gallery', 'categories', 'featured-image', 'excerpt'])
+            ->features('image-gallery', 'categories', 'featured-image', 'excerpt')
             ->description('Blog articles and insights')
             ->ogDescription('Read our latest blog posts'),
 
@@ -246,7 +246,7 @@ return [
             ->singularName('Download')
             ->icon('zmdi-download')
             ->categoryType('download-categories')
-            ->features(['documents', 'categories'])
+            ->features('documents', 'categories')
             ->description('Downloadable files and documents'),
 
         PostType::make('announcements')
@@ -255,7 +255,7 @@ return [
             ->singularName('Announcement')
             ->icon('zmdi-alert-triangle')
             ->categoryType('announcement-categories')
-            ->features(['documents', 'document-number', 'expireable', 'categories', 'reference-no'])
+            ->features('documents', 'document-number', 'expireable', 'categories', 'reference-no')
             ->description('Important announcements and notices'),
 
         PostType::make('publications')
@@ -264,7 +264,7 @@ return [
             ->singularName('Publication')
             ->icon('zmdi-book')
             ->categoryType('publication-categories')
-            ->features(['documents', 'categories', 'featured-image'])
+            ->features('documents', 'categories', 'featured-image')
             ->description('Published documents and materials'),
 
         PostType::make('jobs')
@@ -273,7 +273,7 @@ return [
             ->singularName('Job')
             ->icon('zmdi-case')
             ->categoryType('job-categories')
-            ->features(['documents', 'document-number', 'expireable', 'categories', 'reference-no'])
+            ->features('documents', 'document-number', 'expireable', 'categories', 'reference-no')
             ->description('Job openings and career opportunities'),
 
         PostType::make('galleries')
@@ -282,7 +282,7 @@ return [
             ->singularName('Gallery')
             ->icon('zmdi-collection-image-o')
             ->categoryType('gallery-categories')
-            ->features(['image-gallery', 'format', 'categories'])
+            ->features('image-gallery', 'format', 'categories')
             ->description('Photo and video galleries'),
 
         PostType::make('tenders')
@@ -291,7 +291,7 @@ return [
             ->singularName('Tender')
             ->icon('zmdi-assignment')
             ->categoryType('tender-categories')
-            ->features(['documents', 'document-number', 'expireable', 'categories', 'reference-no', 'gazette-link'])
+            ->features('documents', 'document-number', 'expireable', 'categories', 'reference-no', 'gazette-link')
             ->description('Tender notices and bids'),
 
         PostType::make('reports')
@@ -300,7 +300,7 @@ return [
             ->singularName('Report')
             ->icon('zmdi-collection-text')
             ->categoryType('report-categories')
-            ->features(['documents', 'categories', 'document-number'])
+            ->features('documents', 'categories', 'document-number')
             ->description('Reports and statistics'),
 
         PostType::make('pages')
@@ -308,7 +308,7 @@ return [
             ->nameDv('ސްފްޙާތައް')
             ->singularName('Page')
             ->icon('zmdi-file')
-            ->features(['page-style'])
+            ->features('page-style')
             ->description('Static pages and content'),
     ],
 

@@ -56,7 +56,7 @@ class CmsTest extends TestCase
                 ->name('News')
                 ->singularName('News Article')
                 ->icon('ri-news-line')
-                ->features([PostTypeFeatures::CATEGORIES->value, 'excerpt']),
+                ->features(PostTypeFeatures::CATEGORIES->value, 'excerpt'),
             'pages' => [
                 'name' => 'Pages',
                 'name_singular' => 'Page',

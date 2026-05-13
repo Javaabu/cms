@@ -87,6 +87,36 @@ class AdminPostsControllerTest extends TestCase
         $controller->bulk($type, $request);
     }
 
+    #[Test]
+    public function posts_force_delete_returns_json_true_on_success(): void
+    {
+        $type = $this->createPostType('alerts');
+        $post = $this->createPost($type);
+        $post->delete();
+
+        $request = Request::create('/admin/posts/force-delete', 'DELETE', [], [], [], ['HTTP_ACCEPT' => 'application/json']);
+        $response = app(AdminPostsController::class)->forceDelete($type, $post->id, $request);
+
+        $this->assertSame(200, $response->status());
+        $this->assertSame('true', $response->getContent());
+        $this->assertDatabaseMissing('posts', ['id' => $post->id]);
+    }
+
+    #[Test]
+    public function posts_restore_returns_json_true_on_success(): void
+    {
+        $type = $this->createPostType('alerts');
+        $post = $this->createPost($type);
+        $post->delete();
+
+        $request = Request::create('/admin/posts/restore', 'PATCH', [], [], [], ['HTTP_ACCEPT' => 'application/json']);
+        $response = app(AdminPostsController::class)->restore($type, $post->id, $request);
+
+        $this->assertSame(200, $response->status());
+        $this->assertSame('true', $response->getContent());
+        $this->assertDatabaseHas('posts', ['id' => $post->id, 'deleted_at' => null]);
+    }
+
     private function resolvePostForTypeOrFail(PostType $postType, int $postId): Post
     {
         return Post::query()->where('type', $postType->slug)->findOrFail($postId);

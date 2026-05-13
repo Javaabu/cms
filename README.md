@@ -77,13 +77,13 @@ use Javaabu\Cms\PostTypes\PostType;
         ->singularName('Blog Post')
         ->icon('zmdi-library')
         ->categoryType('blog-categories')
-        ->features([
+        ->features(
             PostTypeFeatures::CATEGORIES,
             PostTypeFeatures::IMAGE_GALLERY,
             'featured-image',
             'excerpt',
             'video-link',
-        ]),
+        ),
 ],
 
 'category_types' => [
