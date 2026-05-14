@@ -2,12 +2,16 @@
 
 namespace Javaabu\Cms\Models;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\URL;
 use Javaabu\Cms\Enums\JsonTranslatable\JsonTranslatable;
 use Javaabu\Cms\Enums\JsonTranslatable\IsJsonTranslatable;
 
 class TranslatablePost extends Post implements JsonTranslatable
 {
     use IsJsonTranslatable;
+
+    protected $table = 'posts';
 
     /**
      * Constructor
@@ -37,7 +41,7 @@ class TranslatablePost extends Post implements JsonTranslatable
     /**
      * A search scope that searches translatable fields
      */
-    public function scopeSearch($query, $search, $locale = null): mixed
+    public function scopeSearch($query, $search, $locale = null): Builder
     {
         return $query->translationsSearch('title', $search, $locale)
             ->orWhere(fn ($q) => $q->translationsSearch('content', $search, $locale))
@@ -124,5 +128,57 @@ class TranslatablePost extends Post implements JsonTranslatable
         } catch (\Exception $e) {
             return null;
         }
+    }
+
+    /**
+     * Returns the url
+     *
+     * Override translatable trait behavior for posts so admin routes include
+     * required post type parameter: {language}/{post_type}/{post}.
+     *
+     * @param string $action
+     * @param string|null $locale
+     * @param string $namespace
+     * @return string
+     */
+    public function url(string $action = 'show', string $locale = null, string $namespace = 'admin'): string
+    {
+        if (! $locale) {
+            $locale = app()->getLocale();
+        }
+
+        $preferredRoute = $namespace . '.posts.' . $action;
+        $fallbackRoute = 'posts.' . $action;
+        $postType = $this->postType ?? $this->type;
+        $params = [$locale, $postType];
+
+        if (! in_array($action, ['index', 'store', 'create', 'trash'])) {
+            $params[] = $this->id;
+        }
+
+        try {
+            return URL::route($preferredRoute, $params);
+        } catch (\Throwable $e) {
+            return URL::route($fallbackRoute, $params);
+        }
+    }
+
+    /**
+     * Translatable posts should point admin_url to the edit page.
+     */
+    public function getAdminUrlAttribute(): string
+    {
+        return $this->getAdminLocalizedEditUrl();
+    }
+
+    /**
+     * Keep getAdminLocalizedUrl consistent with post admin UX (edit page).
+     *
+     * @param string|null $locale
+     * @return string
+     */
+    public function getAdminLocalizedUrl($locale = null)
+    {
+        return $this->url('edit', $locale);
     }
 }

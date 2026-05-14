@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Javaabu\Activitylog\Traits\LogsActivity;
@@ -605,6 +606,12 @@ class Post extends Model implements
 
     public function getAdminUrlAttribute(): string
     {
-        return route('admin.posts.edit', [$this->postType, $this]);
+        $routeName = Route::has('admin.posts.edit') ? 'admin.posts.edit' : 'posts.edit';
+
+        if (config('cms.should_translate')) {
+            return translate_route($routeName, [$this->postType, $this]);
+        }
+
+        return route($routeName, [$this->postType, $this]);
     }
 }
