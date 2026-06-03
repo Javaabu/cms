@@ -9,6 +9,8 @@ class TranslatableCategory extends Category implements JsonTranslatable
 {
     use IsJsonTranslatable;
 
+    protected $table = 'categories';
+
     /**
      * Constructor
      */
@@ -30,6 +32,11 @@ class TranslatableCategory extends Category implements JsonTranslatable
     protected $translatable = [
         'name',
     ];
+
+    public function getMorphClass()
+    {
+        return 'category';
+    }
 
     /**
      * A search scope

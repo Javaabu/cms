@@ -78,7 +78,9 @@ class AdminCategoryTypesControllerTest extends TestCase
 
         $controller = \Mockery::mock(AdminCategoryTypesController::class)->makePartial();
         $controller->shouldReceive('authorize')->once()->with('viewAny', CategoryType::class)->andReturn(true);
-        $controller->shouldReceive('authorize')->once()->with('delete', CategoryType::class)->andThrow(new AuthorizationException());
+        $controller->shouldReceive('authorize')->once()->with('delete', \Mockery::on(
+            fn (CategoryType $categoryType) => $categoryType->is($type)
+        ))->andThrow(new AuthorizationException());
 
         $this->expectException(AuthorizationException::class);
 

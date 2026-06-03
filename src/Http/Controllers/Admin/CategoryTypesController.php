@@ -179,12 +179,10 @@ class CategoryTypesController extends Controller
 
         switch ($action) {
             case 'delete':
-                // make sure allowed to delete
-                $this->authorize('delete', CategoryType::class);
-
                 CategoryType::whereIn('id', $ids)
                     ->get()
                     ->each(function (CategoryType $category_type) {
+                        $this->authorize('delete', $category_type);
                         $category_type->delete();
                     });
                 break;

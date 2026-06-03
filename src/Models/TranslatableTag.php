@@ -9,6 +9,8 @@ class TranslatableTag extends Tag implements JsonTranslatable
 {
     use IsJsonTranslatable;
 
+    protected $table = 'tags';
+
     /**
      * Constructor
      */

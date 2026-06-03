@@ -3,7 +3,10 @@
 namespace Javaabu\Cms\Tests\Feature\Models;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Javaabu\Cms\Enums\Languages;
+use Javaabu\Cms\Models\CategoryType;
+use Javaabu\Cms\Models\TranslatableCategory;
 use Javaabu\Cms\Models\PostType;
 use Javaabu\Cms\Models\TranslatablePost;
 use Javaabu\Cms\Tests\TestCase;
@@ -12,6 +15,17 @@ use PHPUnit\Framework\Attributes\Test;
 class TranslatablePostAdminUrlTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        Route::get('/{language}/news/{post_slug}', fn () => 'show')->name('web.post-types.news.show');
+        Route::get('/admin/{language}/{post_type}/{post}/edit', fn () => 'edit')->name('admin.posts.edit');
+        Route::get('/fallback/{language}/{post_type}/{post}/edit', fn () => 'edit')->name('posts.edit');
+        Route::get('/{language}/news', fn () => 'index')->name('web.posts.index.news');
+        Route::getRoutes()->refreshNameLookups();
+    }
 
     #[Test]
     public function post_translation_url_includes_locale_post_type_and_post_id(): void
@@ -50,6 +64,63 @@ class TranslatablePostAdminUrlTest extends TestCase
 
         $this->assertIsString($template);
         $this->assertStringContainsString("href=\"{{ \$model->translation_url }}\"", $template);
+    }
+
+    #[Test]
+    public function translatable_post_urls_include_locale_post_type_and_translation_visibility_rules(): void
+    {
+        config()->set('cms.should_translate', true);
+        app()->setLocale('en');
+
+        $postType = $this->createPostType('news');
+        $post = $this->createTranslatablePost($postType);
+        $post->translations = ['title' => 'Translated title'];
+        $post->save();
+        $post->refresh();
+
+        $this->assertSame(url('/en/news/' . $post->slug), $post->permalink);
+        $this->assertStringContainsString('/en/news/' . $post->slug, $post->preview_link);
+        $this->assertSame(url('/dv/news/' . $post->slug), $post->translatedPermalink('show', 'dv'));
+        $this->assertSame(url('/admin/dv/news/' . $post->id . '/edit'), $post->url('edit', 'dv'));
+        $this->assertSame($post->url('edit', 'dv'), $post->getAdminLocalizedUrl('dv'));
+
+        $post->hide_translation = true;
+
+        $this->assertNull($post->translatedPermalink('show', 'dv'));
+    }
+
+    #[Test]
+    public function translatable_category_permalink_uses_available_locale_and_category_query_parameter(): void
+    {
+        config()->set('cms.should_translate', true);
+        app()->setLocale('dv');
+
+        $categoryType = new CategoryType([
+            'name' => 'News Categories',
+            'singular_name' => 'News Category',
+            'slug' => 'news-categories',
+        ]);
+        $categoryType->lang = 'en';
+        $categoryType->save();
+
+        $postType = $this->createPostType('news');
+        $postType->categoryType()->associate($categoryType);
+        $postType->save();
+
+        $category = new TranslatableCategory([
+            'name' => 'Policy',
+            'slug' => 'policy',
+        ]);
+        $category->type_id = $categoryType->id;
+        $category->lang = Languages::EN;
+        $category->translations = ['name' => 'Translated Policy'];
+        $category->save();
+
+        $this->assertSame(url('/dv/news?category=' . $category->id), $category->permalink);
+
+        $category->translations = null;
+
+        $this->assertSame(url('/en/news?category=' . $category->id), $category->permalink);
     }
 
     private function createPostType(string $slug): PostType

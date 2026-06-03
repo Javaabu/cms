@@ -65,7 +65,7 @@ class PostRequest extends FormRequest
             'tags.*'            => 'string|max:255|required',
             'action'            => 'in:' . implode(',', $this->actions()),
             'featured_image'    => AllowedMimeTypes::getAttachmentValidationRule('image'),
-            'hide_translations' => 'boolean',
+            'hide_translation'  => 'boolean',
             'recently_updated'  => 'boolean',
         ];
 

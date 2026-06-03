@@ -187,6 +187,32 @@ class PoliciesTest extends TestCase
 
         return $post;
     }
+
+    #[Test]
+    public function post_type_policy_handles_class_level_authorization_checks(): void
+    {
+        $policy = new PostTypePolicy();
+        $user = new PermissionUser();
+
+        // Should return true when post_type is class string or null
+        $this->assertTrue($policy->viewAny($user, PostType::class));
+        $this->assertTrue($policy->viewAny($user, null));
+        $this->assertTrue($policy->create($user, PostType::class));
+        $this->assertTrue($policy->create($user, null));
+    }
+
+    #[Test]
+    public function category_type_policy_handles_class_level_authorization_checks(): void
+    {
+        $policy = new CategoryTypePolicy();
+        $user = new PermissionUser();
+
+        // Should return true when category_type is class string or null
+        $this->assertTrue($policy->viewAny($user, CategoryType::class));
+        $this->assertTrue($policy->viewAny($user, null));
+        $this->assertTrue($policy->create($user, CategoryType::class));
+        $this->assertTrue($policy->create($user, null));
+    }
 }
 
 class PermissionUser extends User

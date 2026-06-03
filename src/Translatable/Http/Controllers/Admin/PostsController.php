@@ -374,7 +374,7 @@ class PostsController extends Controller
             return response()->json(true);
         }
 
-        return redirect()->action([static::class, [$locale, $postType]]);
+        return redirect()->action([static::class, 'index'], [$locale, $postType]);
     }
 
     /**

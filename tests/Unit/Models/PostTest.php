@@ -6,6 +6,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Javaabu\Cms\Enums\PostStatus;
+use Javaabu\Cms\Models\Category;
+use Javaabu\Cms\Models\CategoryType;
 use Javaabu\Cms\Models\Post;
 use Javaabu\Cms\Models\PostType;
 use Javaabu\Cms\Tests\TestCase;
@@ -43,6 +45,34 @@ class PostTest extends TestCase
         $post->save();
 
         return $post;
+    }
+
+    private function create_category_type(array $attributes = []): CategoryType
+    {
+        $category_type = new CategoryType(array_merge([
+            'name' => 'Default Categories',
+            'singular_name' => 'Default Category',
+            'slug' => 'default-categories',
+        ], $attributes));
+
+        $category_type->lang = 'en';
+        $category_type->save();
+
+        return $category_type;
+    }
+
+    private function create_category(CategoryType $category_type, array $attributes = []): Category
+    {
+        $category = new Category(array_merge([
+            'name' => 'Default Category',
+            'slug' => 'default-category',
+        ], $attributes));
+
+        $category->type_id = $category_type->id;
+        $category->lang = 'en';
+        $category->save();
+
+        return $category;
     }
 
     #[Test]
@@ -695,5 +725,56 @@ class PostTest extends TestCase
         $ordered_ids = Post::ordered()->pluck('id')->all();
 
         $this->assertSame([$second->id, $first->id, $third->id], $ordered_ids);
+    }
+
+    #[Test]
+    public function it_filters_and_checks_category_membership_through_the_categories_trait(): void
+    {
+        $category_type = $this->create_category_type([
+            'name' => 'News Categories',
+            'singular_name' => 'News Category',
+            'slug' => 'news-categories',
+        ]);
+
+        $post_type = $this->create_post_type([
+            'name' => 'News',
+            'singular_name' => 'News Item',
+            'slug' => 'news',
+            'icon' => 'ri-news-line',
+            'category_type_id' => $category_type->id,
+        ]);
+
+        $policy = $this->create_category($category_type, ['name' => 'Policy', 'slug' => 'policy']);
+        $sports = $this->create_category($category_type, ['name' => 'Sports', 'slug' => 'sports']);
+
+        $policy_post = $this->create_post($post_type, [
+            'title' => 'Policy Post',
+            'slug' => 'policy-post',
+            'published_at' => now(),
+        ]);
+        $sports_post = $this->create_post($post_type, [
+            'title' => 'Sports Post',
+            'slug' => 'sports-post',
+            'published_at' => now(),
+        ]);
+        $uncategorized_post = $this->create_post($post_type, [
+            'title' => 'Uncategorized Post',
+            'slug' => 'uncategorized-post',
+            'published_at' => now(),
+        ]);
+
+        $policy_post->categories()->attach($policy->id);
+        $sports_post->categories()->attach($sports->id);
+
+        $policy_post->load('categories');
+        $sports_post->load('categories');
+
+        $this->assertTrue($policy_post->hasAnyCategory($policy->id));
+        $this->assertTrue($policy_post->hasAnyCategory([$policy->id, $sports->id]));
+        $this->assertFalse($policy_post->hasAnyCategory($sports->id));
+        $this->assertFalse($policy_post->hasAnyCategory([]));
+
+        $this->assertSame([$policy_post->id], Post::query()->belongsToCategory($policy->id)->pluck('posts.id')->all());
+        $this->assertSame([$uncategorized_post->id], Post::query()->doesNotBelongToAnyCategory()->pluck('posts.id')->all());
     }
 }

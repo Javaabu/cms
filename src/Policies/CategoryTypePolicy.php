@@ -10,8 +10,11 @@ class CategoryTypePolicy
     /**
      * Determine whether the user can see view any category types
      */
-    public function viewAny(User $user, CategoryType $category_type): bool
+    public function viewAny(User $user, CategoryType|string|null $category_type = null): bool
     {
+        if (! ($category_type instanceof CategoryType)) {
+            return true;
+        }
         return $user->can('view_' . $category_type->permission_slug);
     }
 
@@ -26,8 +29,11 @@ class CategoryTypePolicy
     /**
      * Determine whether the user can create category type.
      */
-    public function create(User $user, CategoryType $category_type): bool
+    public function create(User $user, CategoryType|string|null $category_type = null): bool
     {
+        if (! ($category_type instanceof CategoryType)) {
+            return true;
+        }
         return $user->can('edit_' . $category_type->permission_slug);
     }
 

@@ -159,6 +159,19 @@ class FormRequestRulesTest extends TestCase
         $this->assertSame(['publish', 'reject', 'draft'], (new PostRequest())->getBaseActions());
     }
 
+    #[Test]
+    public function post_request_validates_the_singular_hide_translation_field(): void
+    {
+        $rules = $this->requestRules(PostRequest::class, [
+            'post_type' => new PostType(['slug' => 'pages']),
+            'post' => new Post(),
+        ]);
+
+        $this->assertArrayHasKey('hide_translation', $rules);
+        $this->assertSame('boolean', $rules['hide_translation']);
+        $this->assertArrayNotHasKey('hide_translations', $rules);
+    }
+
     private function requestRules(string $requestClass, array $routeParameters = [], array $input = []): array
     {
         $request = $requestClass::create('/', 'POST', $input);

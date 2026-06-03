@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use Javaabu\Cms\Enums\PostStatus;
 use Javaabu\Cms\Http\Controllers\Admin\PostsController as AdminPostsController;
+use Javaabu\Cms\Http\Requests\PostsRequest;
 use Javaabu\Cms\Models\Post;
 use Javaabu\Cms\Models\PostType;
 use Javaabu\Cms\Tests\TestCase;
@@ -24,6 +26,126 @@ class AdminPostsControllerTest extends TestCase
         parent::setUp();
 
         Gate::shouldReceive('authorize')->andReturn(true);
+
+        Route::get('/_test/admin/{post_type}', fn () => 'index')->name('admin.posts.index');
+        Route::get('/_test/admin/{post_type}/trash', fn () => 'trash')->name('admin.posts.trash');
+        Route::get('/_test/admin/{post_type}/{post}/edit', fn () => 'edit')->name('admin.posts.edit');
+        Route::getRoutes()->refreshNameLookups();
+    }
+
+    #[Test]
+    public function posts_index_applies_filters_and_returns_index_view_model(): void
+    {
+        $type = $this->createPostType('alerts');
+        $matching = $this->createPost($type, [
+            'title' => 'Emergency Alert',
+            'slug' => 'emergency-alert',
+            'status' => PostStatus::PUBLISHED->value,
+            'published_at' => now(),
+            'lang' => 'en',
+            'translations' => ['title' => 'Translated Emergency Alert'],
+        ]);
+        $this->createPost($type, [
+            'title' => 'Draft Alert',
+            'slug' => 'draft-alert',
+            'status' => PostStatus::DRAFT->value,
+            'published_at' => now(),
+            'lang' => 'dv',
+        ]);
+
+        $request = Request::create('/admin/alerts', 'GET', [
+            'search' => 'Emergency',
+            'status' => PostStatus::PUBLISHED->value,
+            'primary_language' => 'en',
+            'orderby' => 'title',
+            'order' => 'asc',
+            'per_page' => 10,
+        ]);
+
+        $view = app(AdminPostsController::class)->index($type, $request);
+
+        $this->assertSame('cms::admin.posts.index', $view->name());
+        $this->assertSame($type->id, $view->getData()['type']->id);
+        $this->assertFalse($view->getData()['trashed']);
+        $this->assertSame([$matching->id], $view->getData()['posts']->pluck('id')->all());
+        $this->assertSame('Emergency', $view->getData()['search']);
+    }
+
+    #[Test]
+    public function posts_create_edit_show_and_trash_return_expected_responses(): void
+    {
+        $type = $this->createPostType('alerts');
+        $post = $this->createPost($type);
+
+        $create = app(AdminPostsController::class)->create($type, Request::create('/admin/alerts/create'));
+        $edit = app(AdminPostsController::class)->edit($type, $post);
+        $show = app(AdminPostsController::class)->show($type, $post);
+
+        $post->delete();
+        $trash = app(AdminPostsController::class)->trash($type, Request::create('/admin/alerts/trash'));
+
+        $this->assertSame('cms::admin.posts.create', $create->name());
+        $this->assertSame('cms::admin.posts.edit', $edit->name());
+        $this->assertSame(route('admin.posts.edit', [$type, $post]), $show->getTargetUrl());
+        $this->assertSame('cms::admin.posts.index', $trash->name());
+        $this->assertTrue($trash->getData()['trashed']);
+        $this->assertSame([$post->id], $trash->getData()['posts']->pluck('id')->all());
+    }
+
+    #[Test]
+    public function posts_store_persists_validated_payload_and_syncs_categories_for_json_requests(): void
+    {
+        $type = $this->createPostType('alerts');
+        $categoryType = new \Javaabu\Cms\Models\CategoryType([
+            'name' => 'Alert Categories',
+            'singular_name' => 'Alert Category',
+            'slug' => 'alert-categories',
+        ]);
+        $categoryType->lang = 'en';
+        $categoryType->save();
+
+        $type->categoryType()->associate($categoryType);
+        $type->features = ['categories' => true];
+        $type->save();
+        $category = new \Javaabu\Cms\Models\Category([
+            'name' => 'Weather',
+            'slug' => 'weather',
+        ]);
+        $category->type_id = $categoryType->id;
+        $category->lang = 'en';
+        $category->save();
+
+        $request = \Mockery::mock(PostsRequest::class)->makePartial();
+        $request->shouldReceive('validated')->once()->andReturn([
+            'title' => 'Stored Alert',
+            'slug' => 'stored-alert',
+            'content' => 'Stored content',
+            'status' => PostStatus::DRAFT->value,
+            'published_at' => now(),
+        ]);
+        $request->shouldReceive('input')->with('action')->andReturn(null);
+        $request->shouldReceive('input')->with('status')->andReturn(null);
+        $request->shouldReceive('input')->with('slug')->andReturn('Stored Alert');
+        $request->shouldReceive('input')->with('lang', \Mockery::any())->andReturn('dv');
+        $request->shouldReceive('input')->with('never_expire')->andReturn(false);
+        $request->shouldReceive('input')->with('featured_image')->andReturn(null);
+        $request->shouldReceive('input')->with('clear_file')->andReturn(null);
+        $request->shouldReceive('input')->with('categories', [])->andReturn([$category->id]);
+        $request->shouldReceive('has')->with('department')->andReturn(false);
+        $request->shouldReceive('has')->with('sidebar_menu')->andReturn(false);
+        $request->shouldReceive('has')->with('sync_categories')->andReturn(true);
+        $request->shouldReceive('has')->with('sync_documents')->andReturn(false);
+        $request->shouldReceive('has')->with('sync_image_gallery')->andReturn(false);
+        $request->shouldReceive('expectsJson')->andReturn(true);
+        $request->shouldReceive('file')->andReturn(null);
+
+        $response = app(AdminPostsController::class)->store($type, $request);
+
+        $created = Post::query()->where('title', 'Stored Alert')->firstOrFail();
+        $this->assertSame(200, $response->status());
+        $this->assertSame('stored-alert', $created->slug);
+        $this->assertSame('dv', $created->lang);
+        $this->assertSame([$category->id], $created->categories()->pluck('categories.id')->all());
     }
 
     #[Test]

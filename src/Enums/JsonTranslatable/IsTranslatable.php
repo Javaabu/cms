@@ -5,6 +5,7 @@
 
 namespace Javaabu\Cms\Enums\JsonTranslatable;
 
+use Javaabu\Cms\Enums\Languages;
 
 trait IsTranslatable
 {

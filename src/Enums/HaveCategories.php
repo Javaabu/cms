@@ -30,7 +30,7 @@ trait HaveCategories
             if (! method_exists($model, 'isForceDeleting') || $model->isForceDeleting()) {
                 DB::table('category_model')
                   ->where('model_id', $model->id)
-                  ->where('model_type', $model->type)
+                  ->where('model_type', $model->getMorphClass())
                   ->delete();
             }
         });
@@ -114,7 +114,7 @@ trait HaveCategories
 
         // Get goods
         return $query->whereHas($relation, function ($query) use ($category_ids) {
-            return $query->whereIn('category_id', $category_ids);
+            return $query->whereIn('categories.id', $category_ids);
         });
     }
 
@@ -165,7 +165,7 @@ trait HaveCategories
         }
 
         return $this->{$relation}
-                ->plucK('category_id')
+                ->pluck('id')
                 ->intersect(collect($category_ids))
                 ->count() > 0;
     }
@@ -199,7 +199,7 @@ trait HaveCategories
 
         return static::where('id', '!=', $this->id)
                      ->similarToCategories(
-                         $this->{$relation}->pluck('category_id')->all()
+                         $this->{$relation}->pluck('id')->all()
                      );
     }
 

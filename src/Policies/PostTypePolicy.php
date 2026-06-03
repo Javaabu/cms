@@ -10,8 +10,11 @@ class PostTypePolicy
     /**
      * Determine whether the user can see view any post types
      */
-    public function viewAny(User $user, PostType $post_type): bool
+    public function viewAny(User $user, PostType|string|null $post_type = null): bool
     {
+        if (! ($post_type instanceof PostType)) {
+            return true;
+        }
         return $user->can('view_' . $post_type->permission_slug);
     }
 
@@ -26,8 +29,11 @@ class PostTypePolicy
     /**
      * Determine whether the user can create post type.
      */
-    public function create(User $user, PostType $post_type): bool
+    public function create(User $user, PostType|string|null $post_type = null): bool
     {
+        if (! ($post_type instanceof PostType)) {
+            return true;
+        }
         return $user->can('edit_' . $post_type->permission_slug);
     }
 

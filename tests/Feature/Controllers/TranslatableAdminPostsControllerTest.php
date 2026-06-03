@@ -96,6 +96,28 @@ class TranslatableAdminPostsControllerTest extends TestCase
         $this->assertDatabaseHas('posts', ['id' => $restorable->id, 'deleted_at' => null]);
     }
 
+    #[Test]
+    public function restore_redirects_to_index_on_browser_request(): void
+    {
+        $type = $this->createPostType('alerts');
+        $post = $this->createPost($type);
+        $post->delete();
+
+        \Illuminate\Support\Facades\Route::get('/_test/admin/{language}/{post_type}', [TranslatableAdminPostsController::class, 'index'])
+            ->name('admin.posts.index');
+        \Illuminate\Support\Facades\Route::getRoutes()->refreshNameLookups();
+
+        $restoreRequest = Request::create('/admin/translatable/posts/restore', 'PATCH');
+        $restoreResponse = app(TranslatableAdminPostsController::class)->restore('en', $type, $post->id, $restoreRequest);
+
+        $this->assertSame(302, $restoreResponse->status());
+        $this->assertSame(
+            action([TranslatableAdminPostsController::class, 'index'], ['language' => 'en', 'post_type' => $type]),
+            $restoreResponse->getTargetUrl()
+        );
+        $this->assertDatabaseHas('posts', ['id' => $post->id, 'deleted_at' => null]);
+    }
+
     private function createPostType(string $slug): PostType
     {
         $postType = new PostType([
@@ -124,4 +146,3 @@ class TranslatableAdminPostsControllerTest extends TestCase
         return $post;
     }
 }
-

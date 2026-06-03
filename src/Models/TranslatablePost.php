@@ -38,6 +38,11 @@ class TranslatablePost extends Post implements JsonTranslatable
         'meta_description',
     ];
 
+    public function getMorphClass()
+    {
+        return 'post';
+    }
+
     /**
      * A search scope that searches translatable fields
      */

@@ -312,7 +312,7 @@ trait IsJsonTranslatable
      */
     public function clearTranslations()
     {
-        $this->translation = null;
+        $this->translations = null;
     }
 
     /**
