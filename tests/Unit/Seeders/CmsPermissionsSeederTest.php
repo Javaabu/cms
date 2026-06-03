@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Javaabu\Cms\Models\CategoryType;
 use Javaabu\Cms\Models\PostType;
 use Javaabu\Cms\Tests\TestCase;
-use Javaabu\Cms\seeders\CmsPermissionsSeeder;
+use Javaabu\Cms\Seeders\CmsPermissionsSeeder;
 use PHPUnit\Framework\Attributes\Test;
 
 class CmsPermissionsSeederTest extends TestCase

@@ -1,6 +1,6 @@
 <?php
 
-namespace Javaabu\Cms\seeders;
+namespace Javaabu\Cms\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
