@@ -8,7 +8,7 @@ A flexible and extensible Content Management System package for Laravel applicat
 ## Features
 
 - 🎯 **Custom Post Types**: Define unlimited custom post types with configurable features
-- 📁 **Hierarchical Categories**: Nested category support using Nestedset
+- 📁 **Hierarchical Categories**: Nested category support using Nested set
 - ✍️ **Rich Content Editor**: Integrated Editor.js support for modern content editing
 - 🔐 **Permission System**: Built-in permission management for CMS operations
 - 🌐 **Multi-language Ready**: Translation support for content
