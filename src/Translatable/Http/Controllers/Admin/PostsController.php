@@ -96,7 +96,7 @@ class PostsController extends Controller
         $posts = $posts->paginate($per_page)
             ->appends($request->except('page'));
 
-        return view('admin.posts.index', compact('posts', 'type', 'title', 'per_page', 'search', 'trashed'));
+        return view('cms::admin.posts.index', compact('posts', 'type', 'title', 'per_page', 'search', 'trashed'));
     }
 
     /**
@@ -105,7 +105,7 @@ class PostsController extends Controller
     public function create($locale, PostType $type, Request $request)
     {
         $this->authorize('create', $type);
-        return view('admin.posts.create', compact('type'));
+        return view('cms::admin.posts.create', compact('type'));
     }
 
     /**
@@ -129,7 +129,9 @@ class PostsController extends Controller
 
         $post->lang = $request->input('lang', app()->getLocale());
 
-        $post->department()->associate($request->input('department'));
+        if (\Illuminate\Support\Facades\Schema::hasColumn($post->getTable(), 'department_id')) {
+            $post->department()->associate($request->input('department'));
+        }
 
 
         if ($request->input('never_expire')) {
@@ -144,11 +146,11 @@ class PostsController extends Controller
             $post->projectComponent()->associate($request->input('component'));
         }
 
-        if ($type->hasFeature(PostTypeFeatures::COORDS) && $request->hasAny(['lat', 'lng'])) {
+        if ($type->hasFeature('coords') && $request->hasAny(['lat', 'lng'])) {
             $post->setCoordinates($request->input('lat'), $request->input('lng'));
         }
 
-        if ($type->hasFeature(PostTypeFeatures::CITY) && $request->input('city')) {
+        if ($type->hasFeature('city') && $request->input('city')) {
             $post->city()->associate($request->input('city'));
         }
 
@@ -192,7 +194,7 @@ class PostsController extends Controller
     {
         $this->authorize('update', $post);
         $post->dontShowTranslationFallbacks();
-        return view('admin.posts.edit', compact('post', 'type'));
+        return view('cms::admin.posts.edit', compact('post', 'type'));
     }
 
     /**
@@ -220,10 +222,14 @@ class PostsController extends Controller
             $post->slug = $slug;
         }
 
-        $post->hide_translation = $request->input('hide_translation', false);
-        $post->recently_updated = $request->input('recently_updated', false);
+        if (\Illuminate\Support\Facades\Schema::hasColumn($post->getTable(), 'hide_translation')) {
+            $post->hide_translation = $request->input('hide_translation', false);
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn($post->getTable(), 'recently_updated')) {
+            $post->recently_updated = $request->input('recently_updated', false);
+        }
 
-        if ($request->has('department')) {
+        if ($request->has('department') && \Illuminate\Support\Facades\Schema::hasColumn($post->getTable(), 'department_id')) {
             $post->department()->associate($request->input('department'));
         }
 
@@ -240,11 +246,11 @@ class PostsController extends Controller
             $post->projectComponent()->associate($request->input('component'));
         }
 
-        if ($type->hasFeature(PostTypeFeatures::COORDS) && $request->hasAny(['lat', 'lng'])) {
+        if ($type->hasFeature('coords') && $request->hasAny(['lat', 'lng'])) {
             $post->setCoordinates($request->input('lat'), $request->input('lng'));
         }
 
-        if ($type->hasFeature(PostTypeFeatures::CITY) && $request->input('city')) {
+        if ($type->hasFeature('city') && $request->input('city')) {
             $post->city()->associate($request->input('city'));
         }
 

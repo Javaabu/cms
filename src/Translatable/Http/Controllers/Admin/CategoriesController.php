@@ -69,8 +69,12 @@ class CategoriesController extends Controller
             }
         }
 
-        $categories->with('type.postType')
-            ->withCount('posts', 'staffs', 'statistics');
+        $categories->with('type.postType');
+
+        $countableRelations = array_filter(['posts', 'staffs', 'statistics'], fn (string $relation) => method_exists(Category::class, $relation));
+        if ($countableRelations) {
+            $categories->withCount($countableRelations);
+        }
 
 //        if ($request->download) {
 //            return (new CategoriesExport($categories))->download('categories.xlsx');
@@ -79,7 +83,7 @@ class CategoriesController extends Controller
         $categories = $categories->paginate($per_page)
             ->appends($request->except('page'));
 
-        return view('admin.categories.index', compact('categories', 'type', 'title', 'per_page', 'search'));
+        return view('cms::admin.categories.index', compact('categories', 'type', 'title', 'per_page', 'search'));
     }
 
     /**
@@ -89,7 +93,7 @@ class CategoriesController extends Controller
     {
         $this->authorize('create', $type);
 
-        return view('admin.categories.create', compact('type'));
+        return view('cms::admin.categories.create', compact('type'));
     }
 
     /**
@@ -146,8 +150,10 @@ class CategoriesController extends Controller
         $this->authorize('update', $category);
 
         $allowed_categories = Category::categoryList($type->id, $category->id);
-        $category->dontShowTranslationFallbacks();
-        return view('admin.categories.edit', compact('category', 'type', 'allowed_categories'));
+        if (method_exists($category, 'dontShowTranslationFallbacks')) {
+            $category->dontShowTranslationFallbacks();
+        }
+        return view('cms::admin.categories.edit', compact('category', 'type', 'allowed_categories'));
     }
 
     /**
@@ -179,7 +185,9 @@ class CategoriesController extends Controller
             $category->color = $request->input('color');
         }
 
-        $category->hide_translation = $request->input('hide_translation', false);
+        if (\Illuminate\Support\Facades\Schema::hasColumn($category->getTable(), 'hide_translation')) {
+            $category->hide_translation = $request->input('hide_translation', false);
+        }
 
         $category->save();
 

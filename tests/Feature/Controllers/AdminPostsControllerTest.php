@@ -62,7 +62,12 @@ class AdminPostsControllerTest extends TestCase
             'per_page' => 10,
         ]);
 
-        $view = app(AdminPostsController::class)->index($type, $request);
+        $controller = \Mockery::mock(AdminPostsController::class)->makePartial()->shouldAllowMockingProtectedMethods();
+        $controller->shouldReceive('getOrderBy')->andReturn('title');
+        $controller->shouldReceive('getOrder')->andReturn('asc');
+        $controller->shouldReceive('getPerPage')->andReturn(10);
+
+        $view = $controller->index($type, $request);
 
         $this->assertSame('cms::admin.posts.index', $view->name());
         $this->assertSame($type->id, $view->getData()['type']->id);
@@ -77,12 +82,17 @@ class AdminPostsControllerTest extends TestCase
         $type = $this->createPostType('alerts');
         $post = $this->createPost($type);
 
-        $create = app(AdminPostsController::class)->create($type, Request::create('/admin/alerts/create'));
-        $edit = app(AdminPostsController::class)->edit($type, $post);
-        $show = app(AdminPostsController::class)->show($type, $post);
+        $controller = \Mockery::mock(AdminPostsController::class)->makePartial()->shouldAllowMockingProtectedMethods();
+        $controller->shouldReceive('getOrderBy')->andReturn('created_at');
+        $controller->shouldReceive('getOrder')->andReturn('asc');
+        $controller->shouldReceive('getPerPage')->andReturn(15);
+
+        $create = $controller->create($type, Request::create('/admin/alerts/create'));
+        $edit = $controller->edit($type, $post);
+        $show = $controller->show($type, $post);
 
         $post->delete();
-        $trash = app(AdminPostsController::class)->trash($type, Request::create('/admin/alerts/trash'));
+        $trash = $controller->trash($type, Request::create('/admin/alerts/trash'));
 
         $this->assertSame('cms::admin.posts.create', $create->name());
         $this->assertSame('cms::admin.posts.edit', $edit->name());
@@ -239,6 +249,72 @@ class AdminPostsControllerTest extends TestCase
         $this->assertDatabaseHas('posts', ['id' => $post->id, 'deleted_at' => null]);
     }
 
+    #[Test]
+    public function posts_update_persists_changes_and_redirects_to_edit(): void
+    {
+        $type = $this->createPostType('alerts');
+        $post = $this->createPost($type, [
+            'title' => 'Original',
+            'slug' => 'original',
+        ]);
+
+        $request = \Mockery::mock(PostsRequest::class)->makePartial();
+        $request->shouldReceive('validated')->once()->andReturn([
+            'title' => 'Updated Alert',
+            'slug' => 'updated-alert',
+            'content' => 'Updated content',
+            'status' => PostStatus::DRAFT->value,
+            'published_at' => now(),
+        ]);
+        $request->shouldReceive('input')->with('action')->andReturn(null);
+        $request->shouldReceive('input')->with('status')->andReturn(null);
+        $request->shouldReceive('input')->with('slug')->andReturn('updated-alert');
+        $request->shouldReceive('input')->with('hide_translation', false)->andReturn(false);
+        $request->shouldReceive('input')->with('recently_updated', false)->andReturn(true);
+        $request->shouldReceive('input')->with('never_expire')->andReturn(false);
+        $request->shouldReceive('input')->with('featured_image')->andReturn(null);
+        $request->shouldReceive('input')->with('clear_file')->andReturn(null);
+        $request->shouldReceive('has')->with('department')->andReturn(false);
+        $request->shouldReceive('has')->with('sync_tags')->andReturn(false);
+        $request->shouldReceive('has')->with('sync_categories')->andReturn(false);
+        $request->shouldReceive('has')->with('sync_documents')->andReturn(false);
+        $request->shouldReceive('has')->with('sync_related_galleries')->andReturn(false);
+        $request->shouldReceive('has')->with('sync_image_gallery')->andReturn(false);
+        $request->shouldReceive('file')->andReturn(null);
+
+        $response = app(AdminPostsController::class)->update($request, $type, $post);
+
+        $post->refresh();
+
+        $this->assertSame('updated-alert', $post->slug);
+        $this->assertSame('Updated Alert', $post->title);
+        $this->assertSame(route('admin.posts.edit', [$type, $post]), $response->getTargetUrl());
+    }
+
+    #[Test]
+    public function posts_bulk_deletes_authorized_posts_and_redirects_to_index(): void
+    {
+        $type = $this->createPostType('alerts');
+        $first = $this->createPost($type);
+        $second = $this->createPost($type);
+
+        auth()->setUser(new AdminPostsPermissionUser([
+            'delete',
+        ]));
+
+        $request = Request::create('/admin/posts/bulk', 'PATCH', [
+            'action' => 'delete',
+            'posts' => [$first->id, $second->id],
+        ]);
+
+        $response = app(AdminPostsController::class)->bulk($type, $request);
+
+        $this->assertSame(302, $response->status());
+        $this->assertSame(route('admin.posts.index', $type), $response->getTargetUrl());
+        $this->assertSoftDeleted('posts', ['id' => $first->id]);
+        $this->assertSoftDeleted('posts', ['id' => $second->id]);
+    }
+
     private function resolvePostForTypeOrFail(PostType $postType, int $postId): Post
     {
         return Post::query()->where('type', $postType->slug)->findOrFail($postId);
@@ -274,5 +350,18 @@ class AdminPostsControllerTest extends TestCase
         $post->save();
 
         return $post;
+    }
+}
+
+class AdminPostsPermissionUser extends \Illuminate\Foundation\Auth\User
+{
+    public function __construct(private array $permissions = [])
+    {
+        parent::__construct();
+    }
+
+    public function can($abilities, $arguments = []): bool
+    {
+        return in_array($abilities, $this->permissions, true);
     }
 }

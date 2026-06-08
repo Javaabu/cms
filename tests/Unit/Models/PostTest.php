@@ -2,8 +2,10 @@
 
 namespace Javaabu\Cms\Tests\Unit\Models;
 
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Carbon;
 use Javaabu\Cms\Enums\PostStatus;
 use Javaabu\Cms\Models\Category;
@@ -776,5 +778,182 @@ class PostTest extends TestCase
 
         $this->assertSame([$policy_post->id], Post::query()->belongsToCategory($policy->id)->pluck('posts.id')->all());
         $this->assertSame([$uncategorized_post->id], Post::query()->doesNotBelongToAnyCategory()->pluck('posts.id')->all());
+    }
+
+    #[Test]
+    public function it_builds_content_blocks_names_and_title_snippets_from_attributes(): void
+    {
+        $post_type = $this->create_post_type([
+            'name' => 'Articles',
+            'singular_name' => 'Article',
+            'slug' => 'articles',
+            'icon' => 'ri-article-line',
+        ]);
+
+        $jsonPost = $this->create_post($post_type, [
+            'title' => 'A very long article title that should be shortened for the admin listing view',
+            'slug' => 'json-post',
+            'content' => json_encode([
+                'blocks' => [
+                    ['type' => 'header', 'data' => ['text' => 'Headline']],
+                ],
+            ]),
+            'published_at' => now(),
+        ]);
+        $rawPost = $this->create_post($post_type, [
+            'title' => 'Raw Content',
+            'slug' => 'raw-content',
+            'content' => 'Plain body text',
+            'published_at' => now(),
+        ]);
+
+        $this->assertSame('A very long article title that should be shortened...', $jsonPost->title_attr);
+        $this->assertSame('A very long article title that should be shortened for the admin listing view', $jsonPost->name);
+        $this->assertSame([['type' => 'header', 'data' => ['text' => 'Headline']]], $jsonPost->content_blocks);
+        $this->assertSame([
+            [
+                'type' => 'paragraph',
+                'data' => ['text' => 'Plain body text'],
+            ],
+        ], $rawPost->content_blocks);
+    }
+
+    #[Test]
+    public function it_builds_permalink_preview_and_admin_links_with_fallbacks(): void
+    {
+        Route::get('/web/news/{post}', fn () => 'show')->name('web.post-types.news.show');
+        Route::get('/admin/{post_type}/{post}/edit', fn () => 'edit')->name('admin.posts.edit');
+        Route::getRoutes()->refreshNameLookups();
+
+        config()->set('cms.should_translate', false);
+
+        $post_type = $this->create_post_type([
+            'name' => 'News',
+            'singular_name' => 'News Item',
+            'slug' => 'news',
+            'icon' => 'ri-news-line',
+        ]);
+        $post = $this->create_post($post_type, [
+            'title' => 'Linked Post',
+            'slug' => 'linked-post',
+            'status' => PostStatus::PUBLISHED->value,
+            'published_at' => now()->subDay(),
+        ]);
+
+        $this->assertSame(url('/web/news/' . $post->slug), $post->permalink);
+        $this->assertStringContainsString('/web/news/' . $post->slug, $post->preview_link);
+        $this->assertSame(route('admin.posts.edit', [$post_type, $post]), $post->admin_url);
+
+        Route::setRoutes(new \Illuminate\Routing\RouteCollection());
+        Route::get('/fallback/{post_type}/{post}/edit', fn () => 'edit')->name('posts.edit');
+        Route::getRoutes()->refreshNameLookups();
+
+        $this->assertNull($post->fresh()->permalink);
+        $this->assertSame(route('posts.edit', [$post_type, $post]), $post->fresh()->admin_url);
+    }
+
+    #[Test]
+    public function it_formats_dates_and_compares_related_posts_by_category(): void
+    {
+        Carbon::setTestNow('2026-05-04 10:00:00');
+
+        $category_type = $this->create_category_type([
+            'name' => 'News Categories',
+            'singular_name' => 'News Category',
+            'slug' => 'news-categories',
+        ]);
+        $post_type = $this->create_post_type([
+            'name' => 'News',
+            'singular_name' => 'News Item',
+            'slug' => 'news',
+            'icon' => 'ri-news-line',
+            'category_type_id' => $category_type->id,
+        ]);
+        $policy = $this->create_category($category_type, ['name' => 'Policy', 'slug' => 'policy']);
+        $sports = $this->create_category($category_type, ['name' => 'Sports', 'slug' => 'sports']);
+
+        $current = $this->create_post($post_type, [
+            'title' => 'Current',
+            'slug' => 'current',
+            'status' => PostStatus::PUBLISHED->value,
+            'published_at' => '2026-05-01 10:00:00',
+        ]);
+        $related = $this->create_post($post_type, [
+            'title' => 'Related',
+            'slug' => 'related',
+            'status' => PostStatus::PUBLISHED->value,
+            'published_at' => '2026-05-03 10:00:00',
+        ]);
+        $otherCategory = $this->create_post($post_type, [
+            'title' => 'Other Category',
+            'slug' => 'other-category',
+            'status' => PostStatus::PUBLISHED->value,
+            'published_at' => '2026-05-02 10:00:00',
+        ]);
+        $draftRelated = $this->create_post($post_type, [
+            'title' => 'Draft Related',
+            'slug' => 'draft-related',
+            'status' => PostStatus::DRAFT->value,
+            'published_at' => '2026-05-04 10:00:00',
+        ]);
+
+        $current->categories()->attach($policy->id);
+        $related->categories()->attach($policy->id);
+        $otherCategory->categories()->attach($sports->id);
+        $draftRelated->categories()->attach($policy->id);
+
+        $this->assertSame('01 May 2026', $current->published_at_formatted);
+        $this->assertSame([$related->id], $current->similarByCategory()->pluck('id')->all());
+    }
+
+    #[Test]
+    public function it_limits_user_visible_posts_to_published_for_guests_and_returns_all_for_privileged_admins(): void
+    {
+        config()->set('auth.guards.web_admin', ['driver' => 'session', 'provider' => 'users']);
+        config()->set('auth.providers.users.model', User::class);
+
+        $post_type = $this->create_post_type([
+            'name' => 'News',
+            'singular_name' => 'News Item',
+            'slug' => 'news',
+            'icon' => 'ri-news-line',
+        ]);
+
+        $published = $this->create_post($post_type, [
+            'title' => 'Published',
+            'slug' => 'published',
+            'status' => PostStatus::PUBLISHED->value,
+            'published_at' => now()->subDay(),
+        ]);
+        $draft = $this->create_post($post_type, [
+            'title' => 'Draft',
+            'slug' => 'draft',
+            'status' => PostStatus::DRAFT->value,
+            'published_at' => now()->subDay(),
+        ]);
+
+        auth()->logout();
+        $this->assertSame([$published->id], Post::query()->userVisibleForPostType($post_type)->pluck('id')->all());
+
+        auth()->setUser(new PostVisibilityUser([
+            'create:' . $post_type->slug,
+            'editOthers:' . $post_type->slug,
+        ]));
+
+        $this->assertEqualsCanonicalizing([$published->id, $draft->id], Post::query()->userVisibleForPostType($post_type)->pluck('id')->all());
+    }
+}
+
+class PostVisibilityUser extends User
+{
+    public function __construct(private array $permissions = [])
+    {
+        parent::__construct();
+    }
+
+    public function can($abilities, $arguments = []): bool
+    {
+        $slug = $arguments instanceof PostType ? $arguments->slug : ($arguments[0]->slug ?? null);
+        return in_array($abilities . ':' . $slug, $this->permissions, true);
     }
 }

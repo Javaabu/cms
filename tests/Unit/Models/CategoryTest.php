@@ -3,8 +3,10 @@
 namespace Javaabu\Cms\Tests\Unit\Models;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Javaabu\Cms\Models\Category;
 use Javaabu\Cms\Models\CategoryType;
+use Javaabu\Cms\Models\PostType;
 use Javaabu\Cms\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -128,5 +130,99 @@ class CategoryTest extends TestCase
         $ids = Category::categoryType('news-categories')->pluck('id')->all();
 
         $this->assertSame([$news_category->id], $ids);
+    }
+
+    #[Test]
+    public function it_builds_category_lists_and_omits_descendants_of_the_skipped_category(): void
+    {
+        $type = $this->create_category_type([
+            'name' => 'News Categories',
+            'singular_name' => 'News Category',
+            'slug' => 'news-categories',
+        ]);
+
+        $root = $this->create_category($type, ['name' => 'Root', 'slug' => 'root']);
+        $child = $this->create_category($type, ['name' => 'Child', 'slug' => 'child']);
+        $child->appendToNode($root)->save();
+        $grandchild = $this->create_category($type, ['name' => 'Grandchild', 'slug' => 'grandchild']);
+        $grandchild->appendToNode($child)->save();
+        $sibling = $this->create_category($type, ['name' => 'Sibling', 'slug' => 'sibling']);
+
+        $all = Category::categoryList($type->id);
+        $skipped = Category::categoryList($type->id, $child);
+
+        $this->assertArrayHasKey($root->id, $all);
+        $this->assertArrayHasKey($child->id, $all);
+        $this->assertArrayHasKey($grandchild->id, $all);
+        $this->assertArrayHasKey($sibling->id, $all);
+        $this->assertArrayNotHasKey($child->id, $skipped);
+        $this->assertArrayNotHasKey($grandchild->id, $skipped);
+        $this->assertArrayHasKey($root->id, $skipped);
+        $this->assertArrayHasKey($sibling->id, $skipped);
+    }
+
+    #[Test]
+    public function it_builds_admin_and_public_urls_and_tree_helpers(): void
+    {
+        Route::get('/admin/category-types/{category_type}/{category}/edit', fn () => 'edit')->name('admin.categories.edit');
+        Route::get('/admin/posts/{post_type}', fn () => 'posts')->name('admin.posts.index');
+        Route::get('/admin/staff', fn () => 'staff')->name('admin.staff.index');
+        Route::get('/news', fn () => 'news')->name('web.posts.index.news');
+        Route::get('/staff-directory', fn () => 'staff')->name('web.staff-directory.index');
+        Route::get('/departments', fn () => 'departments')->name('web.departments.index');
+        Route::getRoutes()->refreshNameLookups();
+
+        config()->set('cms.should_translate', false);
+        app()->setLocale('en');
+
+        $newsType = $this->create_category_type([
+            'name' => 'News Categories',
+            'singular_name' => 'News Category',
+            'slug' => 'news-categories',
+        ]);
+        $postType = new PostType([
+            'name' => 'News',
+            'singular_name' => 'News Item',
+            'slug' => 'news',
+            'icon' => 'ri-news-line',
+        ]);
+        $postType->categoryType()->associate($newsType);
+        $postType->lang = 'en';
+        $postType->save();
+
+        $parent = $this->create_category($newsType, ['name' => 'Parent', 'slug' => 'parent']);
+        $child = $this->create_category($newsType, ['name' => 'Child', 'slug' => 'child']);
+        $child->appendToNode($parent)->save();
+        $child->refresh();
+
+        $this->assertSame(route('admin.categories.edit', [$newsType, $child]), $child->admin_url);
+        $this->assertSame(url('/news?category=' . $child->id), $child->permalink);
+        $this->assertTrue($child->has_parent);
+        $this->assertFalse($child->has_children);
+        $this->assertTrue($parent->fresh()->has_children);
+        $this->assertStringEndsWith('Child', $child->depth_name);
+        $this->assertSame($child->depth_name, $child->admin_link_name);
+        $this->assertSame(route('admin.posts.index', $postType), $child->post_admin_link);
+
+        $child->order_column = null;
+        $this->assertSame(0, $child->order_column);
+    }
+
+    #[Test]
+    public function it_builds_localized_category_urls_when_the_route_expects_a_locale_parameter(): void
+    {
+        Route::get('/admin/category-types/{language}/{category_type}/{category}/edit', fn () => 'edit')->name('admin.categories.edit');
+        Route::getRoutes()->refreshNameLookups();
+
+        app()->setLocale('en');
+
+        $type = $this->create_category_type([
+            'name' => 'News Categories',
+            'singular_name' => 'News Category',
+            'slug' => 'news-categories',
+        ]);
+        $category = $this->create_category($type, ['name' => 'Policy', 'slug' => 'policy']);
+
+        $this->assertSame(url('/admin/category-types/en/news-categories/' . $category->id . '/edit'), $category->url('edit', 'en'));
     }
 }

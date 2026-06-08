@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Support\Facades\URL;
 use Javaabu\Activitylog\Traits\LogsActivity;
 use Javaabu\Cms\Enums\RootSlugs\HasRootSlug;
 use Javaabu\Forms\Support\Icons\FontAwesomeIcons;

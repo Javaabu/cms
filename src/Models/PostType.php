@@ -66,6 +66,18 @@ class PostType extends Model
     }
 
     /**
+     * Posts visible to the current user for this post type.
+     */
+    public function userVisiblePosts()
+    {
+        $postModel = config('cms.models.post', Post::class);
+
+        return $postModel::query()
+            ->postType($this)
+            ->userVisibleForPostType($this);
+    }
+
+    /**
      * Relationship to category type
      *
      * @return BelongsTo

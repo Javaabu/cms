@@ -3,6 +3,9 @@
 namespace Javaabu\Cms\Translatable\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
+use Javaabu\Cms\Enums\PostTypeFeatures;
 use Javaabu\Cms\Models\Post;
 use Javaabu\Cms\Models\PostType;
 use Javaabu\Helpers\Http\Controllers\Controller;
@@ -15,17 +18,31 @@ class PostsController extends Controller
     public function index($post_type, Request $request)
     {
         $post_type = PostType::whereSlug($post_type)->first();
+        $postModel = config('cms.models.post', Post::class);
 
         $title = $post_type->title;
         $per_page = $post_type->getPaginatorCount();
 
         $category = $request->input('category');
 
-        $posts = $post_type->posts()
-            ->belongsToCategory($category)
-            ->ofLocale()
-            ->notHiddenOfLocale()
+        $posts = $postModel::query()
+            ->postType($post_type)
             ->published();
+
+        if ($category && method_exists($posts->getModel(), 'scopeBelongsToCategory')) {
+            $posts->belongsToCategory($category);
+        }
+
+        if (method_exists($posts->getModel(), 'scopeOfLocale')) {
+            $posts->ofLocale();
+        }
+
+        if (
+            method_exists($posts->getModel(), 'scopeNotHiddenOfLocale')
+            && Schema::hasColumn($posts->getModel()->getTable(), 'hide_translation')
+        ) {
+            $posts->notHiddenOfLocale();
+        }
 
         if ($search = $request->input('search')) {
             $posts->search($search);
@@ -69,29 +86,55 @@ class PostsController extends Controller
 
     public function show(Request $request, Post $post, PostType $post_type)
     {
-        // Load up relations
-        $post->load(['department', 'attachments', 'attachments.media']);
+        $post->loadMissing(['postType', 'attachments.media', 'categories']);
 
-        $post_documents = $post->attachments_for_translation;
-
-        $related_posts = $post_type->posts()
-            ->similarToTags($post)
-            ->published()
-            ->withRelations()
-            ->orderBy('tag_similarity', 'DESC')
-            ->latest('published_at')
-            ->limit($post_type->getRelatedPostsCount())
-            ->get();
-
-        // Need to load full models. Above statement only gives specific fields.
-        $related_posts = Post::whereIn('id', $related_posts->pluck('id'))
-            ->with('postType', 'attachments.media')
-            ->get();
+        $post_documents = $this->getPostDocuments($post);
+        $related_posts = $this->getRelatedPosts($post, $post_type);
 
         return view(
             $post_type->getWebView('show'),
             compact('post', 'post_type', 'post_documents', 'related_posts')
         );
+    }
+
+    protected function getPostDocuments(Post $post): Collection
+    {
+        if (! method_exists($post, 'getAttachmentMedia')) {
+            return collect();
+        }
+
+        $translatedDocuments = $post->getAttachmentMedia(PostTypeFeatures::DOCUMENTS->getCollectionName(true)) ?? collect();
+
+        if ($translatedDocuments->isNotEmpty()) {
+            return $translatedDocuments;
+        }
+
+        return $post->getAttachmentMedia(PostTypeFeatures::DOCUMENTS->getCollectionName(false)) ?? collect();
+    }
+
+    protected function getRelatedPosts(Post $post, PostType $postType): Collection
+    {
+        $limit = method_exists($postType, 'getRelatedPostsCount')
+            ? $postType->getRelatedPostsCount()
+            : 5;
+
+        if (method_exists($post, 'similarByTag')) {
+            return $post->similarByTag()
+                ->published()
+                ->with(['postType', 'attachments.media'])
+                ->latest('published_at')
+                ->limit($limit)
+                ->get();
+        }
+
+        if (method_exists($post, 'similarByCategory')) {
+            return $post->similarByCategory()
+                ->with(['postType', 'attachments.media'])
+                ->limit($limit)
+                ->get();
+        }
+
+        return collect();
     }
 
 //    /**

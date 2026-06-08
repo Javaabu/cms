@@ -223,8 +223,12 @@ class PostsController extends Controller
             $post->slug = $slug;
         }
 
-        $post->hide_translation = $request->input('hide_translation', false);
-        $post->recently_updated = $request->input('recently_updated', false);
+        if (\Illuminate\Support\Facades\Schema::hasColumn($post->getTable(), 'hide_translation')) {
+            $post->hide_translation = $request->input('hide_translation', false);
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn($post->getTable(), 'recently_updated')) {
+            $post->recently_updated = $request->input('recently_updated', false);
+        }
 
         if ($request->has('department') && method_exists($post, 'department') && \Illuminate\Support\Facades\Schema::hasColumn($post->getTable(), 'department_id')) {
             $post->department()->associate($request->input('department'));

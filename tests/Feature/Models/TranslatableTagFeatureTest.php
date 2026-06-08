@@ -97,4 +97,44 @@ class TranslatableTagFeatureTest extends TestCase
 
         $this->assertNull($tag->translations);
     }
+
+    #[Test]
+    public function it_handles_fillable_suffixed_translations_and_locale_specific_array_output(): void
+    {
+        config()->set('translations.default_translation_locale', 'en');
+        app()->setLocale('dv');
+
+        $tag = new TranslatableTag();
+        $tag->lang = Languages::EN;
+        $tag->fill([
+            'name_dv' => 'Translated Name',
+        ]);
+
+        $this->assertSame(['name_en', 'name_dv'], $tag->getFillableTranslatables());
+        $this->assertSame('Translated Name', $tag->getAttribute('name_dv'));
+        $this->assertSame(['Translated Name', 'translated-name'], $tag->getAttribute(['name', 'slug']));
+        $this->assertSame('Translated Name', $tag->attributesToArray()['name']);
+        $this->assertSame('dv', $tag->current_lang);
+        $this->assertTrue($tag->is_translation);
+        $this->assertTrue($tag->getTranslation('dv'));
+        $this->assertSame($tag, $tag->getTranslation('en'));
+    }
+
+    #[Test]
+    public function it_exposes_primary_locale_and_non_translatable_field_helpers(): void
+    {
+        config()->set('translations.default_translation_locale', 'en');
+        app()->setLocale('en');
+
+        $tag = new TranslatableTag(['name' => 'Policy Update']);
+        $tag->lang = Languages::DV;
+        $tag->save();
+
+        $this->assertTrue($tag->isPrimaryLocale('dv'));
+        $this->assertFalse($tag->isPrimaryLocale('en'));
+        $this->assertFalse($tag->isPrimaryLocale('fr'));
+        $this->assertNotContains('name', $tag->getNonTranslatables());
+        $this->assertSame($tag->getNonTranslatables(), $tag->getAllNonTranslatables());
+        $this->assertSame('Policy Update', $tag->translateField('name'));
+    }
 }

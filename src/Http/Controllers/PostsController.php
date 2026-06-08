@@ -2,7 +2,9 @@
 
 namespace Javaabu\Cms\Http\Controllers;
 
+use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
+use Javaabu\Cms\Enums\PostTypeFeatures;
 use Javaabu\Cms\Models\Post;
 use Javaabu\Cms\Models\PostType;
 use Javaabu\Helpers\Http\Controllers\Controller;
@@ -69,24 +71,10 @@ class PostsController extends Controller
 
     public function show(Request $request, Post $post, PostType $post_type)
     {
-        // Load up relations
-//        $post->load(['department', 'attachments', 'attachments.media']);
+        $post->loadMissing(['postType', 'attachments.media', 'categories']);
 
-        $post_documents = $post->attachments_for_translation;
-
-        $related_posts = $post_type->posts()
-            ->similarToTags($post)
-            ->published()
-            ->withRelations()
-            ->orderBy('tag_similarity', 'DESC')
-            ->latest('published_at')
-//            ->limit($post_type->getRelatedPostsCount())
-            ->get();
-
-        // Need to load full models. Above statement only gives specific fields.
-        $related_posts = Post::whereIn('id', $related_posts->pluck('id'))
-            ->with('postType', 'attachments.media')
-            ->get();
+        $post_documents = $this->getPostDocuments($post);
+        $related_posts = $this->getRelatedPosts($post, $post_type);
 
         return view(
             $post_type->getWebView('show'),
@@ -105,8 +93,46 @@ class PostsController extends Controller
      */
     public function downloadFiles(Request $request, Post $post, PostType $post_type): MediaStream
     {
-        $media_ids = $post->attachments_for_translation->pluck('media_id');
-        $media = Media::whereIn('id', $media_ids)->get();
-        return MediaStream::create("$post->title.zip")->addMedia($media);
+        return MediaStream::create("$post->title.zip")->addMedia($this->getPostDocuments($post));
+    }
+
+    protected function getPostDocuments(Post $post): Collection
+    {
+        if (! method_exists($post, 'getAttachmentMedia')) {
+            return collect();
+        }
+
+        $translatedDocuments = $post->getAttachmentMedia(PostTypeFeatures::DOCUMENTS->getCollectionName(true)) ?? collect();
+
+        if ($translatedDocuments->isNotEmpty()) {
+            return $translatedDocuments;
+        }
+
+        return $post->getAttachmentMedia(PostTypeFeatures::DOCUMENTS->getCollectionName(false)) ?? collect();
+    }
+
+    protected function getRelatedPosts(Post $post, PostType $postType): Collection
+    {
+        $limit = method_exists($postType, 'getRelatedPostsCount')
+            ? $postType->getRelatedPostsCount()
+            : 5;
+
+        if (method_exists($post, 'similarByTag')) {
+            return $post->similarByTag()
+                ->published()
+                ->with(['postType', 'attachments.media'])
+                ->latest('published_at')
+                ->limit($limit)
+                ->get();
+        }
+
+        if (method_exists($post, 'similarByCategory')) {
+            return $post->similarByCategory()
+                ->with(['postType', 'attachments.media'])
+                ->limit($limit)
+                ->get();
+        }
+
+        return collect();
     }
 }

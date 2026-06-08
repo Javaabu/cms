@@ -24,9 +24,37 @@ class AdminCategoryTypesControllerTest extends TestCase
 
         Gate::shouldReceive('authorize')->andReturn(true);
 
+        Route::get('/_test/admin/category-types/create', fn () => 'ok')->name('admin.category-types.create');
         Route::get('/_test/admin/category-types/{category_type}/edit', fn () => 'ok')->name('admin.category-types.edit');
+        Route::get('/_test/admin/category-types/{category_type}', fn () => 'ok')->name('admin.category-types.show');
         Route::get('/_test/admin/category-types', fn () => 'ok')->name('admin.category-types.index');
         Route::getRoutes()->refreshNameLookups();
+    }
+
+    #[Test]
+    public function category_types_index_create_show_and_edit_return_expected_responses(): void
+    {
+        $first = $this->createCategoryType('announcements');
+        $second = $this->createCategoryType('press-releases');
+
+        $controller = \Mockery::mock(AdminCategoryTypesController::class)->makePartial()->shouldAllowMockingProtectedMethods();
+        $controller->shouldReceive('getOrderBy')->andReturn('created_at');
+        $controller->shouldReceive('getOrder')->andReturn('asc');
+        $controller->shouldReceive('getPerPage')->andReturn(10);
+
+        $index = $controller->index(Request::create('/admin/category-types', 'GET', [
+            'per_page' => 10,
+        ]));
+        $create = $controller->create(Request::create('/admin/category-types/create', 'GET'));
+        $show = $controller->show($first);
+        $edit = $controller->edit($second);
+
+        $this->assertSame('cms::admin.category-types.index', $index->name());
+        $this->assertSame([$first->id, $second->id], $index->getData()['category_types']->pluck('id')->all());
+        $this->assertSame('cms::admin.category-types.create', $create->name());
+        $this->assertSame(route('admin.category-types.edit', $first), $show->getTargetUrl());
+        $this->assertSame('cms::admin.category-types.edit', $edit->name());
+        $this->assertTrue($edit->getData()['category_type']->is($second));
     }
 
     #[Test]
@@ -113,6 +141,27 @@ class AdminCategoryTypesControllerTest extends TestCase
     }
 
     #[Test]
+    public function category_types_store_uses_the_requested_language_when_translations_are_enabled(): void
+    {
+        config()->set('cms.should_translate', true);
+
+        $request = \Mockery::mock(CategoryTypesRequest::class);
+        $request->shouldReceive('validated')->once()->andReturn([
+            'name' => 'Blog Categories',
+            'singular_name' => 'Blog Category',
+            'slug' => 'blog-categories',
+        ]);
+        $request->shouldReceive('input')->with('lang', \Mockery::any())->andReturn('en');
+
+        $response = app(AdminCategoryTypesController::class)->store($request);
+
+        $created = CategoryType::query()->where('slug', 'blog-categories')->firstOrFail();
+        $this->assertSame(route('admin.category-types.edit', $created), $response->getTargetUrl());
+        $this->assertSame('Blog Categories', $created->name);
+        $this->assertSame('en', $created->lang);
+    }
+
+    #[Test]
     public function category_types_update_does_not_change_lang_for_translation_records(): void
     {
         config()->set('cms.should_translate', true);
@@ -138,6 +187,53 @@ class AdminCategoryTypesControllerTest extends TestCase
         $this->assertSame('en', $type->lang);
         $this->assertSame('announcements-updated', $type->slug);
         $this->assertSame(route('admin.category-types.edit', $type), $response->getTargetUrl());
+    }
+
+    #[Test]
+    public function category_types_update_sets_lang_for_primary_records_when_translations_are_enabled(): void
+    {
+        config()->set('cms.should_translate', true);
+
+        $type = $this->createCategoryType('news-categories');
+        $type->lang = 'en';
+        $type->save();
+
+        $request = \Mockery::mock(CategoryTypesRequest::class);
+        $request->shouldReceive('validated')->once()->andReturn([
+            'name' => 'News Topics',
+            'singular_name' => 'News Topic',
+            'slug' => 'news-topics',
+        ]);
+        $request->shouldReceive('input')->with('is_translation')->andReturn(false);
+        $request->shouldReceive('input')->with('lang')->andReturn('dv');
+        $request->shouldReceive('input')->with('slug')->andReturn('news-topics');
+
+        $response = app(AdminCategoryTypesController::class)->update($request, $type);
+
+        $type->refresh();
+
+        $this->assertSame('dv', $type->lang);
+        $this->assertSame('news-topics', $type->slug);
+        $this->assertSame(route('admin.category-types.edit', $type), $response->getTargetUrl());
+    }
+
+    #[Test]
+    public function category_types_bulk_deletes_matching_records_and_redirects_to_index(): void
+    {
+        $first = $this->createCategoryType('bulk-one');
+        $second = $this->createCategoryType('bulk-two');
+
+        $request = Request::create('/admin/category-types/bulk', 'PATCH', [
+            'action' => 'delete',
+            'category_types' => [$first->id, $second->id],
+        ]);
+
+        $response = app(AdminCategoryTypesController::class)->bulk($request);
+
+        $this->assertSame(302, $response->status());
+        $this->assertSame(route('admin.category-types.index'), $response->getTargetUrl());
+        $this->assertDatabaseMissing('category_types', ['id' => $first->id]);
+        $this->assertDatabaseMissing('category_types', ['id' => $second->id]);
     }
 
     private function createCategoryType(string $slug): CategoryType

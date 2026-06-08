@@ -2,6 +2,7 @@
 
 namespace Javaabu\Cms\Tests\Unit\Enums;
 
+use Illuminate\Support\Facades\Route;
 use Javaabu\Cms\Enums\GalleryTypes;
 use Javaabu\Cms\Enums\Languages;
 use Javaabu\Cms\Enums\PageStyles;
@@ -65,6 +66,30 @@ class CmsEnumsTest extends TestCase
         $this->assertSame(public_url('/dv'), Languages::getLocalizedUrl(null));
         $this->assertSame(admin_url('/dv/news'), Languages::getAdminLocalizedUrl('news'));
         $this->assertSame(admin_url('/dv'), Languages::getAdminLocalizedUrl(null));
+    }
+
+    #[Test]
+    public function languages_translate_current_routes_and_expose_flags_labels_and_session_locale(): void
+    {
+        config()->set('app.url', 'http://example.test');
+        config()->set('app.admin_domain', 'admin.example.test');
+        config()->set('translations.default_translation_locale', 'dv');
+        app()->setLocale('en');
+
+        Route::get('/admin/{language}/news/{post}', fn () => 'show')->name('admin.posts.show');
+        Route::getRoutes()->refreshNameLookups();
+        $this->get('/admin/en/news/42');
+
+        session()->put('language', 'dv');
+
+        $this->assertStringEndsWith('/admin/dv/news/42', Languages::translateCurrentRoute());
+        $this->assertStringEndsWith('/img/flags/gb.svg', Languages::getLocaleFlag('en'));
+        $this->assertStringEndsWith('/img/flags/mv.svg', Languages::getOppositeLocaleFlag('en'));
+        $this->assertSame('dv', Languages::getSessionLocale());
+        $this->assertSame([
+            'dv' => 'Dhivehi',
+            'en' => 'English',
+        ], Languages::getLabels());
     }
 
     #[Test]
