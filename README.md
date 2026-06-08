@@ -1,5 +1,8 @@
 # Javaabu CMS
 
+![Tests Status](../../actions/workflows/run-tests.yml/badge.svg)
+![Code Coverage Badge](./.github/coverage.svg)
+
 A flexible and extensible Content Management System package for Laravel applications. Built with support for custom post types, hierarchical categories, and rich content editing with Editor.js.
 
 ## Features
