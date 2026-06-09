@@ -142,6 +142,49 @@ class PoliciesTest extends TestCase
         $this->assertTrue($policy->delete($manager, $media));
     }
 
+    #[Test]
+    public function media_post_and_post_type_policies_cover_their_delegate_methods(): void
+    {
+        $postType = $this->createPostType('updates');
+        $post = new Post([
+            'type' => $postType->slug,
+            'title' => 'Delegated Post',
+            'slug' => 'delegated-post',
+            'status' => PostStatus::DRAFT->value,
+            'published_at' => now(),
+        ]);
+        $post->setRelation('postType', $postType);
+
+        $postPolicy = new PostPolicy();
+        $postTypePolicy = new PostTypePolicy();
+        $mediaPolicy = new MediaPolicy();
+
+        $postUser = new PermissionUser([
+            'viewAny', 'update', 'delete', 'viewTrash', 'restore', 'forceDelete', 'publish',
+        ]);
+        $postTypeUser = new PermissionUser([
+            'view_updates', 'edit_updates', 'edit_others_updates', 'publish_updates',
+        ]);
+
+        $media = new Media(['model_type' => 'permission-user', 'model_id' => 99]);
+
+        $this->assertTrue($mediaPolicy->view($postUser, $media));
+        $this->assertTrue($mediaPolicy->update($postUser, $media));
+
+        $this->assertTrue($postPolicy->view($postUser, $post));
+        $this->assertTrue($postPolicy->update($postUser, $post));
+        $this->assertTrue($postPolicy->delete($postUser, $post));
+        $this->assertTrue($postPolicy->viewTrash($postUser, $postType));
+        $this->assertTrue($postPolicy->restore($postUser, $post));
+        $this->assertTrue($postPolicy->forceDelete($postUser, $post));
+        $this->assertTrue($postPolicy->viewLogs($postUser, $post));
+
+        $this->assertTrue($postTypePolicy->view($postTypeUser, $postType));
+        $this->assertTrue($postTypePolicy->update($postTypeUser, $postType));
+        $this->assertTrue($postTypePolicy->editOthers($postTypeUser, $postType));
+        $this->assertTrue($postTypePolicy->viewLogs($postTypeUser, $postType));
+    }
+
     private function createCategoryType(string $slug): CategoryType
     {
         $categoryType = new CategoryType([

@@ -7,6 +7,7 @@ namespace Javaabu\Cms\Media;
 
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 trait UpdateMedia
 {
@@ -31,7 +32,7 @@ trait UpdateMedia
 
             // add the new file
             return $this->addMedia($file)
-                        ->usingFileName(str_slug(str_random(8)) . '.' . $file->guessExtension())
+                        ->usingFileName(Str::slug(Str::random(8)) . '.' . $file->guessExtension())
                         ->toMediaCollection($collection);
 
         } elseif ($request->exists($key)) {

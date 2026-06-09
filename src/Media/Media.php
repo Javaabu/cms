@@ -6,6 +6,7 @@ use Javaabu\Cms\Enums\JsonTranslatable\IsJsonTranslatable;
 use Javaabu\Cms\Enums\JsonTranslatable\JsonTranslatable;
 use Javaabu\Cms\Enums\Languages;
 use Spatie\Image\Image;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
 use Javaabu\Helpers\AdminModel\AdminModel;
@@ -84,11 +85,18 @@ class Media extends BaseMedia implements
      */
     public function scopeSearch($query, $search, $locale = null):mixed
     {
-        $query->translationsSearch('description', $search, $locale)
-              ->orWhere('name', 'like', '%' . $search . '%')
-              ->orWhereHas('tagWords', function ($tags) use ($search, $locale) {
-                  $tags->search($search, $locale);
-              });
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            $query->translationsSearch('description', $search, $locale)
+                ->orWhere('name', 'like', '%' . $search . '%');
+        } else {
+            $query->where('name', 'like', '%' . $search . '%');
+        }
+
+        if (method_exists($this, 'tagWords')) {
+            $query->orWhereHas('tagWords', function ($tags) use ($search, $locale) {
+                $tags->search($search, $locale);
+            });
+        }
 
         return $query;
     }
@@ -287,8 +295,6 @@ class Media extends BaseMedia implements
         return translate_route('admin.media.edit', $this);
     }
 }
-
-
 
 
 

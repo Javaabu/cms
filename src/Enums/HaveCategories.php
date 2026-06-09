@@ -197,7 +197,7 @@ trait HaveCategories
             $relation = $this->getCategoriesRelationName();
         }
 
-        return static::where('id', '!=', $this->id)
+        return static::where($this->getTable() . '.id', '!=', $this->id)
                      ->similarToCategories(
                          $this->{$relation}->pluck('id')->all()
                      );

@@ -65,7 +65,7 @@ trait IsTaggable
         }
 
         return $this->tagWords
-                ->plucK('tag_id')
+                ->pluck('id')
                 ->intersect(collect($tag_ids))
                 ->count() > 0;
     }
@@ -97,9 +97,9 @@ trait IsTaggable
             $relation = $this->getTagsRelationName();
         }
 
-        return static::where('id', '!=', $this->id)
+        return static::where($this->getTable() . '.id', '!=', $this->id)
             ->similarToTags(
-                $this->{$relation}->pluck('tag_id')->all()
+                $this->{$relation}->pluck('id')->all()
             );
     }
 
@@ -115,7 +115,7 @@ trait IsTaggable
     {
         if ($tags instanceof Model) {
             $query->where($this->getTable() . '.id', '!=', $tags->id);
-            $tags = $tags->tagWords()->pluck('tag_id')->all();
+            $tags = $tags->tagWords()->pluck('tags.id')->all();
         }
 
         return $query->joinTagsPivot()
@@ -181,7 +181,10 @@ trait IsTaggable
         // find the missing tags
         foreach ($tag_names as $name) {
             if (! $existing_tags->contains('name', $name)) {
-                $new_tag = Tag::firstOrCreate(compact('name'));
+                $new_tag = Tag::firstOrCreate(
+                    compact('name'),
+                    ['lang' => app()->getLocale()]
+                );
                 $tag_ids[] = $new_tag->id;
             }
         }
