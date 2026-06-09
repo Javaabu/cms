@@ -59,8 +59,9 @@ if (! function_exists('translate_action')) {
             // Scalar parameters are treated as query values to avoid ambiguous
             // route matching between translated and untranslated controller actions.
             return add_query_arg(
-                array_merge(['language' => $locale], Arr::wrap($parameters)),
-                action($name, [], $absolute)
+                'language',
+                $locale,
+                add_query_arg(Arr::wrap($parameters), action($name, [], $absolute))
             );
         }
 
