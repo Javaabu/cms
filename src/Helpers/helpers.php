@@ -34,12 +34,12 @@ if (! function_exists('translate_action')) {
      * Generate the URL to a controller action.
      *
      * @param string $name
-     * @param array $parameters
+     * @param array|string|mixed $parameters
      * @param bool $absolute
      * @param null $locale
      * @return string
      */
-    function translate_action(string $name, array $parameters = [], bool $absolute = true, $locale = null): string
+    function translate_action(string $name, $parameters = [], bool $absolute = true, $locale = null): string
     {
         if (! config('cms.should_translate')) {
             return action($name, $parameters, $absolute);
@@ -50,14 +50,21 @@ if (! function_exists('translate_action')) {
         }
 
         if (is_array($parameters)) {
-            array_unshift($parameters, $locale);
-        } elseif ($parameters) {
-            $parameters = [$locale, $parameters];
-        } else {
-            $parameters = $locale;
+            $parameters = array_merge(['language' => $locale], $parameters);
+
+            return action($name, $parameters, $absolute);
         }
 
-        return action($name, $parameters, $absolute);
+        if ($parameters) {
+            // Scalar parameters are treated as query values to avoid ambiguous
+            // route matching between translated and untranslated controller actions.
+            return add_query_arg(
+                array_merge(['language' => $locale], Arr::wrap($parameters)),
+                action($name, [], $absolute)
+            );
+        }
+
+        return action($name, ['language' => $locale], $absolute);
     }
 }
 
