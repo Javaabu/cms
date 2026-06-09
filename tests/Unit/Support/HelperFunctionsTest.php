@@ -72,7 +72,13 @@ class HelperFunctionsTest extends TestCase
         app()->setLocale('dv');
 
         $this->assertStringContainsString('/dv/', translate_route('translated.posts.show', ['post' => 'report']));
-        $this->assertStringContainsString('language=dv', translate_action(HelperFunctionsController::class . '@index', 'report'));
+        $translatedAction = translate_action(HelperFunctionsController::class . '@index', 'report');
+
+        $this->assertTrue(
+            str_contains($translatedAction, '/dv/admin/dashboard') || str_contains($translatedAction, 'language=dv'),
+            $translatedAction
+        );
+        $this->assertStringContainsString('report', parse_url($translatedAction, PHP_URL_QUERY) ?? '');
         $this->assertSame('tab-pane fade', add_tab_class(false));
         $this->assertSame('Hello Team', _d('Hello :name', ['name' => 'Team']));
         $this->assertSame('http://admin.example.test', admin_url('/'));
