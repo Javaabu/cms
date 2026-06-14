@@ -18,6 +18,7 @@ use Javaabu\Helpers\Traits\HasOrderbys;
 use Javaabu\Helpers\Exceptions\AppException;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Auth\Access\AuthorizationException;
+use Javaabu\Mediapicker\Mediapicker;
 use Spatie\MediaLibrary\MediaCollections\FileAdder;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
@@ -154,7 +155,7 @@ class MediaController extends Controller
      */
     public function create()
     {
-        return view('cms::admin.media.create');
+        return view(Mediapicker::getViewName('media.create'));
     }
 
     /**
@@ -214,10 +215,12 @@ class MediaController extends Controller
                 'thumb'     => $media->getUrl('thumb'),
                 'large'     => $media->getUrl('large'),
                 'type_slug' => $media->type_slug,
+                'file_type' => $media->type_slug,
                 'icon'      => $media->icon,
                 'name'      => $media->name,
                 'file_name' => $media->file_name,
                 'location'  => $media->getUrl(),
+                'url'       => $media->getUrl(),
                 'edit_url'  => $media->admin_url,
                 //'tags' => $media->tagWords->pluck('name', 'id'),
             ]);

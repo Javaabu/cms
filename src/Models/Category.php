@@ -14,7 +14,7 @@ use Javaabu\Cms\Enums\RootSlugs\HasRootSlug;
 use Javaabu\Forms\Support\Icons\FontAwesomeIcons;
 use Javaabu\Helpers\AdminModel\AdminModel;
 use Javaabu\Helpers\AdminModel\IsAdminModel;
-use Javaabu\Cms\Media\AllowedMimeTypes;
+use Javaabu\Helpers\Media\AllowedMimeTypes;
 use Javaabu\Helpers\Traits\HasSlug;
 use Javaabu\Mediapicker\Concerns\InteractsWithAttachments;
 use Javaabu\Mediapicker\Contracts\HasAttachments;
@@ -246,7 +246,7 @@ class Category extends Model implements
      *
      * @param Media|null $media
      */
-    public function registerAttachmentConversions(Media $media = null)
+    public function registerAttachmentConversions(?Media $media = null)
     {
         $this->addAttachmentConversion('shareable_image')
             ->width(1200)
@@ -335,7 +335,7 @@ class Category extends Model implements
      * @param string $namespace
      * @return string
      */
-    public function url(string $action = 'show', string $locale = null, string $namespace = 'admin'): string
+    public function url(string $action = 'show', ?string $locale = null, string $namespace = 'admin'): string
     {
         if (! $locale) {
             $locale = app()->getLocale();

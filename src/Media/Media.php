@@ -2,39 +2,38 @@
 
 namespace Javaabu\Cms\Media;
 
-use Javaabu\Cms\Enums\JsonTranslatable\IsJsonTranslatable;
-use Javaabu\Cms\Enums\JsonTranslatable\JsonTranslatable;
+use Illuminate\Database\Eloquent\Builder;
 use Javaabu\Cms\Enums\Languages;
 use Spatie\Image\Image;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
-use Spatie\Activitylog\LogOptions;
-use Javaabu\Helpers\AdminModel\AdminModel;
-use Javaabu\Helpers\AdminModel\IsAdminModel;
-use Javaabu\Activitylog\Traits\LogsActivity;
-use Spatie\MediaLibrary\MediaCollections\Models\Media as BaseMedia;
+use Javaabu\Cms\Translatable\IsJsonTranslatable;
+use Javaabu\Mediapicker\Models\Media as BaseMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media as SpatieMedia;
 
-class Media extends BaseMedia implements
-    AdminModel,
-    JsonTranslatable
+class Media extends BaseMedia
 {
-
-    use LogsActivity;
-    use IsAdminModel;
-    use IsJsonTranslatable;
+    use IsJsonTranslatable {
+        getAdminLocalizedUrl as protected getTranslatableAdminLocalizedUrl;
+        getAdminUrlAttribute as protected getTranslatableAdminUrlAttribute;
+        getLocalizedUrl as protected getTranslatableLocalizedUrl;
+        getAdminLocalizedEditUrl as protected getTranslatableAdminLocalizedEditUrl;
+        url as protected translatableUrl;
+    }
 
     /**
      * The attributes that would be logged
      *
      * @var array
      */
-    protected static $logAttributes = ['*'];
+    protected static array $logAttributes = ['*'];
     /**
      * Log only changed attributes
      *
      * @var boolean
      */
-    protected static $logOnlyDirty = true;
+    protected static bool $logOnlyDirty = true;
     protected $morphClass = 'media';
     protected $attributes = [
         'lang' => Languages::DV,
@@ -118,7 +117,7 @@ class Media extends BaseMedia implements
      * @param $query
      * @return mixed
      */
-    public function scopeUserVisible($query)
+    public function scopeUserVisible(Builder $query): void
     {
         $userModel = config('auth.providers.users.model') ?: 'App\Models\User';
 
@@ -129,15 +128,17 @@ class Media extends BaseMedia implements
         if ($admin) {
             if ($admin->can('create', static::class)) {
                 if ($admin->can('edit_other_users_media')) {
-                    return $query;
+                    return;
                 } else {
-                    return $query->whereModelType($admin->getMorphClass())
+                    $query->whereModelType($admin->getMorphClass())
                         ->whereModelId($admin->id);
+
+                    return;
                 }
             }
         }
 
-        return $query->whereId(-1);
+        $query->whereId(-1);
     }
 
 
@@ -228,7 +229,7 @@ class Media extends BaseMedia implements
      */
     public function memberUrl($action = 'show', $locale = null)
     {
-        return $this->url($action, $locale, 'Member\\');
+        return $this->mediaRouteUrl($action, namespace: 'Member\\');
     }
 
     /**
@@ -239,7 +240,44 @@ class Media extends BaseMedia implements
      */
     public function getMemberLocalizedUrl($locale = null)
     {
-        return $this->url('show', $locale, 'Member\\');
+        return $this->mediaRouteUrl('show', namespace: 'Member\\');
+    }
+
+    public function getAdminUrlAttribute(): string
+    {
+        return $this->mediaRouteUrl('edit');
+    }
+
+    public function getAdminLocalizedUrl($locale = null): string
+    {
+        return $this->mediaRouteUrl('show');
+    }
+
+    public function getAdminLocalizedEditUrl($locale = null): string
+    {
+        return $this->mediaRouteUrl('edit');
+    }
+
+    public function getLocalizedUrl($locale = null): string
+    {
+        return $this->getUrl();
+    }
+
+    public function url(string $action, ?SpatieMedia $media = null): string
+    {
+        return $this->mediaRouteUrl($action, $media);
+    }
+
+    protected function mediaRouteUrl(string $action = 'show', ?SpatieMedia $media = null, string $namespace = 'admin'): string
+    {
+        $route = $namespace . '.media.' . $action;
+        $params = [];
+
+        if (! in_array($action, ['index', 'store', 'create', 'bulk', 'picker'])) {
+            $params[] = $media ?: $this;
+        }
+
+        return URL::route($route, $params);
     }
 
     /**
@@ -247,7 +285,7 @@ class Media extends BaseMedia implements
      *
      * @return int
      */
-    public function getWidthAttribute()
+    public function getWidthAttribute(): ?int
     {
         if (! $this->hasCustomProperty('width')) {
             $this->saveDimensions();
@@ -273,7 +311,7 @@ class Media extends BaseMedia implements
      *
      * @return int
      */
-    public function getHeightAttribute()
+    public function getHeightAttribute(): ?int
     {
         if (! $this->hasCustomProperty('height')) {
             $this->saveDimensions();
@@ -287,14 +325,4 @@ class Media extends BaseMedia implements
         return Str::limit($this->name, 15);
     }
 
-    /**
-     * Get the admin url attribute
-     */
-    public function getAdminUrlAttribute():string
-    {
-        return translate_route('admin.media.edit', $this);
-    }
 }
-
-
-

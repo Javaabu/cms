@@ -2,8 +2,8 @@
 
 namespace Javaabu\Cms\Http\Requests;
 
-use Javaabu\Cms\Media\AllowedMimeTypes;
 use Illuminate\Foundation\Http\FormRequest;
+use Javaabu\Helpers\Media\AllowedMimeTypes;
 
 class MediaRequest extends FormRequest
 {

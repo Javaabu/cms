@@ -90,7 +90,7 @@ if (! function_exists('_d')) {
      * @param string|null $locale
      * @return string|array|null
      */
-    function _d(string $key, array $replace = [], string $locale = null)
+    function _d(string $key, array $replace = [], ?string $locale = null)
     {
         $locale = $locale ?: Languages::getDefaultAppLocale();
         return __($key, $replace, $locale);

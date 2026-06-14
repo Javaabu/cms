@@ -4,8 +4,8 @@ namespace Javaabu\Cms\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\URL;
-use Javaabu\Cms\Enums\JsonTranslatable\JsonTranslatable;
-use Javaabu\Cms\Enums\JsonTranslatable\IsJsonTranslatable;
+use Javaabu\Cms\Translatable\Contracts\JsonTranslatable;
+use Javaabu\Cms\Translatable\IsJsonTranslatable;
 
 class TranslatablePost extends Post implements JsonTranslatable
 {
@@ -114,7 +114,7 @@ class TranslatablePost extends Post implements JsonTranslatable
      * @param string|null $locale
      * @return string|null
      */
-    public function translatedPermalink(string $action = 'show', string $locale = null): ?string
+    public function translatedPermalink(string $action = 'show', ?string $locale = null): ?string
     {
         if (!$locale) {
             $locale = app()->getLocale();
@@ -146,7 +146,7 @@ class TranslatablePost extends Post implements JsonTranslatable
      * @param string $namespace
      * @return string
      */
-    public function url(string $action = 'show', string $locale = null, string $namespace = 'admin'): string
+    public function url(string $action = 'show', ?string $locale = null, string $namespace = 'admin'): string
     {
         if (! $locale) {
             $locale = app()->getLocale();

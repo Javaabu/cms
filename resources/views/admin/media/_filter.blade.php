@@ -1,4 +1,4 @@
-@php use Javaabu\Cms\Media\AllowedMimeTypes; @endphp
+@php use Javaabu\Helpers\Media\AllowedMimeTypes; @endphp
 <x-forms::filter>
     <div class="row">
         <div class="col-md-6">
@@ -33,5 +33,4 @@
 
     <x-forms::hidden name="view" :value="$view"/>
 </x-forms::filter>
-
 

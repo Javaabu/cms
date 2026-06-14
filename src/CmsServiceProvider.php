@@ -22,6 +22,8 @@ use Javaabu\Mediapicker\MediapickerServiceProvider;
 use Javaabu\Mediapicker\Models\Media as MediapickerMedia;
 use ReflectionClass;
 use Spatie\MediaLibrary\MediaCollections\Models\Media as SpatieMedia;
+use Javaabu\Cms\Media\AllowedMimeTypes;
+use Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer;
 
 class CmsServiceProvider extends ServiceProvider
 {
@@ -117,6 +119,7 @@ class CmsServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/../config/cms.php', 'cms');
         $this->app->register(MediapickerServiceProvider::class);
         $this->configureMediapickerDefaults();
+        $this->registerCmsMediaMimeTypes();
 
         if ($this->app->runningInConsole()) {
             // Register commands
@@ -134,6 +137,7 @@ class CmsServiceProvider extends ServiceProvider
         $this->setConfigDefault('mediapicker.media_model', CmsMedia::class, MediapickerMedia::class);
         $this->setConfigDefault('mediapicker.media_controller', MediaController::class, MediapickerMediaController::class);
         $this->setConfigDefault('media-library.media_model', CmsMedia::class, SpatieMedia::class);
+        $this->setConfigDefault('media-library.file_namer', DefaultFileNamer::class);
     }
 
     protected function setConfigDefault(string $key, mixed $value, mixed $packageDefault = null): void
@@ -143,6 +147,11 @@ class CmsServiceProvider extends ServiceProvider
         if (is_null($current) || $current === $packageDefault) {
             config([$key => $value]);
         }
+    }
+
+    protected function registerCmsMediaMimeTypes(): void
+    {
+        AllowedMimeTypes::registerCmsMimeTypes();
     }
 
     protected function loadMediapickerMigrations(): void

@@ -27,6 +27,7 @@ namespace Javaabu\Cms\Tests\Unit\Media {
             $this->assertContains('image', AllowedMimeTypes::getAllowedTypes());
             $this->assertContains('application/pdf', AllowedMimeTypes::getAllowedMimeTypes());
             $this->assertContains('image/webp', AllowedMimeTypes::getAllowedMimeTypes('image'));
+            $this->assertContains('archive', AllowedMimeTypes::getAllowedTypes());
 
             $this->assertSame('image', AllowedMimeTypes::getType('image/png'));
             $this->assertSame('pdf', AllowedMimeTypes::getType('application/pdf'));

@@ -79,7 +79,7 @@ class MediaControllerTest extends TestCase
         $show = $controller->show($media);
         $edit = $controller->edit($media);
 
-        $this->assertSame('cms::admin.media.create', $create->name());
+        $this->assertSame('mediapicker::material-admin-26.media.create', $create->name());
         $this->assertSame('http://localhost/media/1/edit', $show->getTargetUrl());
         $this->assertSame('cms::admin.media.edit', $edit->name());
     }

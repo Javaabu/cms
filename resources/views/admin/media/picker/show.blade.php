@@ -12,7 +12,7 @@
 
                 @can('create', \Javaabu\Cms\Media\Media::class)
                     <div id="new-media" class="{{ add_tab_class(false) }}">
-                        @include('cms::admin.media.form._uploader', ['view' => 'grid'])
+                        @include('mediapicker::material-admin-26.media.form._uploader', ['view' => 'grid'])
                     </div>
                 @endcan
             </div>

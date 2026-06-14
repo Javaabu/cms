@@ -2,8 +2,8 @@
 
 namespace Javaabu\Cms\Models;
 
-use Javaabu\Cms\Enums\JsonTranslatable\JsonTranslatable;
-use Javaabu\Cms\Enums\JsonTranslatable\IsJsonTranslatable;
+use Javaabu\Cms\Translatable\Contracts\JsonTranslatable;
+use Javaabu\Cms\Translatable\IsJsonTranslatable;
 
 class TranslatableTag extends Tag implements JsonTranslatable
 {

@@ -21,7 +21,7 @@ use Javaabu\Cms\Enums\PostTypeFeatures;
 use Javaabu\Helpers\AdminModel\AdminModel;
 use Javaabu\Helpers\AdminModel\IsAdminModel;
 use Javaabu\Helpers\Enums\PublishStatuses;
-use Javaabu\Cms\Media\AllowedMimeTypes;
+use Javaabu\Helpers\Media\AllowedMimeTypes;
 use Javaabu\Helpers\Traits\HasSlug;
 use Javaabu\Helpers\Traits\Publishable;
 use Javaabu\Mediapicker\Concerns\InteractsWithAttachments;
@@ -525,7 +525,7 @@ class Post extends Model implements
         return 'featured_image';
     }
 
-    public function registerAttachmentConversions(Media $media = null)
+    public function registerAttachmentConversions(?Media $media = null)
     {
         $this->addAttachmentConversion('og_image')
             ->width(1200)

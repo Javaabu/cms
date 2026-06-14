@@ -2,7 +2,7 @@
 
 namespace Javaabu\Cms\Enums;
 
-use Javaabu\Cms\Enums\JsonTranslatable\Translatable;
+use Javaabu\Cms\Translatable\Contracts\Translatable;
 use Javaabu\Helpers\Enums\IsEnum;
 use Illuminate\Support\Facades\Route;
 use Javaabu\Helpers\Traits\EnumsTrait;
