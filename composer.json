@@ -53,6 +53,9 @@
         "orchestra/testbench": "^10.0 || ^11.0",
         "phpunit/phpunit": "^11.5.3 || ^12.5.8"
     },
+    "conflict": {
+        "javaabu/dynamic-menubuilder": "dev-main"
+    },
     "suggest": {
         "inertiajs/inertia-laravel": "Renders the admin and public pages with Inertia React when cms.views is inertia (^2.0)",
         "javaabu/translatable": "Pages, news, terms, menus, widgets and site settings in several languages (^3.0)"
