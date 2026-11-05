@@ -1,0 +1,42 @@
+# javaabu/cms
+
+> A complete CMS for Laravel assembled from Javaabu packages. It registers a content model with javaabu/post-types (pages at /{slug}, news with categories and tags), menu locations with javaabu/dynamic-menubuilder (header, footer), widget locations with javaabu/widgets (sidebar, footer) plus recent-posts and terms widgets, and a "Site" settings page with javaabu/settings (site name, tagline, front page, footer text). Route::cmsAdmin() puts a dashboard and every package's admin pages (post types, media, menus, widgets, settings, roles) under one prefix, name and guard; Route::cms() adds the home page and the public post type pages. Cms::navigation() is the permission-aware admin navigation. A public theme and admin layout ship in Blade and Inertia React (@javaabu/cms through javaabu/manifest). php artisan cms:install sets everything up with starter content; php artisan cms:import-v1 brings a v1 site's content over. Permissions through javaabu/permissions, any guard. Optional javaabu/translatable. English and Dhivehi, RTL.
+
+Paths are relative to this file. In a project, that's vendor/javaabu/cms/.
+
+## Rules
+
+- Don't write models, migrations, controllers or CRUD views for pages, news, categories, menus or widgets: they're javaabu/post-types', dynamic-menubuilder's and widgets'. Add post types with PostTypes::register() (start from Javaabu\Cms\Content\Defaults to change a default) and remove defaults in config/cms.php.
+- Register routes with Route::cmsAdmin(['guard' => ..., 'prefix' => 'admin', 'name' => 'admin.']) and Route::cms(). Call Route::cms() after the app's own routes: pages live at /{slug}. Don't also call Route::postTypesAdmin(), Route::menus(), Route::widgets(), Route::settings(), Route::mediapicker() or Route::roles() for the same prefix; turn a section off with its option (`'roles' => false`) or pass it options.
+- Run php artisan cms:install (or permissions:sync), then give roles view_dashboard and the content permissions (view_/edit_/delete_/publish_{type}, view_/edit_/delete_{taxonomy}, view_menus, view_widgets, view_settings, edit_site_settings, view_media).
+- Add admin links with Cms::navigation()->add(NavigationItem::make('key')->label(fn () => __('…'))->route('name.index')->group('content')->can('ability')); routes are relative to the admin name prefix.
+- Read site details with Cms::siteName(), Cms::tagline(), Cms::footerText(), Cms::frontPage() or Cms::site(), not settings('site_name').
+- Blade pages extend config('cms.layouts.public') / 'cms::layouts.public' (section `content`). For Inertia, resolve pages with withCmsLayouts(resolvePage(...)) from @javaabu/cms; the `cms`, `menus` and `widgets` shared props are filled on CMS routes.
+- cms.sync_packages (default on) sets the views and layouts of post-types, widgets, dynamic-menubuilder, settings, mediapicker and permissions from config('cms'). Turn it off before configuring those packages' views or layouts yourself.
+- Optional packages (inertiajs/inertia-laravel, javaabu/translatable) are feature-detected; go through Javaabu\Cms\Support\Translations, never translatable's classes directly.
+- Upgrading from v1: php artisan migrate renames v1's tables to cms_v1_*, then php artisan cms:import-v1 [--type=v1:v2] [--taxonomy=v1:v2] [--dry-run].
+- Pass every user-facing string through __() and add it to lang/dv.json. Use logical CSS (ms-, pe-, inset-inline-start) in overridden views.
+
+## Docs
+
+- [Introduction](docs/intro.md): what the CMS is made of and what it adds
+- [Requirements](docs/requirements.md): PHP, Laravel, the packages it installs, optional packages, React
+- [Installation & Setup](docs/installation-and-setup.md): cms:install and its starter content, user models, routes, permissions, styles, Inertia, publishing
+- [Upgrading from v1](docs/upgrading.md): what changed, the table rename, cms:import-v1 and its options, post types, menus, templates, URLs
+- [AI assistants](docs/ai-assistants.md): Laravel Boost and llms.txt
+- [Routes](docs/basic-usage/routes.md): Route::cmsAdmin() and Route::cms(), every option and route, several guards
+- [The content model](docs/basic-usage/content-model.md): the default post types, taxonomies, menu and widget locations; leaving out, changing and adding
+- [Dashboard and navigation](docs/basic-usage/dashboard-and-navigation.md): the dashboard and its data, Cms::navigation(), NavigationItem, rendering it
+- [The public theme](docs/basic-usage/public-theme.md): the home page, the Blade layout, ThemeLayout, overriding, styles
+- [Site settings](docs/basic-usage/site-settings.md): the Site page, its settings, the facade
+- [Widgets](docs/basic-usage/widgets.md): recent-posts and terms, rendering, your own widgets
+- [Permissions](docs/basic-usage/permissions.md): every permission, the dashboard policy, guards
+- [Configuration](docs/advanced-usage/configuration.md): every config option and the facade
+- [Controllers, policies and views](docs/advanced-usage/controllers-policies-and-views.md): extending the controllers, every view and how to override it
+- [Inertia React](docs/advanced-usage/inertia-react.md): app setup, shared props, the @javaabu/cms exports
+- [Translations](docs/advanced-usage/translations.md): javaabu/translatable, what becomes translatable, turning it off
+- [Dhivehi and RTL](docs/advanced-usage/dhivehi-and-rtl.md): strings, right to left, Thaana, strings for review
+- [Questions and Security](docs/questions-and-security.md): support and reporting vulnerabilities
+- [About Us](docs/about-us.md): Javaabu and the CMS
+- [Changelog](docs/changelog.md): what changed
+- [Contributing to the docs](docs/contributing-to-docs.md): how the docs are built

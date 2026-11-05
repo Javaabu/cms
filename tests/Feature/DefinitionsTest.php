@@ -7,6 +7,7 @@ use Javaabu\Cms\Tests\TestCase;
 use Javaabu\Cms\Widgets\RecentPostsWidget;
 use Javaabu\Cms\Widgets\TermsWidget;
 use Javaabu\DynamicMenubuilder\Facades\Menus;
+use Javaabu\Permissions\Models\Permission;
 use Javaabu\PostTypes\Facades\PostTypes;
 use Javaabu\PostTypes\PostType;
 use Javaabu\Settings\Facades\Settings;
@@ -56,6 +57,15 @@ class DefinitionsTest extends TestCase
     {
         $this->assertNotNull(Settings::definition('cms_site_name'));
         $this->assertSame('Javaabu', settings('cms_site_name'));
+    }
+
+    #[Test]
+    public function it_registers_the_dashboard_and_site_settings_permissions(): void
+    {
+        $this->artisan('permissions:sync')->assertSuccessful();
+
+        $this->assertTrue(Permission::query()->where('name', 'view_dashboard')->exists());
+        $this->assertTrue(Permission::query()->where('name', 'edit_site_settings')->exists());
     }
 
     #[Test]

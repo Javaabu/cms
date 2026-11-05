@@ -8,6 +8,23 @@ All notable changes to this package are documented here and on [GitHub](https://
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - Unreleased
+
+A rebuild on javaabu/post-types, javaabu/widgets, javaabu/dynamic-menubuilder, javaabu/settings, javaabu/mediapicker, javaabu/block-editor and javaabu/permissions. See [Upgrading from v1](upgrading.md).
+
+### Added
+
+- The default content model: pages, news, categories and tags; header and footer menus; sidebar and footer widgets; recent-posts and terms widgets; a Site settings page.
+- `Route::cmsAdmin()` and `Route::cms()`.
+- The dashboard and the permission-aware admin navigation (`Cms::navigation()`).
+- The public theme and admin layout, in Blade and Inertia React.
+- `php artisan cms:install` and `php artisan cms:import-v1`.
+- Optional javaabu/translatable support; English and Dhivehi.
+
+### Removed
+
+- v1's models, tables, controllers, admin views, enums, helpers and jQuery/Editor.js assets, and the dependency on javaabu/helpers.
+
 ## [1.0.0] - Initial Release
 
 ### Added
