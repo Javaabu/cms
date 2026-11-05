@@ -4,7 +4,7 @@ import type { WidgetComponents, WidgetLocations } from "@javaabu/widgets/types"
 import { usePage } from "@inertiajs/react"
 import type { ReactNode } from "react"
 import { useCms } from "../shared"
-import type { SiteData } from "../types"
+import type { LayoutStrings, SiteData } from "../types"
 import { cmsWidgets } from "../widgets"
 import { LanguageSwitcher } from "./LanguageSwitcher"
 
@@ -18,7 +18,7 @@ export interface ThemeLayoutProps {
   components?: WidgetComponents
   /** Leave out the sidebar on this page */
   fullWidth?: boolean
-  strings?: { skip?: string; main?: string; footer?: string; sidebar?: string; language?: string; copyright?: string }
+  strings?: Partial<LayoutStrings>
 }
 
 function useSharedWidgets(): WidgetLocations {
@@ -40,15 +40,15 @@ export function ThemeLayout({
   widgets,
   components,
   fullWidth = false,
-  strings = {},
+  strings: own = {},
 }: ThemeLayoutProps) {
   const cms = useCms()
+  const strings = { ...cms?.strings, ...own }
   const shared = useSharedWidgets()
   const details = site ?? cms?.site
   const locations = widgets ?? shared
   const widgetComponents = { ...cmsWidgets, ...components }
   const sidebar = !fullWidth && (locations.sidebar?.length ?? 0) > 0
-  const year = new Date().getFullYear()
 
   return (
     <div className="cms-theme" dir={details?.direction} lang={details?.locale}>
@@ -104,7 +104,7 @@ export function ThemeLayout({
           />
           <Menu location="footer" label={strings.footer ?? "Footer"} className="cms-menu cms-menu--footer" />
           <p className="cms-theme__footer-text" dir="auto">
-            {details?.footer_text ?? `${strings.copyright ?? "©"} ${year} ${details?.name ?? ""}`.trim()}
+            {details?.footer_text ?? strings.copyright ?? `© ${new Date().getFullYear()} ${details?.name ?? ""}`.trim()}
           </p>
         </div>
       </footer>

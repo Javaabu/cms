@@ -183,6 +183,26 @@ describe("layouts", () => {
     expect(document.querySelector(".cms-theme__body--sidebar")).toBeNull()
   })
 
+  it("uses the translated strings PHP shares", () => {
+    pageProps = {
+      ...home,
+      cms: {
+        ...home.cms,
+        strings: { ...home.cms.strings, main: "މައިގަނޑު", sidebar: "ސައިޑްބާ", skip: "ކޮންޓެންޓަށް ދާށެވެ" },
+      },
+    }
+
+    render(
+      <CmsLayout>
+        <p>ސަފްހާ</p>
+      </CmsLayout>,
+    )
+
+    expect(screen.getByRole("navigation", { name: "މައިގަނޑު" })).toBeInTheDocument()
+    expect(screen.getByRole("complementary", { name: "ސައިޑްބާ" })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "ކޮންޓެންޓަށް ދާށެވެ" })).toHaveAttribute("href", "#cms-main")
+  })
+
   it("the admin layout takes its data as props too", () => {
     render(
       <AdminLayout

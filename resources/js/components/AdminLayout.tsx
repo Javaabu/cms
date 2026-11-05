@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { useCms } from "../shared"
-import type { NavigationGroupData, SiteData } from "../types"
+import type { LayoutStrings, NavigationGroupData, SiteData } from "../types"
 import { AdminNavigation } from "./AdminNavigation"
 
 export interface AdminLayoutProps {
@@ -8,12 +8,13 @@ export interface AdminLayoutProps {
   /** Defaults to the `cms` shared prop */
   site?: SiteData
   navigation?: NavigationGroupData[]
-  strings?: { skip?: string; navigation?: string }
+  strings?: Partial<LayoutStrings>
 }
 
 /** The admin layout: the same markup as cms::layouts.admin */
-export function AdminLayout({ children, site, navigation, strings = {} }: AdminLayoutProps) {
+export function AdminLayout({ children, site, navigation, strings: own = {} }: AdminLayoutProps) {
   const cms = useCms()
+  const strings = { ...cms?.strings, ...own }
   const details = site ?? cms?.site
   const groups = navigation ?? cms?.navigation ?? []
 

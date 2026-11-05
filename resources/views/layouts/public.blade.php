@@ -59,7 +59,7 @@
             @endif
 
             <p class="cms-theme__footer-text" dir="auto">
-                {{ $site['footer_text'] ?? __('© :year :site', ['year' => now()->year, 'site' => $site['name']]) }}
+                {{ $site['footer_text'] ?? __('© :year :site. All rights reserved.', ['year' => now()->year, 'site' => $site['name']]) }}
             </p>
         </div>
     </footer>

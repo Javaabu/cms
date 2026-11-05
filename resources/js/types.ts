@@ -41,10 +41,23 @@ export interface NavigationGroupData {
   items: NavigationItemData[]
 }
 
+/** The layouts' strings, in the current language */
+export interface LayoutStrings {
+  skip: string
+  navigation: string
+  main: string
+  footer: string
+  sidebar: string
+  language: string
+  /** The default footer text */
+  copyright: string
+}
+
 /** What every page of a CMS route gets as the `cms` shared prop */
 export interface CmsSharedProps {
   area: "admin" | "public"
   site: SiteData
+  strings: LayoutStrings
   navigation: NavigationGroupData[]
 }
 

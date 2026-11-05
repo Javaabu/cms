@@ -129,6 +129,24 @@ class CmsManager
     }
 
     /**
+     * The layouts' strings in the current language, for React
+     *
+     * @return array<string, string>
+     */
+    public function strings(): array
+    {
+        return [
+            'skip' => __('Skip to content'),
+            'navigation' => __('Admin'),
+            'main' => __('Main'),
+            'footer' => __('Footer'),
+            'sidebar' => __('Sidebar'),
+            'language' => __('Language'),
+            'copyright' => __('© :year :site. All rights reserved.', ['year' => now()->year, 'site' => $this->siteName()]),
+        ];
+    }
+
+    /**
      * The menus of the CMS's menu locations, as javaabu/dynamic-menubuilder
      * shares them with React (`menus.header`)
      *

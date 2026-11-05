@@ -23,6 +23,7 @@ class ShareCmsData
             Inertia::share('cms', fn () => [
                 'area' => $area,
                 'site' => Cms::site(),
+                'strings' => Cms::strings(),
                 'navigation' => $area === 'admin'
                     ? Cms::navigationFor($request->user(CmsRoutes::guard($request)), $request)
                     : [],

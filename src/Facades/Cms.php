@@ -14,6 +14,7 @@ use Javaabu\Cms\CmsManager;
  * @method static \Javaabu\PostTypes\Models\Post|null frontPage()
  * @method static \Javaabu\PostTypes\PostType|null homePostType()
  * @method static array site()
+ * @method static array strings()
  * @method static array menus()
  * @method static array widgets()
  * @method static string views()
