@@ -39,7 +39,11 @@ class RoutesTest extends TestCase
         $this->assertSame('news', Route::getRoutes()->getByName('news.index')->uri());
         $this->assertSame('{post_slug}', Route::getRoutes()->getByName('page.show')->uri());
 
-        $names = array_values(array_filter(array_map(fn ($route) => $route->getName(), Route::getRoutes()->getRoutes())));
+        // The framework may add its own routes (storage.*) afterwards
+        $names = array_values(array_filter(
+            array_map(fn ($route) => $route->getName(), Route::getRoutes()->getRoutes()),
+            fn ($name) => $name !== null && ! str_starts_with($name, 'storage.'),
+        ));
 
         $this->assertSame('page.show', end($names));
         $this->assertSame(url('/'), CmsRoutes::homeUrl());
