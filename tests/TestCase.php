@@ -2,36 +2,114 @@
 
 namespace Javaabu\Cms\Tests;
 
-use Javaabu\Helpers\HelpersServiceProvider;
-use Javaabu\Translatable\TranslatableServiceProvider;
-use Orchestra\Testbench\TestCase as BaseTestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\ServiceProvider as InertiaServiceProvider;
+use Javaabu\BlockEditor\BlockEditorServiceProvider;
+use Javaabu\BulkActions\BulkActionsServiceProvider;
 use Javaabu\Cms\CmsServiceProvider;
+use Javaabu\Cms\Routing\CmsRoutes;
+use Javaabu\Cms\Support\Translations;
+use Javaabu\Cms\Tests\TestSupport\Models\Admin;
+use Javaabu\Cms\Tests\TestSupport\Models\User;
 use Javaabu\Cms\Tests\TestSupport\Providers\TestServiceProvider;
+use Javaabu\DynamicMenubuilder\DynamicMenubuilderServiceProvider;
+use Javaabu\Filters\FiltersServiceProvider;
+use Javaabu\Forms\FormsServiceProvider;
+use Javaabu\Manifest\ManifestServiceProvider;
+use Javaabu\Mediapicker\MediapickerServiceProvider;
+use Javaabu\Mediapicker\Models\Media;
+use Javaabu\Meta\MetaServiceProvider;
+use Javaabu\Permissions\Models\Permission;
+use Javaabu\Permissions\Models\Role;
+use Javaabu\Permissions\PermissionsServiceProvider;
+use Javaabu\PostTypes\Facades\PostTypes;
+use Javaabu\PostTypes\PostTypesServiceProvider;
+use Javaabu\PostTypes\Routing\PostTypeRoutes;
+use Javaabu\Settings\SettingsServiceProvider;
+use Javaabu\Stencil\StencilServiceProvider;
+use Javaabu\Translatable\TranslatableServiceProvider;
+use Javaabu\Widgets\WidgetsServiceProvider;
+use Orchestra\Testbench\TestCase as BaseTestCase;
+use Spatie\MediaLibrary\MediaLibraryServiceProvider;
+use Spatie\Permission\PermissionServiceProvider;
 
 abstract class TestCase extends BaseTestCase
 {
-    public static $latestResponse = null;
+    use RefreshDatabase;
 
-    public function setUp(): void
+    protected function defineEnvironment($app): void
     {
+        $config = $app['config'];
 
-        parent::setUp();
+        $config->set('app.key', 'base64:yWa/ByhLC/GUvfToOuaPD7zDwB64qkc/QkaQOrT5IpE=');
+        $config->set('app.name', 'Javaabu');
+        $config->set('database.default', 'testing');
+        $config->set('session.serialization', 'php');
+        $config->set('permission.models.permission', Permission::class);
+        $config->set('permission.models.role', Role::class);
+        $config->set('permissions.guards', ['web', 'web_admin']);
+        $config->set('media-library.media_model', Media::class);
+        $config->set('media-library.queue_conversions_by_default', false);
+        $config->set('inertia.testing.ensure_pages_exist', false);
+        $config->set('manifest.inject', false);
 
-        $this->app['config']->set('app.key', 'base64:yWa/ByhLC/GUvfToOuaPD7zDwB64qkc/QkaQOrT5IpE=');
+        $config->set('auth.guards', [
+            'web' => ['driver' => 'session', 'provider' => 'users'],
+            'web_admin' => ['driver' => 'session', 'provider' => 'admins'],
+        ]);
 
-        $this->app['config']->set('session.serialization', 'php');
-        $this->app['config']->set('activitylog.enabled', false);
-        $this->app['config']->set('activitylog.default_auth_driver', 'web');
+        $config->set('auth.providers', [
+            'users' => ['driver' => 'eloquent', 'model' => User::class],
+            'admins' => ['driver' => 'eloquent', 'model' => Admin::class],
+        ]);
 
+        $config->set('filesystems.disks.public', [
+            'driver' => 'local',
+            'root' => sys_get_temp_dir() . '/cms-tests/media',
+            'url' => '/media',
+        ]);
     }
 
-    protected function getPackageProviders($app)
+    protected function getPackageProviders($app): array
     {
-        return [
+        $providers = [
+            PermissionServiceProvider::class,
+            PermissionsServiceProvider::class,
+            ManifestServiceProvider::class,
+            FormsServiceProvider::class,
+            StencilServiceProvider::class,
+            MetaServiceProvider::class,
+            BlockEditorServiceProvider::class,
+            MediaLibraryServiceProvider::class,
+            MediapickerServiceProvider::class,
+            FiltersServiceProvider::class,
+            BulkActionsServiceProvider::class,
+            SettingsServiceProvider::class,
+            WidgetsServiceProvider::class,
+            DynamicMenubuilderServiceProvider::class,
+            PostTypesServiceProvider::class,
             CmsServiceProvider::class,
-            TranslatableServiceProvider::class,
-            HelpersServiceProvider::class,
-            TestServiceProvider::class
+            TestServiceProvider::class,
         ];
+
+        if (class_exists(InertiaServiceProvider::class)) {
+            $providers[] = InertiaServiceProvider::class;
+        }
+
+        if (class_exists(TranslatableServiceProvider::class)) {
+            $providers[] = TranslatableServiceProvider::class;
+        }
+
+        return $providers;
+    }
+
+    protected function tearDown(): void
+    {
+        PostTypes::clearResolvedInstances();
+        PostTypeRoutes::flush();
+        CmsRoutes::flush();
+        Translations::$enabled = true;
+
+        parent::tearDown();
     }
 }
