@@ -29,9 +29,7 @@
             </div>
 
             @if($menus::hasLocation('header') && $menus::items('header'))
-                <nav class="cms-theme__nav" aria-label="{{ __('Main') }}">
-                    <x-dynamic-menubuilder::menu location="header" class="cms-menu cms-menu--header" />
-                </nav>
+                <x-dynamic-menubuilder::menu location="header" :label="__('Main')" class="cms-menu cms-menu--header cms-theme__nav" />
             @endif
 
             <x-cms::language-switcher :locales="$site['locales']" />
@@ -57,9 +55,7 @@
             @endif
 
             @if($menus::hasLocation('footer') && $menus::items('footer'))
-                <nav aria-label="{{ __('Footer') }}">
-                    <x-dynamic-menubuilder::menu location="footer" class="cms-menu cms-menu--footer" />
-                </nav>
+                <x-dynamic-menubuilder::menu location="footer" :label="__('Footer')" class="cms-menu cms-menu--footer" />
             @endif
 
             <p class="cms-theme__footer-text" dir="auto">

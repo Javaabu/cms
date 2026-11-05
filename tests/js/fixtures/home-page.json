@@ -1,0 +1,151 @@
+{
+    "cms": {
+        "area": "public",
+        "site": {
+            "name": "Javaabu",
+            "tagline": null,
+            "footer_text": null,
+            "home_url": "http://localhost",
+            "locale": "en",
+            "direction": "ltr",
+            "locales": []
+        },
+        "navigation": []
+    },
+    "menus": {
+        "header": [],
+        "footer": []
+    },
+    "widgets": {
+        "sidebar": [],
+        "footer": []
+    },
+    "page": {
+        "id": 1,
+        "title": "މަރުޙަބާ",
+        "slug": "welcome",
+        "url": "http://localhost/welcome",
+        "summary": "ދިވެހިރާއްޖެ",
+        "published_at": "2026-11-05T10:00:00+00:00",
+        "published_at_label": "5 November 2026",
+        "author": null,
+        "image": null,
+        "terms": [],
+        "excerpt": null,
+        "content": {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "attrs": {
+                        "textAlign": null,
+                        "dir": null
+                    },
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "ދިވެހިރާއްޖެ"
+                        }
+                    ]
+                }
+            ]
+        },
+        "content_html": "<p dir=\"auto\">ދިވެހިރާއްޖެ</p>",
+        "meta": [],
+        "status": "published",
+        "published": true
+    },
+    "post_type": {
+        "key": "news",
+        "singular": "News article",
+        "plural": "News",
+        "description": "News articles, listed newest first",
+        "icon": "newspaper",
+        "supports": [
+            "content",
+            "excerpt",
+            "media",
+            "author",
+            "scheduling"
+        ],
+        "taxonomies": [
+            {
+                "key": "categories",
+                "singular": "Category",
+                "plural": "Categories",
+                "description": null,
+                "slug": "categories",
+                "hierarchical": true,
+                "multiple": true,
+                "required": false,
+                "public": true,
+                "icon": "folder-tree"
+            },
+            {
+                "key": "tags",
+                "singular": "Tag",
+                "plural": "Tags",
+                "description": null,
+                "slug": "tags",
+                "hierarchical": false,
+                "multiple": true,
+                "required": false,
+                "public": true,
+                "icon": "tags"
+            }
+        ],
+        "statuses": [
+            {
+                "key": "draft",
+                "label": "Draft",
+                "public": false,
+                "color": "secondary"
+            },
+            {
+                "key": "pending",
+                "label": "Pending review",
+                "public": false,
+                "color": "warning"
+            },
+            {
+                "key": "published",
+                "label": "Published",
+                "public": true,
+                "color": "success"
+            }
+        ],
+        "default_status": "draft",
+        "slug": "news",
+        "permalink": "{year}/{month}/{slug}",
+        "public": true,
+        "has_archive": true
+    },
+    "posts": [],
+    "archive_url": "http://localhost/news",
+    "site": {
+        "name": "Javaabu",
+        "tagline": null,
+        "footer_text": null,
+        "home_url": "http://localhost",
+        "locale": "en",
+        "direction": "ltr",
+        "locales": []
+    },
+    "strings": {
+        "archive": "News",
+        "empty": "Nothing has been published here yet.",
+        "read_more": "Read more",
+        "previous": "Newer",
+        "next": "Older",
+        "by": "By :author",
+        "published_on": "Published :date",
+        "preview": "This is a preview. Visitors don't see this post yet.",
+        "back": "Back to News",
+        "pagination": "Pagination",
+        "latest": "Latest news",
+        "view_all": "View all",
+        "welcome": "Welcome"
+    },
+    "layout": "cms::layouts.public",
+    "layout_section": "content"
+}
