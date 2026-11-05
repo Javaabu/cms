@@ -45,12 +45,12 @@ class SiteSettings extends SettingsPage
                 ->label(__('Site name'))
                 ->required()
                 ->maxLength(255)
-                ->translatable(),
+                ->translatable((bool) config('cms.translatable', true)),
             Setting::make('cms_tagline')
                 ->label(__('Tagline'))
                 ->help(__('A few words under the site name.'))
                 ->maxLength(255)
-                ->translatable(),
+                ->translatable((bool) config('cms.translatable', true)),
             Section::make(__('Home page'))->schema([
                 Setting::make('cms_front_page')
                     ->field(Select::class)
@@ -70,7 +70,7 @@ class SiteSettings extends SettingsPage
                     ->field(Textarea::class)
                     ->label(__('Footer text'))
                     ->maxLength(1000)
-                    ->translatable(),
+                    ->translatable((bool) config('cms.translatable', true)),
             ]),
         ];
     }
