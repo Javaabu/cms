@@ -14,6 +14,7 @@ A rebuild: the CMS is now assembled from javaabu/post-types, javaabu/widgets, ja
 - `cms:install` and `cms:import-v1` commands.
 - Optional javaabu/translatable support.
 - No dependency on javaabu/helpers.
+- The React layouts import the theme's stylesheet; npm packages are declared for the Inertia pages only (`npm(..., for: 'pages')`), so Blade apps aren't asked to install React.
 
 ## 1.1.0
 

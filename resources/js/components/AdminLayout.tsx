@@ -1,3 +1,5 @@
+// The theme's styles: Vite bundles them with the page (manifest skips Inertia responses)
+import "../../css/cms.css"
 import type { ReactNode } from "react"
 import { useCms } from "../shared"
 import type { LayoutStrings, NavigationGroupData, SiteData } from "../types"

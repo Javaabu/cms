@@ -21,6 +21,8 @@ class Assets
             ->pages()
             ->dist('../dist')
             ->style('styles', 'css/cms.css')
+            // Only the Inertia pages and the @javaabu/cms components import these; the
+            // Blade views need nothing from npm, so Blade apps aren't asked to install React
             ->npm([
                 '@javaabu/forms' => 'github:Javaabu/react-forms#next-gen',
                 '@javaabu/onu' => '^0.2.1',
@@ -28,6 +30,6 @@ class Assets
                 'react' => '^19.0',
                 'react-dom' => '^19.0',
                 '@inertiajs/react' => '^2.0 || ^3.0',
-            ]);
+            ], for: 'pages');
     }
 }

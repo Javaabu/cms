@@ -101,7 +101,8 @@ class TranslatableTest extends TestCase
         Widgets::flush();
 
         $this->assertSame('އަޅުގަނޑުމެންނާ ބެހޭ', $about->fresh()->title);
-        $this->assertSame('ފުރަތަމަ ސަފްހާ', Menus::items('header')[0]->title);
+        $this->assertSame(['ފުރަތަމަ ސަފްހާ', 'ޚަބަރު', 'އަޅުގަނޑުމެންނާ ބެހޭ'], array_map(fn ($node) => $node->title, Menus::items('header')));
+        $this->assertSame(['އަޅުގަނޑުމެންނާ ބެހޭ'], array_map(fn ($node) => $node->title, Menus::items('footer')));
         $this->assertSame('އެންމެ ފަހުގެ ޚަބަރު', Widgets::widgets('sidebar')->first()->setting('title'));
     }
 

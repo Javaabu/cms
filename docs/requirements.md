@@ -33,4 +33,4 @@ The CMS never depends on `javaabu/helpers` or `javaabu/settings` v1.
 
 ## For React
 
-With `cms.views` set to `inertia`, the app builds the pages with Vite and [javaabu/manifest](https://github.com/Javaabu/manifest)'s plugin, and needs `react` and `react-dom` 19, `@inertiajs/react` 2 or 3, `@javaabu/forms` and `@javaabu/onu`. `php artisan manifest:check` lists what's missing.
+With `cms.views` set to `inertia`, the app builds the pages with Vite and [javaabu/manifest](https://github.com/Javaabu/manifest)'s plugin, and needs `react` and `react-dom` 19, `@inertiajs/react` 2 or 3, `@javaabu/forms` and `@javaabu/onu`. `php artisan manifest:check` lists what's missing. A Blade-only app needs no npm packages for the CMS: these are declared for the Inertia pages only, so `manifest:check` doesn't ask for them unless the app uses Inertia.

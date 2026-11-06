@@ -10,5 +10,7 @@
 - **Checking `auth()->user()` in the admin.** Each `Route::cmsAdmin()` call has its guard; use `$request->user(CmsRoutes::guard($request))` or policies with `Model $user`.
 - **Forgetting `permissions:sync` after adding a post type**: its admin pages and navigation link stay hidden.
 - **Inertia pages without a layout.** Resolve pages with `withCmsLayouts()` so post-types', widgets' and menubuilder's pages get the admin layout and theme.
+- **Unstyled content on Inertia pages.** The CMS layouts import `cms.css` themselves, but post-types', widgets' and block-editor's stylesheets must be imported in the app's CSS (`@import "../../vendor/javaabu/post-types/resources/css/post-types.css";` and so on). A custom layout must import `cms.css` too.
+- **Installing React packages in a Blade-only app.** The CMS needs no npm packages for Blade; `manifest:check` only lists React packages when the app uses Inertia.
 - **Importing v1 before migrating.** `cms:import-v1` reads the `cms_v1_*` tables that `php artisan migrate` creates by renaming v1's.
 - **Physical CSS in overridden views** (`ml-4`, `text-left`): use logical utilities so Dhivehi pages work.

@@ -1,3 +1,5 @@
+// The theme's styles: Vite bundles them with the page (manifest skips Inertia responses)
+import "../../css/cms.css"
 import { Menu } from "@javaabu/dynamic-menubuilder/components/Menu"
 import { WidgetLocation } from "@javaabu/widgets/components/WidgetLocation"
 import type { WidgetComponents, WidgetLocations } from "@javaabu/widgets/types"

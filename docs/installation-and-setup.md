@@ -108,7 +108,7 @@ export default defineConfig({
 })
 ```
 
-Without Vite, the prebuilt styles in the package's `dist/` are served instead.
+Without Vite, the prebuilt styles in the package's `dist/` are served instead. Blade pages need nothing from npm for the CMS. On Inertia pages, the React layouts import the stylesheet themselves; see [Inertia React](advanced-usage/inertia-react.md#styles) for the other packages' content styles.
 
 The admin pages of post-types, widgets, menus, settings, media and roles use Tailwind utilities. Point Tailwind at their views:
 

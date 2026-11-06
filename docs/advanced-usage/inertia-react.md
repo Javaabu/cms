@@ -22,7 +22,22 @@ createInertiaApp({
 })
 ```
 
-`@javaabu/cms` isn't on npm: javaabu/manifest's Vite plugin resolves it to the package's `resources/js`. `php artisan manifest:types` adds it to `tsconfig.json`.
+`@javaabu/cms` isn't on npm: javaabu/manifest's Vite plugin resolves it to the package's `resources/js`. `php artisan manifest:types` adds it to `tsconfig.json`. `php artisan manifest:check` lists the npm packages the pages need (`react`, `react-dom`, `@inertiajs/react`, `@javaabu/forms`, `@javaabu/onu`); Blade-only apps aren't asked for them.
+
+## Styles
+
+`ThemeLayout` and `AdminLayout` import the CMS's stylesheet (`resources/css/cms.css`), so Vite bundles it with any page that uses them: nothing to add for the layouts. (manifest's automatic injection only covers Blade pages; it skips Inertia responses.)
+
+The content inside the theme comes from other packages, whose React parts don't load their CSS yet. Import their stylesheets once in your app's CSS:
+
+```css
+/* resources/css/app.css */
+@import "../../vendor/javaabu/post-types/resources/css/post-types.css";   /* post cards, archives, single posts */
+@import "../../vendor/javaabu/widgets/resources/css/widgets.css";         /* widget defaults */
+@import "../../vendor/javaabu/block-editor/resources/css/block-editor.css"; /* rendered content */
+```
+
+If you replace the layouts with your own, import the CMS's too: `@import "../../vendor/javaabu/cms/resources/css/cms.css";`.
 
 ## Shared props
 

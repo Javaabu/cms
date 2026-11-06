@@ -26,6 +26,9 @@ use Javaabu\Widgets\Support\Translations as WidgetTranslations;
  */
 class StarterContent
 {
+    /** The About page's title, also its menu items' label */
+    protected const array ABOUT = ['en' => 'About us', 'dv' => 'އަޅުގަނޑުމެންނާ ބެހޭ'];
+
     /** @var array<int, string> */
     protected array $created = [];
 
@@ -93,7 +96,7 @@ class StarterContent
             'slug' => 'about',
             'status' => 'published',
             'published_at' => Carbon::now(),
-            ...$this->text($post, 'title', ['en' => 'About us', 'dv' => 'އަޅުގަނޑުމެންނާ ބެހޭ']),
+            ...$this->text($post, 'title', self::ABOUT),
             ...$this->text($post, 'content', [
                 'en' => $this->document('Tell visitors who you are and what you do. Edit this page from the admin.'),
                 'dv' => $this->document('ތިޔަ ފަރާތަކީ ކާކުކަމާއި ކުރާ މަސައްކަތުގެ ވާހަކަ މިތާ ލިޔުއްވާ. މި ސަފްހާ އެޑްމިނުން ބަދަލުކުރެވޭނެ.'),
@@ -153,7 +156,7 @@ class StarterContent
             }
 
             if ($about && Menus::hasLinkable('page')) {
-                $items[] = ['key' => 'about', 'type' => 'model', 'source' => 'page', 'linkable_id' => (string) $about->getKey()];
+                $items[] = ['key' => 'about', 'type' => 'model', 'source' => 'page', 'linkable_id' => (string) $about->getKey(), ...$this->modelItemText(self::ABOUT)];
             }
 
             $this->menu('Main menu', 'header', $items);
@@ -161,7 +164,7 @@ class StarterContent
 
         if (Menus::hasLocation('footer') && ! Menus::menuFor('footer') && $about && Menus::hasLinkable('page')) {
             $this->menu('Footer menu', 'footer', [
-                ['key' => 'about', 'type' => 'model', 'source' => 'page', 'linkable_id' => (string) $about->getKey()],
+                ['key' => 'about', 'type' => 'model', 'source' => 'page', 'linkable_id' => (string) $about->getKey(), ...$this->modelItemText(self::ABOUT)],
             ]);
         }
     }
@@ -273,6 +276,18 @@ class StarterContent
         }
 
         return $data;
+    }
+
+    /**
+     * A label per language for a menu item that links to a record. Without
+     * translations the item has none and follows the record's title.
+     *
+     * @param  array<string, string>  $titles
+     * @return array<string, string|null>
+     */
+    protected function modelItemText(array $titles): array
+    {
+        return $this->locales() === [] ? [] : $this->menuText($titles);
     }
 
     /**
