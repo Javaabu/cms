@@ -5,7 +5,7 @@
     "collapsed": false,
     "link": {
         "type": "generated-index",
-        "slug": "/cms/basic-usage",
-        "description": "Learn how to work with post types, categories, and posts in Javaabu CMS. Everything you need to know to get started building content-driven applications!"
+        "slug": "/cms/_categories/basic-usage",
+        "description": "The routes, the content model, the dashboard and navigation, the public theme, site settings, widgets and permissions."
     }
 }

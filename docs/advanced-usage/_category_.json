@@ -1,0 +1,11 @@
+{
+    "position": 1.32,
+    "label": "Advanced Usage",
+    "collapsible": true,
+    "collapsed": true,
+    "link": {
+        "type": "generated-index",
+        "slug": "/cms/_categories/advanced-usage",
+        "description": "Configuration, overriding controllers, policies and views, Inertia React, translations, and Dhivehi and RTL."
+    }
+}

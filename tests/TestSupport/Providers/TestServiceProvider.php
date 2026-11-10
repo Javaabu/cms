@@ -2,28 +2,23 @@
 
 namespace Javaabu\Cms\Tests\TestSupport\Providers;
 
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Javaabu\Cms\Tests\TestSupport\Models\Admin;
+use Javaabu\Cms\Tests\TestSupport\Models\User;
 
 class TestServiceProvider extends ServiceProvider
 {
-    /**
-     * Bootstrap the application services.
-     */
-    public function boot()
+    public function boot(): void
     {
-        $this->loadMigrationsFrom([
-            __DIR__ . '/../../../vendor/javaabu/translatable/database/migrations',
-            __DIR__ . '/../../../database/migrations',
-            __DIR__ . '/../database',
+        $this->loadMigrationsFrom(__DIR__ . '/../database');
 
+        View::addLocation(__DIR__ . '/../views');
+
+        Relation::morphMap([
+            'user' => User::class,
+            'admin' => Admin::class,
         ]);
-    }
-
-    /**
-     * Register the application services.
-     */
-    public function register()
-    {
-
     }
 }

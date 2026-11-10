@@ -1,17 +1,5 @@
 {
-    "name": "Javaabu CMS",
-    "description": "A flexible and extensible Content Management System package for Laravel applications with support for custom post types, hierarchical categories, and rich content editing",
-    "version": "1.0.0",
-    "repository": "https://github.com/Javaabu/cms",
-    "homepage": "https://github.com/Javaabu/cms",
-    "license": "MIT",
-    "author": "Javaabu Pvt Ltd",
-    "keywords": [
-        "laravel",
-        "cms",
-        "content-management",
-        "post-types",
-        "categories",
-        "javaabu"
-    ]
+    "name": "CMS",
+    "description": "A complete CMS for Laravel assembled from Javaabu packages: pages, news, categories and tags (javaabu/post-types), menus (javaabu/dynamic-menubuilder), widgets (javaabu/widgets), site settings, a media library, an admin dashboard and navigation, an install command and a default public theme, in Blade and Inertia React",
+    "version": "2"
 }

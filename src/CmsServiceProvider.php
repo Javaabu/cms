@@ -2,170 +2,213 @@
 
 namespace Javaabu\Cms;
 
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Javaabu\Cms\Models\Category;
-use Javaabu\Cms\Models\CategoryType;
-use Javaabu\Cms\Models\Post;
-use Javaabu\Cms\Models\PostType;
-use Javaabu\Cms\Models\Tag;
-use Javaabu\Cms\Policies\CategoryPolicy;
-use Javaabu\Cms\Policies\CategoryTypePolicy;
-use Javaabu\Cms\Policies\PostPolicy;
-use Javaabu\Cms\Policies\PostTypePolicy;
-use Javaabu\Cms\Console\Commands\SetupCmsCommand;
-use Javaabu\Cms\Http\Controllers\Admin\MediaController;
-use Javaabu\Cms\Media\Media as CmsMedia;
-use Javaabu\Mediapicker\Http\Controllers\MediaController as MediapickerMediaController;
-use Javaabu\Mediapicker\MediapickerServiceProvider;
-use Javaabu\Mediapicker\Models\Media as MediapickerMedia;
-use ReflectionClass;
-use Spatie\MediaLibrary\MediaCollections\Models\Media as SpatieMedia;
-use Javaabu\Cms\Media\AllowedMimeTypes;
-use Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer;
+use Javaabu\Cms\Assets\Assets;
+use Javaabu\Cms\Console\ImportV1Command;
+use Javaabu\Cms\Console\InstallCommand;
+use Javaabu\Cms\Content\Defaults;
+use Javaabu\Cms\Dashboard\Dashboard;
+use Javaabu\Cms\Policies\DashboardPolicy;
+use Javaabu\Cms\Routing\CmsRoutes;
+use Javaabu\Cms\Settings\SiteSettings;
+use Javaabu\DynamicMenubuilder\Facades\Menus;
+use Javaabu\Manifest\Concerns\RegistersAssets;
+use Javaabu\Manifest\Package;
+use Javaabu\Permissions\Permissions;
+use Javaabu\PostTypes\Facades\PostTypes;
+use Javaabu\Settings\Facades\Settings;
+use Javaabu\Widgets\Facades\Widgets;
 
 class CmsServiceProvider extends ServiceProvider
 {
+    use RegistersAssets;
+
     /**
-     * The policy mappings for the package.
+     * The packages whose views and layouts follow config('cms.views') and
+     * config('cms.layouts') when cms.sync_packages is on
      *
-     * @var array
+     * @var array<string, array<string, string>>
      */
-    protected $policies = [
-        'category_type' => CategoryTypePolicy::class,
-        'category' => CategoryPolicy::class,
-        'post_type' => PostTypePolicy::class,
-        'post' => PostPolicy::class,
-        'media' => \Javaabu\Cms\Policies\MediaPolicy::class,
+    public const array SYNCED = [
+        'post-types' => ['views' => 'views', 'layout' => 'admin', 'public_layout' => 'public', 'layout_section' => 'section'],
+        'widgets' => ['views' => 'views', 'layout' => 'admin', 'layout_section' => 'section'],
+        'dynamic-menubuilder' => ['views' => 'views', 'layout' => 'admin', 'layout_section' => 'section'],
+        'settings' => ['views' => 'views', 'layout' => 'admin', 'layout_section' => 'section'],
+        'mediapicker' => ['views' => 'views', 'layout' => 'admin', 'layout_section' => 'section'],
+        'permissions' => ['views' => 'views', 'layout' => 'admin', 'layout_section' => 'section'],
     ];
 
-    /**
-     * Bootstrap the application services.
-     */
-    public function boot()
+    public function register(): void
     {
+        $this->mergeConfigFrom(__DIR__ . '/../config/cms.php', 'cms');
 
-        // Register policies
-        $this->registerPolicies();
+        $this->app->singleton(CmsManager::class);
+        $this->app->alias(CmsManager::class, 'cms');
 
-        Relation::enforceMorphMap([
-            'post_type'      => config('cms.models.post_type', PostType::class),
-            'post'           => config('cms.models.post', Post::class),
-            'category'       => config('cms.models.category', Category::class),
-            'category_type'  => config('cms.models.category_type', CategoryType::class),
-            'tag'            => config('cms.models.tag', Tag::class),
-            'media'          => CmsMedia::class,
-        ]);
+        $this->syncPackages();
+    }
 
-        // Load migrations
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
-        $this->loadMediapickerMigrations();
+    public function boot(): void
+    {
+        // Again, for config set after the providers registered (tests, runtime)
+        $this->syncPackages();
 
-        // Load views
+        $this->loadJsonTranslationsFrom(__DIR__ . '/../lang');
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'cms');
+        Blade::componentNamespace('Javaabu\\Cms\\Views\\Components', 'cms');
 
-        // Publish config
+        $this->registerFrontendAssets();
+        $this->registerContent();
+        $this->registerSettings();
+        $this->registerRouteMacros();
+        $this->registerPermissions();
+
         if ($this->app->runningInConsole()) {
-            $this->publishes([
-                __DIR__ . '/../config/cms.php' => config_path('cms.php'),
-            ], 'cms-config');
+            $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
-            // Publish migrations
-            $this->publishes([
-                __DIR__ . '/../database/migrations' => database_path('migrations'),
-            ], 'cms-migrations');
+            $this->commands([
+                InstallCommand::class,
+                ImportV1Command::class,
+            ]);
 
-            // Publish views
-            $this->publishes([
-                __DIR__ . '/../resources/views' => resource_path('views/vendor/cms'),
-            ], 'cms-views');
-
-            // Publish assets - JS blocks and media related SASS
-            $this->publishes([
-                __DIR__ . '/../resources/js/blocks' => resource_path('js/vendor/cms/blocks'),
-                __DIR__ . '/../resources/sass/media/_media-library.scss' => resource_path('sass/admin/inc/_media-library.scss'),
-                __DIR__ . '/../resources/sass/media/_fileinput-overrides.scss' => resource_path('sass/admin/inc/_fileinput-overrides.scss'),
-            ], 'cms-assets');
+            $this->registerPublishing();
         }
     }
 
     /**
-     * Register the package's policies.
-     *
-     * @return void
+     * One stack and one set of layouts for every package the CMS is made of
      */
-    protected function registerPolicies()
+    protected function syncPackages(): void
     {
-        foreach ($this->policies as $key => $policy) {
-            $model = $key == 'media' ? CmsMedia::class : config("cms.models.$key");
+        $config = $this->app['config'];
 
-            if ($model) {
-                Gate::policy($model, $policy);
+        if (! $config->get('cms.sync_packages', true)) {
+            return;
+        }
+
+        $values = [
+            'views' => $config->get('cms.views', 'blade'),
+            'admin' => $config->get('cms.layouts.admin', 'cms::layouts.admin'),
+            'public' => $config->get('cms.layouts.public', 'cms::layouts.public'),
+            'section' => $config->get('cms.layouts.section', 'content'),
+        ];
+
+        foreach (self::SYNCED as $package => $keys) {
+            foreach ($keys as $key => $value) {
+                $config->set("{$package}.{$key}", $values[$value]);
             }
         }
     }
 
     /**
-     * Register the application services.
+     * The Inertia pages (cms::Admin/Dashboard, cms::Public/Home), the
+     * components apps import as @javaabu/cms, and the theme's styles
      */
-    public function register()
+    protected function registerFrontendAssets(): void
     {
+        $this->registerAssets(Assets::PACKAGE, __DIR__ . '/../resources', function (Package $package) {
+            Assets::register($package);
+        });
+    }
 
-        // Require helpers defined on the package.
-        require_once __DIR__ . '/Helpers/helpers.php';
+    /**
+     * The default content model: taxonomies, post types, menu and widget
+     * locations, and the CMS's widget types
+     */
+    protected function registerContent(): void
+    {
+        foreach ((array) config('cms.taxonomies', []) as $taxonomy) {
+            $taxonomy = is_string($taxonomy) ? (Defaults::taxonomy($taxonomy) ?? $taxonomy) : $taxonomy;
 
-        // Merge package config with user defined config
-        $this->mergeConfigFrom(__DIR__ . '/../config/cms.php', 'cms');
-        $this->app->register(MediapickerServiceProvider::class);
-        $this->configureMediapickerDefaults();
-        $this->registerCmsMediaMimeTypes();
-
-        if ($this->app->runningInConsole()) {
-            // Register commands
-            $this->commands([
-                SetupCmsCommand::class,
-            ]);
+            PostTypes::taxonomy($taxonomy);
         }
 
-        // Register facades or singletons if needed
-        $this->app->register(\Javaabu\Cms\Enums\RootSlugs\RootSlugsServiceProvider::class);
-    }
+        foreach ((array) config('cms.post_types', []) as $type) {
+            $type = is_string($type) ? (Defaults::postType($type) ?? $type) : $type;
 
-    protected function configureMediapickerDefaults(): void
-    {
-        $this->setConfigDefault('mediapicker.media_model', CmsMedia::class, MediapickerMedia::class);
-        $this->setConfigDefault('mediapicker.media_controller', MediaController::class, MediapickerMediaController::class);
-        $this->setConfigDefault('media-library.media_model', CmsMedia::class, SpatieMedia::class);
-        $this->setConfigDefault('media-library.file_namer', DefaultFileNamer::class);
-    }
+            PostTypes::register($type);
+        }
 
-    protected function setConfigDefault(string $key, mixed $value, mixed $packageDefault = null): void
-    {
-        $current = config($key);
+        foreach ((array) config('cms.menu_locations', []) as $key => $depth) {
+            if (is_int($key)) {
+                [$key, $depth] = [$depth, null];
+            }
 
-        if (is_null($current) || $current === $packageDefault) {
-            config([$key => $value]);
+            Menus::location((string) $key, static::locationLabel((string) $key))->maxDepth($depth);
+        }
+
+        foreach ((array) config('cms.widget_locations', []) as $location) {
+            Widgets::location((string) $location, fn () => __(static::locationLabel((string) $location)));
+        }
+
+        $widgets = (array) config('cms.widgets', []);
+
+        if ($widgets !== []) {
+            Widgets::register($widgets);
         }
     }
 
-    protected function registerCmsMediaMimeTypes(): void
+    protected function registerSettings(): void
     {
-        AllowedMimeTypes::registerCmsMimeTypes();
+        if (config('cms.settings', true)) {
+            Settings::page(SiteSettings::class);
+        }
     }
 
-    protected function loadMediapickerMigrations(): void
+    protected function registerRouteMacros(): void
     {
-        $provider = new ReflectionClass(MediapickerServiceProvider::class);
-        $migrations = dirname($provider->getFileName(), 2) . '/database/migrations';
+        Route::macro('cmsAdmin', function (array $options = []) {
+            CmsRoutes::registerAdmin($this, $options);
+        });
 
-        if (is_dir($migrations)) {
-            $this->loadMigrationsFrom($migrations);
+        Route::macro('cms', function (array $options = []) {
+            CmsRoutes::registerPublic($this, $options);
+        });
+    }
+
+    /**
+     * view_dashboard and the dashboard policy, which the app can override
+     */
+    protected function registerPermissions(): void
+    {
+        Permissions::policy(Dashboard::class, config('cms.policies.dashboard', DashboardPolicy::class));
+
+        if (! config('cms.register_permissions', true)) {
+            return;
         }
+
+        Permissions::register('dashboard', [
+            'view_dashboard' => 'View the dashboard',
+        ], label: 'Dashboard');
+    }
+
+    protected function registerPublishing(): void
+    {
+        $this->publishes([
+            __DIR__ . '/../config/cms.php' => config_path('cms.php'),
+        ], 'cms-config');
+
+        $this->publishes([
+            __DIR__ . '/../lang' => lang_path('vendor/cms'),
+        ], 'cms-translations');
+
+        $this->publishes([
+            __DIR__ . '/../resources/views' => resource_path('views/vendor/cms'),
+        ], 'cms-views');
+    }
+
+    /**
+     * The English label of a default location (translated when shown)
+     */
+    public static function locationLabel(string $key): string
+    {
+        return match ($key) {
+            'header' => 'Header',
+            'footer' => 'Footer',
+            'sidebar' => 'Sidebar',
+            default => ucfirst(str_replace(['-', '_'], ' ', $key)),
+        };
     }
 }
-
-
-
-
-

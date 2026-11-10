@@ -3,373 +3,153 @@ title: Installation & Setup
 sidebar_position: 1.2
 ---
 
-This guide will walk you through installing and setting up the Javaabu CMS package in your Laravel application.
-
-## Installation
-
-### Step 1: Install via Composer
-
-Install the package via composer:
+## 1. Install
 
 ```bash
 composer require javaabu/cms
+php artisan cms:install
 ```
 
-### Step 2: Run Setup Command
+`cms:install` does, in order (safe to run again):
 
-The easiest way to set up the CMS is using the setup command:
+1. publishes `config/cms.php` (`--force` overwrites it);
+2. runs the migrations of the CMS and the packages it uses (`--no-migrate` skips them);
+3. runs `php artisan permissions:sync`;
+4. creates starter content, skipping anything already there (`--no-content` skips it):
+   - a **General** category,
+   - an **About us** page at `/about`,
+   - a **Welcome to your new site** news article,
+   - a **Main menu** in the header (Home, News, About us) and a **Footer menu** (About us),
+   - a **Latest news** and a **Categories** widget in the sidebar.
 
-```bash
-php artisan cms:setup
-```
+   With javaabu/translatable enabled, the content is in English and Dhivehi. Otherwise it's in the app's language (Dhivehi when `app.locale` is `dv`).
 
-This command will:
-- Publish the configuration file
-- Publish and run migrations
-- Optionally install default post types and categories
-- Seed CMS permissions
-- Display next steps
+## 2. Your user models
 
-#### Setup Command Options
-
-```bash
-# Install with default post types and categories
-php artisan cms:setup --with-defaults
-
-# Skip migrations
-php artisan cms:setup --skip-migrations
-
-# Skip permission seeding
-php artisan cms:setup --skip-permissions
-
-# Force in production
-php artisan cms:setup --force
-
-# Combine options
-php artisan cms:setup --with-defaults --force
-```
-
-#### Default Post Types and Categories
-
-When using the `--with-defaults` option (or when prompted during setup), the following will be installed:
-
-**Post Types:**
-- News
-- Blog Posts
-- Downloads
-- Announcements
-- Publications
-- Jobs
-- Galleries
-- Tenders
-- Reports
-- Pages
-
-**Category Types:**
-- News Categories
-- Blog Categories
-- Download Categories
-- Announcement Categories
-- Publication Categories
-- Job Categories
-- Gallery Categories
-- Tender Categories
-- Report Categories
-
-**Sample Categories:**
-- News: General, Press Releases
-- Blog: Technology, Business
-- Jobs: Full Time, Part Time, Intern
-
-:::tip
-You can customize these defaults in `config/cms.php` under `default_category_types`, `default_post_types`, and `default_categories` before running the setup command.
-:::
-
-### Step 3: Register Routes
-
-Add CMS routes to your `routes/web.php`:
+Admins need roles (javaabu/permissions) and their own media library (javaabu/mediapicker). Use any model and any guard:
 
 ```php
-use Javaabu\Cms\Support\Routes;
+namespace App\Models;
 
-// Admin routes (protected by auth middleware)
-Routes::admin(
-    prefix: 'admin',
-    middleware: ['web', 'auth', 'verified']
-);
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Javaabu\Mediapicker\Concerns\OwnsMedia;
+use Javaabu\Mediapicker\Contracts\MediaOwner;
+use Javaabu\Permissions\Traits\HasRoles;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-// Public routes (for displaying posts)
-Routes::web(
-    prefix: null,  // or 'blog', 'news', etc.
-    middleware: ['web']
-);
-```
-
-#### Custom Route Configuration
-
-You can customize routes per post type:
-
-```php
-use Javaabu\Cms\Support\Routes;
-
-// Register routes for a specific post type
-Routes::customPostType(
-    postTypeSlug: 'news',
-    prefix: 'news',
-    middleware: ['web'],
-    controller: '\App\Http\Controllers\NewsController'  // Optional custom controller
-);
-```
-
-### Step 4: Admin Routes
-
-Add CMS routes to your admin routes file (typically `routes/admin.php`):
-
-```php
-use Javaabu\Cms\Http\Controllers\Admin\MediaController;
-
-// Media routes
-Route::match(['PUT', 'PATCH'], 'media', [MediaController::class, 'bulk'])->name('media.bulk');
-Route::get('media/picker', [MediaController::class, 'picker'])->name('media.picker');
-Route::resource('media', MediaController::class, [
-    'parameters' => [
-        'media' => 'media',
-    ],
-]);
-```
-
-## Configuration
-
-### Publishing Config File
-
-The config file is automatically published during setup, but you can republish it:
-
-```bash
-php artisan vendor:publish --tag=cms-config
-```
-
-### Config File Structure
-
-The configuration file (`config/cms.php`) contains:
-
-```php
-<?php
-
-return [
-    /*
-    |--------------------------------------------------------------------------
-    | Post Types
-    |--------------------------------------------------------------------------
-    */
-    'post_types' => [
-        'news' => [
-            'label' => 'News',
-            'singular_label' => 'News Article',
-            'features' => ['categories', 'featured_image', 'excerpt'],
-            'category_types' => ['news-categories'],
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Category Types
-    |--------------------------------------------------------------------------
-    */
-    'category_types' => [
-        'news-categories' => [
-            'label' => 'News Categories',
-            'singular_label' => 'News Category',
-            'hierarchical' => true,
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Post Type Features
-    |--------------------------------------------------------------------------
-    */
-    'default_features' => [
-        'title',
-        'content',
-        'excerpt',
-        'featured_image',
-        'categories',
-        'publish_date',
-        'status',
-        'slug',
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Media Settings
-    |--------------------------------------------------------------------------
-    */
-    'media' => [
-        'featured_image_sizes' => [
-            'thumb' => [300, 300],
-            'medium' => [600, 400],
-            'large' => [1200, 800],
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Pagination Settings
-    |--------------------------------------------------------------------------
-    */
-    'pagination' => [
-        'per_page' => 15,
-    ],
-];
-```
-
-## Database Migrations
-
-### Running Migrations
-
-If you skipped migrations during setup, run them manually:
-
-```bash
-php artisan migrate
-```
-
-### Publishing Migrations
-
-To customize migrations, publish them first:
-
-```bash
-php artisan vendor:publish --tag=cms-migrations
-```
-
-This creates the following tables:
-- `category_types`
-- `categories`
-- `post_types`
-- `posts`
-- `category_model` (pivot table)
-
-## Permissions Setup
-
-### Seeding Permissions
-
-If you skipped permissions during setup, seed them manually:
-
-```php
-use Javaabu\Cms\seeders\CmsPermissionsSeeder;
-
-CmsPermissionsSeeder::seedPermissions();
-```
-
-Or add to your `DatabaseSeeder`:
-
-```php
-public function run()
+class Admin extends Authenticatable implements MediaOwner
 {
-    // Other seeders...
-    
-    \Javaabu\Cms\seeders\CmsPermissionsSeeder::seedPermissions();
+    use HasRoles;
+    use InteractsWithMedia;
+    use OwnsMedia;
+
+    protected string $guard_name = 'web_admin';
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->registerMediapickerConversions($media);
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->registerMediapickerCollections();
+    }
 }
 ```
 
-### Available Permissions
+## 3. Routes
 
-The package dynamically creates permissions for each Post Type and Category Type you create. Permissions are based on the slug of the type.
+```php
+// routes/web.php
+use Illuminate\Support\Facades\Route;
 
-**Post Type Permissions** (11 per type):
+Route::middleware('web')->group(function () {
+    Route::cmsAdmin(['guard' => 'web_admin', 'prefix' => 'admin', 'name' => 'admin.']);
 
-For each Post Type (e.g., 'news'), the following permissions are created:
-- `edit_{slug}` - Edit own posts (e.g., `edit_news`)
-- `edit_others_{slug}` - Edit all posts
-- `delete_{slug}` - Delete own posts
-- `delete_others_{slug}` - Delete all posts
-- `view_{slug}` - View own posts
-- `view_others_{slug}` - View all posts
-- `force_delete_{slug}` - Force delete own posts
-- `force_delete_others_{slug}` - Force delete all posts
-- `publish_{slug}` - Publish own posts
-- `publish_others_{slug}` - Publish all posts
-- `import_{slug}` - Import posts
+    // Your own routes
 
-**Category Type Permissions** (4 per type):
+    Route::cms();
+});
+```
 
-For each Category Type (e.g., 'news-categories'), the following permissions are created:
-- `edit_{slug}` - Edit categories (e.g., `edit_news_categories`)
-- `delete_{slug}` - Delete categories
-- `view_{slug}` - View categories
-- `import_{slug}` - Import categories
+`Route::cms()` registers pages at `/{slug}`, which matches any one-segment URL, so call it **after** your own routes. [Routes](basic-usage/routes.md) lists every route and option.
 
-:::tip
-Call `CmsPermissionsSeeder::seedPermissions()` after creating your Post Types and Category Types to generate the appropriate permissions.
-:::
+## 4. Permissions
 
-## Frontend Assets (Optional)
+```php
+// config/permissions.php
+'guards' => ['web_admin'],
 
-### Editor.js Setup
-
-If using Editor.js for content editing:
+'roles' => [
+    'super_admin' => ['description' => 'Super Admin', 'permissions' => '*'],
+    'editor' => ['description' => 'Editor', 'permissions' => ['view_dashboard', 'view_*', 'edit_news', 'edit_pages', 'publish_*']],
+],
+```
 
 ```bash
-npm install --save @editorjs/editorjs @editorjs/header @editorjs/list @editorjs/image @editorjs/quote @editorjs/table @editorjs/delimiter @editorjs/embed @editorjs/link @editorjs/raw @editorjs/simple-image @calumk/editorjs-columns
+php artisan permissions:sync
 ```
 
-Or copy from package.json:
+[Permissions](basic-usage/permissions.md) lists them all.
 
-```json
-{
-  "dependencies": {
-    "@calumk/editorjs-columns": "^0.3.2",
-    "@editorjs/delimiter": "^1.4.2",
-    "@editorjs/editorjs": "^2.29.1",
-    "@editorjs/embed": "^2.7.4",
-    "@editorjs/header": "^2.6.0",
-    "@editorjs/image": "^2.6.0",
-    "@editorjs/link": "^2.3.1",
-    "@editorjs/list": "^1.6.1",
-    "@editorjs/quote": "^2.4.0",
-    "@editorjs/raw": "^2.2.0",
-    "@editorjs/simple-image": "^1.4.0",
-    "@editorjs/table": "^1.3.0"
-  }
-}
+## 5. Styles
+
+Every page that needs the CMS's styles requires them through [javaabu/manifest](https://github.com/Javaabu/manifest), which injects them for you. With Vite, add manifest's plugin:
+
+```js
+// vite.config.js
+import laravel from "laravel-vite-plugin"
+import { defineConfig } from "vite"
+import manifest from "./vendor/javaabu/manifest/dist/vite.js"
+
+export default defineConfig({
+  plugins: [laravel({ input: ["resources/css/app.css", "resources/js/app.js"] }), manifest()],
+})
 ```
 
-### Laravel Object Configuration
+Without Vite, the prebuilt styles in the package's `dist/` are served instead. Blade pages need nothing from npm for the CMS. On Inertia pages, the React layouts import the stylesheet themselves; see [Inertia React](advanced-usage/inertia-react.md#styles) for the other packages' content styles.
 
-To enable correct functionality for the Media Picker and other CMS features, add the following script block to your admin layout's `<head>`:
+The admin pages of post-types, widgets, menus, settings, media and roles use Tailwind utilities. Point Tailwind at their views:
 
-```blade
-<script>
-    window.Laravel = <?php echo json_encode([
-        'csrfToken'        => csrf_token(),
-        'mediaPicker'      => translate_route('admin.media.picker'),
-        'locale'           => app()->getLocale(),
-        'admin_domain'     => url(''),
-        'public_domain'    => config('app.url')
-    ]); ?>
-</script>
+```css
+/* resources/css/app.css */
+@import "tailwindcss";
+@source "../../vendor/javaabu/*/resources/views";
 ```
 
-### SASS Setup
+## 6. Inertia React (optional)
 
-To include the Media Library styles, import the SASS file in your `admin.scss`:
-
-```scss
-@import 'inc/media-library';
-@import 'inc/fileinput-overrides';
+```bash
+composer require inertiajs/inertia-laravel
 ```
 
-## Verification
+```dotenv
+CMS_VIEWS=inertia
+```
 
-After installation, verify everything is working:
+```tsx
+// resources/js/app.tsx
+import { createInertiaApp } from "@inertiajs/react"
+import { withCmsLayouts } from "@javaabu/cms"
+import { resolvePage } from "@javaabu/manifest/inertia"
+import { createRoot } from "react-dom/client"
 
-1. **Check routes**: `php artisan route:list | grep cms`
-2. **Check migrations**: Verify tables exist in database
-3. **Access admin panel**: Visit `/admin/category-types` (requires authentication)
-4. **Check permissions**: Verify permissions exist in your permissions table
+createInertiaApp({
+  resolve: withCmsLayouts((name) => resolvePage(name, import.meta.glob("./pages/**/*.tsx"))),
+  setup({ el, App, props }) {
+    createRoot(el).render(<App {...props} />)
+  },
+})
+```
 
-## Next Steps
+`withCmsLayouts()` gives pages without a layout of their own the CMS's: the admin layout on `Route::cmsAdmin()` routes and the theme on `Route::cms()` routes. Then run `php artisan manifest:check` and install what it lists. See [Inertia React](advanced-usage/inertia-react.md).
 
-- [Configure Post Types](basic-usage/creating-post-types.md)
-- [Create Categories](basic-usage/managing-categories.md)
-- [Create Your First Post](basic-usage/creating-posts.md)
-- [Customize Views](basic-usage/customizing-views.md)
+## Publishing
+
+```bash
+php artisan vendor:publish --tag=cms-config        # config/cms.php
+php artisan vendor:publish --tag=cms-views         # resources/views/vendor/cms
+php artisan vendor:publish --tag=cms-translations  # lang/vendor/cms
+php artisan manifest:override cms js/components/ThemeLayout.tsx   # one React file
+```

@@ -3,41 +3,40 @@ title: Introduction
 sidebar_position: 1.0
 ---
 
-# Javaabu CMS
+# CMS
 
-[Javaabu CMS](https://github.com/Javaabu/cms) is a flexible and extensible Content Management System package for Laravel applications. Built with support for custom post types, hierarchical categories, and rich content editing with Editor.js.
+[javaabu/cms](https://github.com/Javaabu/cms) is a complete CMS for Laravel. It doesn't reimplement content, menus or widgets: it assembles finished Javaabu packages, sets them up the same way, and adds what ties them into a site.
 
-## Key Features
+| You get | From |
+| --- | --- |
+| Pages at the site root (`/about`), and news with categories and tags | [javaabu/post-types](https://github.com/Javaabu/post-types), with [javaabu/block-editor](https://github.com/Javaabu/block-editor) content, [javaabu/mediapicker](https://github.com/Javaabu/mediapicker) media and [javaabu/meta](https://github.com/Javaabu/meta) fields |
+| Header and footer menus | [javaabu/dynamic-menubuilder](https://github.com/Javaabu/dynamic-menubuilder) |
+| Sidebar and footer widgets, plus recent-posts and categories widgets | [javaabu/widgets](https://github.com/Javaabu/widgets) |
+| A "Site" settings page: name, tagline, front page, footer text | [javaabu/settings](https://github.com/Javaabu/settings) |
+| Roles and permissions for any guard | [javaabu/permissions](https://github.com/Javaabu/permissions) |
+| An admin dashboard and navigation that follows each user's permissions | this package |
+| A public theme, in Blade and Inertia React | this package |
+| `php artisan cms:install` with starter content in English and Dhivehi | this package |
+| `php artisan cms:import-v1` for sites on v1 | this package |
 
-- 🎯 **Custom Post Types**: Define unlimited custom post types with configurable features
-- 📁 **Hierarchical Categories**: Nested category support using Nestedset
-- ✍️ **Rich Content Editor**: Integrated Editor.js support for modern content editing
-- 🔐 **Permission System**: Built-in permission management for CMS operations
-- 🌐 **Multi-language Ready**: Translation support for content
-- 📱 **Responsive Admin**: Modern admin interface
-- 🔌 **Extensible**: Easy to extend with custom controllers, views, and policies
-- 🚀 **Easy Setup**: Artisan command for quick installation
+Everything renders with Blade ([javaabu/forms](https://github.com/Javaabu/forms)) or Inertia React (@javaabu/forms and Onu), chosen with one config option. With [javaabu/translatable](https://github.com/Javaabu/translatable) installed, content, menus, widgets and settings are translatable, and the theme gets a language switcher.
 
-## Use Cases
+```bash
+composer require javaabu/cms
+php artisan cms:install
+```
 
-This package is ideal for:
+```php
+// routes/web.php
+Route::middleware('web')->group(function () {
+    Route::cmsAdmin(['guard' => 'web_admin', 'prefix' => 'admin', 'name' => 'admin.']);
 
-- Building news and blog websites
-- Creating document management systems
-- Managing announcements and publications
-- Building custom content-driven applications
-- Any project requiring flexible content types and categories
+    // Your own routes here
 
-## What's Inside
+    Route::cms(); // last: pages live at /{slug}
+});
+```
 
-The package provides:
+Then give your admin role `view_dashboard` and the content permissions, and open `/admin`.
 
-- **Models**: Post, PostType, Category, CategoryType with full relationships
-- **Controllers**: Admin controllers for CRUD operations
-- **Policies**: Authorization policies for all models
-- **Migrations**: Database schema for posts, categories, and types
-- **Views**: Complete admin interface (Blade templates)
-- **Routes**: Helper for registering admin and public routes
-- **Seeders**: Permission seeder for CMS operations
-- **Enums**: PostStatus and PostTypeFeatures enums
-- **Commands**: Setup command for easy installation
+Next: [Requirements](requirements.md), then [Installation & Setup](installation-and-setup.md). Upgrading a v1 site? Read [Upgrading from v1](upgrading.md).

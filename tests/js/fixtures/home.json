@@ -1,0 +1,180 @@
+{
+    "cms": {
+        "area": "public",
+        "site": {
+            "name": "ޖާވާބު",
+            "tagline": "ޓެގްލައިން",
+            "footer_text": null,
+            "home_url": "http://localhost",
+            "locale": "en",
+            "direction": "ltr",
+            "locales": []
+        },
+        "strings": {
+            "skip": "Skip to content",
+            "navigation": "Admin",
+            "main": "Main",
+            "footer": "Footer",
+            "sidebar": "Sidebar",
+            "language": "Language",
+            "copyright": "© 2026 ޖާވާބު. All rights reserved."
+        },
+        "navigation": []
+    },
+    "menus": {
+        "header": [
+            {
+                "id": 1,
+                "title": "ފުރަތަމަ ސަފްހާ",
+                "url": "/",
+                "type": "link",
+                "depth": 1,
+                "target": null,
+                "rel": null,
+                "css_class": null,
+                "icon": null,
+                "current": true,
+                "active": true,
+                "children": []
+            }
+        ],
+        "footer": []
+    },
+    "widgets": {
+        "sidebar": [
+            {
+                "id": 1,
+                "type": "recent-posts",
+                "component": "RecentPosts",
+                "location": "sidebar",
+                "settings": {
+                    "post_type": "news",
+                    "count": 3,
+                    "show_date": true,
+                    "title": "ފަހުގެ ޚަބަރު"
+                },
+                "data": {
+                    "posts": [
+                        {
+                            "id": 1,
+                            "title": "ރާއްޖޭގެ ޚަބަރު",
+                            "url": "http://localhost/news/2026/11/local",
+                            "date": "2026-11-01T08:00:00+00:00",
+                            "date_label": "1 November 2026"
+                        }
+                    ],
+                    "archive_url": "http://localhost/news",
+                    "archive_label": "All news"
+                }
+            }
+        ],
+        "footer": []
+    },
+    "page": null,
+    "post_type": {
+        "key": "news",
+        "singular": "News article",
+        "plural": "News",
+        "description": "News articles, listed newest first",
+        "icon": "newspaper",
+        "supports": [
+            "content",
+            "excerpt",
+            "media",
+            "author",
+            "scheduling"
+        ],
+        "taxonomies": [
+            {
+                "key": "categories",
+                "singular": "Category",
+                "plural": "Categories",
+                "description": null,
+                "slug": "categories",
+                "hierarchical": true,
+                "multiple": true,
+                "required": false,
+                "public": true,
+                "icon": "folder-tree"
+            },
+            {
+                "key": "tags",
+                "singular": "Tag",
+                "plural": "Tags",
+                "description": null,
+                "slug": "tags",
+                "hierarchical": false,
+                "multiple": true,
+                "required": false,
+                "public": true,
+                "icon": "tags"
+            }
+        ],
+        "statuses": [
+            {
+                "key": "draft",
+                "label": "Draft",
+                "public": false,
+                "color": "secondary"
+            },
+            {
+                "key": "pending",
+                "label": "Pending review",
+                "public": false,
+                "color": "warning"
+            },
+            {
+                "key": "published",
+                "label": "Published",
+                "public": true,
+                "color": "success"
+            }
+        ],
+        "default_status": "draft",
+        "slug": "news",
+        "permalink": "{year}/{month}/{slug}",
+        "public": true,
+        "has_archive": true
+    },
+    "posts": [
+        {
+            "id": 1,
+            "title": "ރާއްޖޭގެ ޚަބަރު",
+            "slug": "local",
+            "url": "http://localhost/news/2026/11/local",
+            "summary": "",
+            "published_at": "2026-11-01T08:00:00+00:00",
+            "published_at_label": "1 November 2026",
+            "author": null,
+            "image": null,
+            "terms": []
+        }
+    ],
+    "archive_url": "http://localhost/news",
+    "site": {
+        "name": "ޖާވާބު",
+        "tagline": "ޓެގްލައިން",
+        "footer_text": null,
+        "home_url": "http://localhost",
+        "locale": "en",
+        "direction": "ltr",
+        "locales": []
+    },
+    "strings": {
+        "archive": "News",
+        "empty": "Nothing has been published here yet.",
+        "read_more": "Read more",
+        "previous": "Newer",
+        "next": "Older",
+        "by": "By :author",
+        "published_on": "Published :date",
+        "preview": "This is a preview. Visitors don't see this post yet.",
+        "back": "Back to News",
+        "pagination": "Pagination",
+        "latest": "Latest news",
+        "view_all": "View all",
+        "welcome": "Welcome"
+    },
+    "layout": "cms::layouts.public",
+    "layout_section": "content"
+}

@@ -1,0 +1,122 @@
+{
+    "cms": {
+        "area": "admin",
+        "site": {
+            "name": "Javaabu",
+            "tagline": null,
+            "footer_text": null,
+            "home_url": "http://localhost",
+            "locale": "en",
+            "direction": "ltr",
+            "locales": []
+        },
+        "strings": {
+            "skip": "Skip to content",
+            "navigation": "Admin",
+            "main": "Main",
+            "footer": "Footer",
+            "sidebar": "Sidebar",
+            "language": "Language",
+            "copyright": "© 2026 Javaabu. All rights reserved."
+        },
+        "navigation": [
+            {
+                "key": "",
+                "label": null,
+                "items": [
+                    {
+                        "key": "dashboard",
+                        "label": "Dashboard",
+                        "url": "http://localhost/admin",
+                        "icon": "layout-dashboard",
+                        "active": true,
+                        "children": []
+                    }
+                ]
+            },
+            {
+                "key": "content",
+                "label": "Content",
+                "items": [
+                    {
+                        "key": "post-type-news",
+                        "label": "News",
+                        "url": "http://localhost/admin/news",
+                        "icon": "newspaper",
+                        "active": false,
+                        "children": []
+                    }
+                ]
+            },
+            {
+                "key": "appearance",
+                "label": "Appearance",
+                "items": [
+                    {
+                        "key": "menus",
+                        "label": "Menus",
+                        "url": "http://localhost/admin/menus",
+                        "icon": "menu",
+                        "active": false,
+                        "children": []
+                    }
+                ]
+            }
+        ]
+    },
+    "post_types": [
+        {
+            "key": "news",
+            "label": "News",
+            "singular_label": "News article",
+            "icon": "newspaper",
+            "counts": {
+                "published": 1,
+                "scheduled": 0,
+                "draft": 1,
+                "pending": 0
+            },
+            "index_url": "http://localhost/admin/news",
+            "create_url": "http://localhost/admin/news/create"
+        }
+    ],
+    "recent": [
+        {
+            "id": 2,
+            "title": "ޑްރާފްޓް",
+            "post_type": "news",
+            "post_type_label": "News article",
+            "status": "Draft",
+            "status_color": "secondary",
+            "updated_at": "2026-11-06T10:00:00+00:00",
+            "edit_url": "http://localhost/admin/news/2/edit"
+        },
+        {
+            "id": 1,
+            "title": "ރާއްޖޭގެ ޚަބަރު",
+            "post_type": "news",
+            "post_type_label": "News article",
+            "status": "Published",
+            "status_color": "success",
+            "updated_at": "2026-11-06T10:00:00+00:00",
+            "edit_url": "http://localhost/admin/news/1/edit"
+        }
+    ],
+    "strings": {
+        "title": "Dashboard",
+        "content": "Content",
+        "recent": "Recently edited",
+        "published": "Published",
+        "scheduled": "Scheduled",
+        "draft": "Drafts",
+        "pending": "Pending review",
+        "add": "Add :type",
+        "view_all": "View all",
+        "edit": "Edit",
+        "empty": "Nothing has been written yet.",
+        "no_types": "You can't see any content yet.",
+        "updated": "Updated :date"
+    },
+    "layout": "cms::layouts.admin",
+    "layout_section": "content"
+}
